@@ -77,7 +77,7 @@ small{color:var(--muted)} a{color:var(--blue);text-decoration:none}
 </head>
 <body>
 <header>
-  <div class="brand"><span class="logo">M</span><span>Минутка<small>ЖК Солнечный · поминутно</small></span></div>
+  <div class="brand"><span class="logo">M</span><span>Минутка<small>Сургут · поминутно</small></span></div>
   <div class="head-right"><span id="user">—</span><button class="ghost theme-btn" onclick="logout()">Выйти</button><button class="ghost theme-btn" id="themeBtn" onclick="cycleTheme()">Тема</button></div>
 </header>
 <div class="wrap">
@@ -111,9 +111,9 @@ small{color:var(--muted)} a{color:var(--blue);text-decoration:none}
 const H = () => ({ 'Content-Type': 'application/json' });
 const RU = { free:'Свободна', hold:'Бронь', rent:'Аренда', service:'Сервис', active:'Поездка', paused:'Пауза', finished:'Завершена', cancelled:'Отменена' };
 const ru = s => RU[s] || s;
-const map = L.map('map').setView([55.7887, 49.1221], 15);
+const map = L.map('map').setView([61.2500, 73.3960], 15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-L.circle([55.7887, 49.1221], { radius: 900, color: '#22c55e' }).addTo(map).bindPopup('Зона: ЖК Солнечный');
+L.circle([61.2500, 73.3960], { radius: 900, color: '#22c55e' }).addTo(map).bindPopup('Зона: Сургут');
 let markers = [];
 async function api(p, o = {}) {
   const r = await fetch(p, { ...o, headers: H() });
