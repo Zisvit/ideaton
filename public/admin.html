@@ -35,6 +35,14 @@ a{color:var(--blue);text-decoration:none}
 .rowline:last-child{border-bottom:0}
 .rowline .sum{font-weight:800;white-space:nowrap}
 .empty{color:var(--muted);font-size:13px}
+@media(max-width:560px){
+  header{padding:10px 12px}
+  input{width:100%;margin:4px 0}
+  button{min-height:48px;width:100%;margin:6px 0 0}
+  .code{font-size:17px;letter-spacing:2px}
+  .wrap{padding:10px 10px 32px}
+}
+@media(min-width:920px){ .wrap{max-width:1180px} }
 [data-theme="light"]{--bg:#eef1f6;--panel:#ffffff;--panel2:#e7ecf3;--line:#d5dce7;--text:#141a24;--muted:#5b6572}
 [data-theme="light"] header{background:rgba(255,255,255,.92)}
 [data-theme="light"] input{background:#fff}
