@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomInt } from 'node:crypto';
 
-export const db = new DatabaseSync('./data.db');
+export const db = new DatabaseSync(process.env.DB_PATH || './data.db');
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS users(
