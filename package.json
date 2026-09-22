@@ -1,0 +1,12 @@
+{
+  "name": "minutka",
+  "version": "0.1.0",
+  "description": "Minutka - SaaS поминутной аренды для локальных зон (ЖК/кампус/курорт). MVP.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

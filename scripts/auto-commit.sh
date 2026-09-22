@@ -4,7 +4,7 @@
 # Ждет 10 сек (файл допишется), коммитит всё одним autosync-коммитом, пушит.
 # В main НЕ пушит никогда — туда сливает бот.
 set -u
-REPO="${1:-/home/deb/Projects/ideaton}"
+REPO="${1:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO" || exit 0
 unset GITHUB_TOKEN GH_TOKEN
 BR="$(git branch --show-current)"

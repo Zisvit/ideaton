@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Минутка — админка</title>
+<style>body{font-family:system-ui;background:#0f1115;color:#eee;margin:0;padding:16px}
+.card{background:#1c2029;border-radius:12px;padding:12px;margin:8px 0}button{background:#4caf50;border:0;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}input{padding:8px;border-radius:8px;border:1px solid #333;background:#111;color:#eee;margin:2px}</style>
+</head>
+<body>
+<h2>Админка · Минутка</h2>
+<div class="card">Телефон <input id="phone" value="+70000000000"> Пароль <input id="pass" type="password" value="admin123">
+<button onclick="login()">Войти как админ</button> <a href="/" style="color:#7cc4ff">← к приложению</a></div>
+<div class="card"><b>Статистика:</b> <span id="stats">—</span></div>
+<h3>Автопарк (код — это QR/сейф для старта)</h3><div id="cars"></div>
+<h3>Последние поездки</h3><div id="books"></div>
+<script>
+let token = localStorage.getItem('t') || '';
+const H = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + token });
+async function api(p, o = {}) { const r = await fetch(p, { ...o, headers: H() }); const j = await r.json(); if (!r.ok) throw new Error(j.error); return j; }
+async function login() {
+  const j = await api('/api/login', { method: 'POST', body: JSON.stringify({ phone: phone.value, password: pass.value }) });
+  token = j.token; localStorage.setItem('t', token); refresh();
+}
+async function refresh() {
+  try {
+    const s = await api('/api/admin/stats'); stats.textContent = `выручка ${s.revenue}₽ · активных ${s.active}`;
+    const { cars } = await api('/api/cars');
+    document.getElementById('cars').innerHTML = cars.map(c =>
+      `<div class="card"><b>${c.model}</b> ${c.plate} · ${c.status} · код <b>${c.code_current}</b> · ${c.tariff_drive}/${c.tariff_pause}₽<br>
+      <button onclick="setStatus(${c.id},'free')">в линию</button>
+      <button onclick="setStatus(${c.id},'service')">в сервис</button></div>`).join('');
+    const b = await api('/api/admin/bookings');
+    document.getElementById('books').innerHTML = b.bookings.map(x =>
+      `<div class="card"><small>#${x.id} ${x.phone} · ${x.model} · ${x.status} · драйв ${x.drive_sec}с · пауза ${x.pause_sec}с · ${x.total_rub}₽</small></div>`).join('');
+  } catch (e) { stats.textContent = 'войдите как админ'; }
+}
+async function setStatus(id, status) { await api(`/api/admin/cars/${id}`, { method: 'POST', body: JSON.stringify({ status }) }); refresh(); }
+refresh();
+</script>
+</body>
+</html>

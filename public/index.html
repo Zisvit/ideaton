@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Минутка — поминутная аренда</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+body{font-family:system-ui,sans-serif;margin:0;background:#0f1115;color:#eee}
+header{padding:12px 16px;background:#171a21;display:flex;justify-content:space-between;align-items:center}
+#map{height:42vh}
+.panel{padding:12px 16px}
+.card{background:#1c2029;border-radius:12px;padding:12px;margin:8px 0}
+button{background:#4caf50;border:0;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer;margin:4px 4px 4px 0}
+button.ghost{background:#2a2f3a} button.danger{background:#c0392b} button:disabled{opacity:.5}
+input{padding:10px;border-radius:8px;border:1px solid #333;background:#111;color:#eee;margin:4px 0;width:100%;box-sizing:border-box}
+.row{display:flex;gap:8px} .row>div{flex:1}
+small{color:#999} a{color:#7cc4ff}
+</style>
+</head>
+<body>
+<header>
+<b>Минутка · ЖК Солнечный</b>
+<span id="user">—</span>
+</header>
+<div id="map"></div>
+<div class="panel">
+<div class="card" id="auth">
+<h3>Вход / Регистрация</h3>
+<div class="row"><div><input id="phone" placeholder="+79990001122" value="+79990001122"></div>
+<div><input id="pass" type="password" placeholder="пароль" value="demo123"></div></div>
+<button onclick="login()">Войти</button>
+<button class="ghost" onclick="register()">Регистрация (+500₽ бонус)</button>
+<small>демо: +79990001122/demo123 · <a href="/admin.html">админка</a></small>
+</div>
+<div class="card">Баланс: <b id="balance">—</b> ₽
+<button class="ghost" onclick="topup()">+500 ₽ (mock)</button>
+<div id="active"></div>
+</div>
+<h3>Свободные авто · 12 ₽/мин, пауза 3 ₽/мин</h3>
+<div id="cars"></div>
+<h3>История</h3>
+<div id="hist"></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let token = localStorage.getItem('t') || '';
+const H = () => ({ 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) });
+const map = L.map('map').setView([55.7887, 49.1221], 15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+L.circle([55.7887, 49.1221], { radius: 900, color: '#4caf50' }).addTo(map).bindPopup('Зона: ЖК Солнечный');
+let markers = [];
+async function api(p, o = {}) {
+  const r = await fetch(p, { ...o, headers: H() });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || 'ошибка');
+  return j;
+}
+async function login() {
+  try {
+    const j = await api('/api/login', { method: 'POST', body: JSON.stringify({ phone: phone.value, password: pass.value }) });
+    token = j.token; localStorage.setItem('t', token); refresh();
+  } catch (e) { alert(e.message); }
+}
+async function register() {
+  try {
+    const j = await api('/api/register', { method: 'POST', body: JSON.stringify({ phone: phone.value, name: 'Гость', password: pass.value }) });
+    token = j.token; localStorage.setItem('t', token); refresh();
+  } catch (e) { alert(e.message); }
+}
+async function topup() { await api('/api/topup', { method: 'POST', body: JSON.stringify({ amount: 500 }) }); refresh(); }
+async function refresh() {
+  try {
+    const me = await api('/api/me');
+    user.textContent = me.user.phone + (me.user.is_admin ? ' (admin)' : '');
+    balance.textContent = me.user.balance;
+    const { cars } = await api('/api/cars');
+    markers.forEach(m => m.remove()); markers = [];
+    carsEl = document.getElementById('cars'); carsEl.innerHTML = '';
+    cars.forEach(c => {
+      const m = L.marker([c.lat, c.lng]).addTo(map).bindPopup(`${c.model} · ${c.plate} · ${c.status}`);
+      markers.push(m);
+      const d = document.createElement('div'); d.className = 'card';
+      d.innerHTML = `<b>${c.model}</b> ${c.plate}<br><small>${c.status} · ⛽${c.fuel}% · ${c.tariff_drive}₽/мин</small><br>`;
+      if (c.status === 'free') {
+        const b = document.createElement('button'); b.textContent = 'Забронировать (15 мин бесплатно)';
+        b.onclick = async () => { try { await api('/api/bookings', { method: 'POST', body: JSON.stringify({ car_id: c.id }) }); refresh(); } catch (e) { alert(e.message); } };
+        d.appendChild(b);
+      }
+      carsEl.appendChild(d);
+    });
+    const a = await api('/api/my-active');
+    const box = document.getElementById('active');
+    if (!a.booking) { box.innerHTML = '<small>Нет активной аренды</small>'; }
+    else {
+      const b = a.booking;
+      box.innerHTML = `<b>${b.status}</b> · авто ${b.car_id} · драйв ${Math.floor(b.drive_sec / 60)} мин · пауза ${Math.floor(b.pause_sec / 60)} мин<br>
+      <small>hold до ${new Date(b.hold_until * 1000).toLocaleTimeString()}</small><br>
+      <input id="code" placeholder="код из авто (у админа в admin.html)" style="max-width:220px">
+      <div>
+      <button onclick="act('start')">Старт по коду</button>
+      <button class="ghost" onclick="act('pause')">Пауза</button>
+      <button class="ghost" onclick="act('resume')">Продолжить</button>
+      <button class="danger" onclick="act('finish')">Завершить</button>
+      <button class="ghost" onclick="act('cancel')">Отменить hold</button>
+      </div>`;
+      box.dataset.id = b.id;
+    }
+    const h = await api('/api/history');
+    hist.innerHTML = h.history.map(x => `<div class="card"><small>#${x.id} ${x.model} ${x.plate} · ${x.status} · ${x.total_rub}₽</small></div>`).join('') || '<small>пусто</small>';
+  } catch (e) { /* не залогинен */ }
+}
+let carsEl;
+async function act(op) {
+  const id = document.getElementById('active').dataset.id;
+  try {
+    if (op === 'start') {
+      const code = document.getElementById('code').value;
+      await api(`/api/bookings/${id}/start`, { method: 'POST', body: JSON.stringify({ code }) });
+    }
+    else if (op === 'cancel') await api(`/api/bookings/${id}/cancel`, { method: 'POST' });
+    else await api(`/api/bookings/${id}/${op}`, { method: 'POST' });
+    refresh();
+  } catch (e) { alert(e.message); }
+}
+setInterval(() => { if (token) refresh(); }, 15000);
+refresh();
+</script>
+</body>
+</html>

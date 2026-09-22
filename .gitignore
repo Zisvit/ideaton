@@ -1,3 +1,11 @@
 .sync.log
 *~
+node_modules/
+data.db
+data.db-journal
+*.log
 .DS_Store
+# локальные worktree-папки координатора (не коммитить)
+/mine/
+/friend/
+/merge/

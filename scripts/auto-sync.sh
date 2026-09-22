@@ -4,8 +4,12 @@
 # Крон дергает каждые 3 мин. Detached-корень пропускается всегда.
 set -u
 REPO="${1:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+<<<<<<< HEAD
 TOP="$(git -C "$REPO" rev-parse --show-toplevel 2>/dev/null || echo "$REPO")"
 cd "$TOP" || exit 0
+=======
+cd "$REPO" || exit 0
+>>>>>>> origin/main
 unset GITHUB_TOKEN GH_TOKEN
 git fetch origin --prune 2>&1 | head -5
 git worktree list --porcelain | grep '^worktree ' | cut -d' ' -f2- | while IFS= read -r wt; do
