@@ -1,0 +1,35 @@
+name: automerge feat → main
+on:
+  push:
+    branches:
+      - 'feat/**'
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: automerge-main
+  cancel-in-progress: false
+jobs:
+  merge-to-main:
+    if: github.ref_name != 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Merge feat branch into main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin
+          if git merge --no-ff "origin/${{ github.ref_name }}" -m "auto-merge ${{ github.ref_name }}"; then
+            git push origin main
+          else
+            echo "::warning::auto-merge conflict, opening PR instead"
+            git merge --abort || true
+            gh pr create --base main --head "${{ github.ref_name }}" --title "auto-merge ${{ github.ref_name }}" --body "Auto-merge conflicted, needs manual resolve." || true
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
