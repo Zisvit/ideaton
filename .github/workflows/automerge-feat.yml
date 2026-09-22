@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'feat/**'
+  workflow_dispatch:
 permissions:
   contents: write
   pull-requests: write
@@ -19,17 +20,31 @@ jobs:
           ref: main
           fetch-depth: 0
       - name: Merge feat branch into main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.ref_name }}
         run: |
+          set -u
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin
-          if git merge --no-ff "origin/${{ github.ref_name }}" -m "auto-merge ${{ github.ref_name }}"; then
+          # петля-стоп: ветка не добавляет ничего нового поверх main — выходим без пустого мерж-коммита
+          if [ -z "$(git diff "main...origin/$BRANCH")" ]; then
+            echo "nothing new in $BRANCH, skip"
+            exit 0
+          fi
+          if git merge --no-ff "origin/$BRANCH" -m "auto-merge $BRANCH"; then
             git push origin main
           else
             echo "::warning::auto-merge conflict, opening PR instead"
             git merge --abort || true
-            gh pr create --base main --head "${{ github.ref_name }}" --title "auto-merge ${{ github.ref_name }}" --body "Auto-merge conflicted, needs manual resolve." || true
+            if gh pr view "$BRANCH" --json number -q .number >/dev/null 2>&1; then
+              echo "PR already exists, skip create"
+            else
+              gh pr create --base main --head "$BRANCH" \
+                --title "auto-merge $BRANCH (конфликт — нужен разбор)" \
+                --body "Бот не смог сам слить \`$BRANCH\` в \`main\`. Разрулите конфликт и смержите PR." \
+              || echo "::error::failed to create PR"
+            fi
             exit 1
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
