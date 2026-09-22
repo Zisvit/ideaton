@@ -1,0 +1,20 @@
+{
+  "name": "Минутка — поминутная аренда авто",
+  "short_name": "Минутка",
+  "description": "Поминутная аренда авто: карта, бронь, оплата",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0f14",
+  "theme_color": "#0c0f14",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

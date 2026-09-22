@@ -2,7 +2,14 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c0f14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
 <title>Минутка — поминутная аренда</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
@@ -61,7 +68,23 @@ small{color:var(--muted)} a{color:var(--blue);text-decoration:none}
 .hist-row:last-child{border-bottom:0}
 .hist-row .sum{font-weight:800;white-space:nowrap}
 .empty{color:var(--muted);font-size:13px;padding:6px 2px}
-@media(max-width:560px){ .wrap{padding:10px 10px 32px} #map{height:34vh} }
+@media(max-width:560px){
+  .wrap{padding:10px 10px 32px}
+  #map{height:32vh;min-height:220px}
+  button{min-height:48px;font-size:15px}
+  #active button,.car-card button{width:100%;margin:6px 0 0}
+  #active input{max-width:100% !important}
+  .sect h3{font-size:15px}
+  header{padding:10px 12px}
+  .brand{font-size:15px}
+}
+@media(min-width:920px){
+  .wrap{max-width:1180px}
+  .layout{display:grid;grid-template-columns:370px 1fr;gap:16px;align-items:start}
+  .side{position:sticky;top:70px}
+  .side .card{margin:0 0 12px}
+  #map{height:340px}
+}
 [data-theme="light"]{--bg:#eef1f6;--panel:#ffffff;--panel2:#e7ecf3;--line:#d5dce7;--text:#141a24;--muted:#5b6572}
 [data-theme="light"] header{background:rgba(255,255,255,.92)}
 [data-theme="light"] input{background:#fff}
@@ -80,7 +103,8 @@ small{color:var(--muted)} a{color:var(--blue);text-decoration:none}
   <div class="brand"><span class="logo">M</span><span>Минутка<small>Сургут · поминутно</small></span></div>
   <div class="head-right"><span id="user">—</span><button class="ghost theme-btn" onclick="logout()">Выйти</button><button class="ghost theme-btn" id="themeBtn" onclick="cycleTheme()">Тема</button></div>
 </header>
-<div class="wrap">
+<div class="wrap layout">
+ <div class="side">
   <div class="map-card"><div id="map"></div></div>
 
   <div class="card" id="auth">
@@ -99,12 +123,15 @@ small{color:var(--muted)} a{color:var(--blue);text-decoration:none}
     </div>
     <div id="active"></div>
   </div>
+ </div>
+ <div class="main">
 
   <div class="sect"><h3>Свободные авто</h3><span class="pill">12 ₽/мин · пауза 3 ₽/мин</span></div>
   <div id="cars" class="grid"></div>
 
   <div class="sect"><h3>История поездок</h3></div>
   <div class="card" style="padding:6px 16px"><div id="hist"></div></div>
+ </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
