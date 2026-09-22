@@ -1,0 +1,54 @@
+name: automerge scheduled sweep
+# Страховка: сводит в main все feat/* с новым содержимым, даже если push-событие потерялось.
+# Пустые ветки пропускаются (петель нет), конфликты уходят в PR.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: automerge-main
+  cancel-in-progress: false
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Merge every feat branch with new content
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -u
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin
+          FAILED=0
+          for ref in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/feat/); do
+            br="${ref#origin/}"
+            if [ -z "$(git diff "main...$ref")" ]; then
+              echo "skip $br: nothing new"
+              continue
+            fi
+            if git merge --no-ff "$ref" -m "auto-merge $br (scheduled)"; then
+              echo "merged $br"
+            else
+              echo "::warning::conflict in $br"
+              git merge --abort || true
+              if gh pr view "$br" --json number -q .number >/dev/null 2>&1; then
+                echo "PR already exists for $br"
+              else
+                gh pr create --base main --head "$br" \
+                  --title "auto-merge $br (конфликт — нужен разбор)" \
+                  --body "Плановый мерж не смог слить \`$br\` в \`main\`. Разрулите конфликт и смержите PR." \
+                || echo "::error::pr failed for $br"
+              fi
+              FAILED=1
+            fi
+          done
+          git push origin main || echo "nothing to push"
+          exit $FAILED
