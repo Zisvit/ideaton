@@ -1,8 +1,6 @@
 name: automerge feat → main
 on:
-  push:
-    branches:
-      - 'feat/**'
+  # push-триггер ВРЕМЕННО снят на время чистки веток (вернуть после)
   workflow_dispatch:
 permissions:
   contents: write
