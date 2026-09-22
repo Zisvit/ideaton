@@ -35,10 +35,16 @@ a{color:var(--blue);text-decoration:none}
 .rowline:last-child{border-bottom:0}
 .rowline .sum{font-weight:800;white-space:nowrap}
 .empty{color:var(--muted);font-size:13px}
+[data-theme="light"]{--bg:#eef1f6;--panel:#ffffff;--panel2:#e7ecf3;--line:#d5dce7;--text:#141a24;--muted:#5b6572}
+[data-theme="light"] header{background:rgba(255,255,255,.92)}
+[data-theme="light"] input{background:#fff}
+[data-theme="light"] .code{color:#15803d;border-color:rgba(21,128,61,.5)}
+.theme-btn{padding:7px 14px;font-size:12px;margin:0}
+.head-right{display:flex;gap:10px;align-items:center}
 </style>
 </head>
 <body>
-<header><div class="brand">Минутка · Админка<small>ЖК Солнечный</small></div><a href="/">← к приложению</a></header>
+<header><div class="brand">Минутка · Админка<small>ЖК Солнечный</small></div><div class="head-right"><button class="ghost theme-btn" id="themeBtn" onclick="cycleTheme()">Тема</button><a href="/">← к приложению</a></div></header>
 <div class="wrap">
 <div class="card"><h3>Вход</h3>Телефон <input id="phone" value="+70000000000"> Пароль <input id="pass" type="password" value="admin123">
 <button onclick="login()">Войти как админ</button></div>
@@ -72,6 +78,25 @@ async function refresh() {
   } catch (e) { stRev.textContent = '—'; stAct.textContent = '—'; stats.textContent = 'войдите как админ'; }
 }
 async function setStatus(id, status) { await api(`/api/admin/cars/${id}`, { method: 'POST', body: JSON.stringify({ status }) }); refresh(); }
+const THEME_RU = { dark:'Тёмная', light:'Светлая', auto:'Авто' };
+function currentTheme() {
+  const t = localStorage.getItem('minutka-theme') || 'auto';
+  if (t !== 'auto') return t;
+  const h = new Date().getHours();
+  return (h >= 7 && h < 19) ? 'light' : 'dark';
+}
+function applyTheme() {
+  const t = localStorage.getItem('minutka-theme') || 'auto';
+  document.documentElement.dataset.theme = currentTheme();
+  themeBtn.textContent = 'Тема: ' + THEME_RU[t];
+}
+function cycleTheme() {
+  const t = localStorage.getItem('minutka-theme') || 'auto';
+  localStorage.setItem('minutka-theme', t === 'dark' ? 'light' : t === 'light' ? 'auto' : 'dark');
+  applyTheme();
+}
+applyTheme();
+setInterval(applyTheme, 60000);
 refresh();
 </script>
 </body>
