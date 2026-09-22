@@ -1,3 +1,8 @@
 .sync.log
 *~
+node_modules/
+data.db
+data.db-journal
+*.log
+>>>>>>> origin/feat/phpAtom1c-part
 .DS_Store

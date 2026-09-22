@@ -2,7 +2,7 @@
 # auto-sync: забрать всё смерженное в main (и обновить feat-ветки) без потери локальной работы.
 # Только fast-forward, только при чистом дереве для текущей ветки. Крон дергает каждые 3 мин.
 set -u
-REPO="${1:-/home/deb/Projects/ideaton}"
+REPO="${1:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO" || exit 0
 unset GITHUB_TOKEN GH_TOKEN
 git fetch origin --prune 2>&1 | head -5
