@@ -66,6 +66,9 @@ try:
     admin = Sess()
     st, _ = admin.api('/api/login', {'phone': '+70000000000', 'password': 'admin123'})
     assert st == 200, 'admin login failed'
+    st, zdata = admin.api('/api/cars')
+    check('Z1 Surgut bbox', all(61.2 < c['lat'] < 61.3 and 73.3 < c['lng'] < 73.5 for c in zdata['cars']))
+    check('Z2 plates 86', all(c['plate'].endswith('86') for c in zdata['cars']))
 
     for i in range(N):
         u = Sess()
@@ -143,6 +146,14 @@ try:
         check(f'I{i} status finished', bb['status'] == 'finished')
         st, _ = u.api(f'/api/bookings/{bid}/finish', {})
         check(f'I{i} double finish -> 400', st == 400)
+
+        if i % 10 == 9:
+            st, _ = u.api('/api/logout', {})
+            check(f'I{i} logout ok', st == 200)
+            st, _ = u.api('/api/me')
+            check(f'I{i} me after logout -> 401', st == 401)
+            st, _ = u.api('/api/login', {'phone': f'+7911000{2000 + i}', 'password': 'pw123456'})
+            check(f'I{i} relogin ok', st == 200)
 
         if (i + 1) % 20 == 0:
             print(f'  ...{i + 1}/{N} done (fails={failed})', flush=True)
