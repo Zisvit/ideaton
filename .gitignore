@@ -4,5 +4,8 @@ node_modules/
 data.db
 data.db-journal
 *.log
->>>>>>> origin/feat/phpAtom1c-part
 .DS_Store
+# локальные worktree-папки координатора (не коммитить)
+/mine/
+/friend/
+/merge/
