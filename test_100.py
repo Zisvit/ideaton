@@ -165,7 +165,7 @@ try:
     st, s = admin.api('/api/admin/stats')
     check('ADMIN stats ok', st == 200 and s['revenue'] > 0, str(s))
     st, b = admin.api('/api/admin/bookings')
-    check('ADMIN bookings list', st == 200 and len(b['bookings']) >= N)
+    check('ADMIN bookings list (limit 50)', st == 200 and len(b['bookings']) == 50, f"len={len(b.get('bookings', []))}")
 
     print(f'\nRESULT: iterations={N} pass={passed} fail={failed}', flush=True)
     if failed == 0:
