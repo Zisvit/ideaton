@@ -68,6 +68,9 @@ small{color:var(--muted)} a{color:var(--blue);text-decoration:none}
 .hist-row:last-child{border-bottom:0}
 .hist-row .sum{font-weight:800;white-space:nowrap}
 .empty{color:var(--muted);font-size:13px;padding:6px 2px}
+.dim{opacity:.62}
+.live{font-size:13px;font-weight:800;color:#4ade80}
+[data-theme="light"] .live{color:#15803d}
 @media(max-width:560px){
   .wrap{padding:10px 10px 32px}
   #map{height:32vh;min-height:220px}
@@ -109,6 +112,7 @@ small{color:var(--muted)} a{color:var(--blue);text-decoration:none}
 
   <div class="card" id="auth">
     <h3>Вход / Регистрация</h3>
+    <input id="regname" placeholder="Имя (только для регистрации)">
     <div class="row"><div><input id="phone" placeholder="+79990001122" value="+79990001122"></div>
     <div><input id="pass" type="password" placeholder="пароль" value="demo123"></div></div>
     <button onclick="login()">Войти</button>
@@ -156,7 +160,7 @@ async function login() {
 }
 async function register() {
   try {
-    const j = await api('/api/register', { method: 'POST', body: JSON.stringify({ phone: phone.value, name: 'Гость', password: pass.value }) });
+    const j = await api('/api/register', { method: 'POST', body: JSON.stringify({ phone: phone.value, name: regname.value || 'Гость', password: pass.value }) });
     refresh();
   } catch (e) { alert(e.message); }
 }
@@ -171,10 +175,11 @@ async function refresh() {
     markers.forEach(m => m.remove()); markers = [];
     carsEl = document.getElementById('cars'); carsEl.innerHTML = '';
     if (!cars.length) carsEl.innerHTML = '<div class="empty">Авто пока нет</div>';
+    const MCOL = { free:'#22c55e', hold:'#f59e0b', rent:'#f59e0b', service:'#ef4444' };
     cars.forEach(c => {
-      const m = L.marker([c.lat, c.lng]).addTo(map).bindPopup(`${c.model} · ${c.plate} · ${ru(c.status)}`);
+      const m = L.circleMarker([c.lat, c.lng], { radius: 10, color: MCOL[c.status] || '#555', weight: 3, fillColor: MCOL[c.status] || '#555', fillOpacity: .35 }).addTo(map).bindPopup(`${c.model} · ${c.plate} · ${ru(c.status)}`);
       markers.push(m);
-      const d = document.createElement('div'); d.className = 'card car-card';
+      const d = document.createElement('div'); d.className = 'card car-card' + (c.status === 'free' ? '' : ' dim');
       d.innerHTML = `<div class="car-top"><div><b>${c.model}</b><br><span class="plate">${c.plate}</span></div>` +
         `<span class="status"><span class="dot ${c.status}"></span>${ru(c.status)}</span></div>` +
         `<div class="fuel"><i style="width:${c.fuel}%"></i></div>` +
@@ -189,11 +194,12 @@ async function refresh() {
     const a = await api('/api/my-active');
     const box = document.getElementById('active');
     box.innerHTML = '';
-    if (!a.booking) { box.innerHTML = '<div class="empty">Нет активной аренды — выбери авто ниже</div>'; }
+    if (!a.booking) { box.innerHTML = '<div class="empty">Нет активной аренды — выбери авто ниже</div>'; window._live = null; }
     else {
       const b = a.booking;
-      box.innerHTML = `<span class="st">${ru(b.status)}</span> <span class="meta">авто #${b.car_id} · драйв ${Math.floor(b.drive_sec / 60)} мин · пауза ${Math.floor(b.pause_sec / 60)} мин</span><br>` +
-      `<small>Бронь держится до ${new Date(b.hold_until * 1000).toLocaleTimeString()}</small><br>` +
+      box.innerHTML = `<span class="st">${ru(b.status)}</span> <span class="meta">${b.model} · ${b.plate}</span> <span class="live" id="liveCost"></span><br>` +
+      `<span class="meta" id="liveTime"></span><br>` +
+      `<small>Бронь держится до ${new Date(b.hold_until * 1000).toLocaleTimeString()} (<span id="holdLeft"></span>)</small><br>` +
       `<input id="code" placeholder="Код из авто (подскажет админка)" style="max-width:240px">` +
       `<div><button onclick="act('start')">Старт по коду</button>` +
       `<button class="ghost" onclick="act('pause')">Пауза</button>` +
@@ -201,6 +207,8 @@ async function refresh() {
       `<button class="danger" onclick="act('finish')">Завершить</button>` +
       `<button class="ghost" onclick="act('cancel')">Отменить</button></div>`;
       box.dataset.id = b.id;
+      window._live = { drive: b.drive_sec, pause: b.pause_sec, ts: Date.now(), status: b.status, td: b.tariff_drive, tp: b.tariff_pause, hold: b.hold_until };
+      tickLive();
     }
     const h = await api('/api/history');
     hist.innerHTML = h.history.map(x => `<div class="hist-row"><span>#${x.id} · ${x.model} · ${x.plate} · ${ru(x.status)}</span><span class="sum">${x.total_rub}₽</span></div>`).join('') || '<div class="empty">Поездок пока нет</div>';
@@ -220,6 +228,21 @@ async function act(op) {
   } catch (e) { alert(e.message); }
 }
 setInterval(() => { refresh(); }, 15000);
+function tickLive() {
+  const L = window._live;
+  const costEl = document.getElementById('liveCost'), timeEl = document.getElementById('liveTime'), holdEl = document.getElementById('holdLeft');
+  if (!L || !costEl) return;
+  let d = L.drive, p = L.pause;
+  if (L.status === 'active') d += Math.floor((Date.now() - L.ts) / 1000);
+  else if (L.status === 'paused') p += Math.floor((Date.now() - L.ts) / 1000);
+  costEl.textContent = '≈ ' + (Math.ceil(d / 60) * L.td + Math.ceil(p / 60) * L.tp) + '₽';
+  if (timeEl) timeEl.textContent = `драйв ${Math.floor(d / 60)} мин ${d % 60} с · пауза ${Math.floor(p / 60)} мин ${p % 60} с`;
+  if (holdEl) {
+    const s = Math.max(0, L.hold - Math.floor(Date.now() / 1000));
+    holdEl.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+}
+setInterval(tickLive, 1000);
 const THEME_RU = { dark:'Тёмная', light:'Светлая', auto:'Авто' };
 function currentTheme() {
   const t = localStorage.getItem('minutka-theme') || 'auto';

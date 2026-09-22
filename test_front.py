@@ -54,6 +54,9 @@ try:
     check('F10 logout button', 'onclick="logout()"' in index)
     check('F11 no Bearer tokens', 'Bearer' not in index)
     check('F12 responsive css', '@media(min-width:920px)' in index and '@media(max-width:560px)' in index)
+    check('F12b live ticker', 'liveCost' in index and 'tickLive' in index)
+    check('F12c colored markers', 'circleMarker' in index)
+    check('F12d regname field', 'id="regname"' in index)
 
     st, admin, _ = get('/admin.html')
     check('F13 admin 200', st == 200)
