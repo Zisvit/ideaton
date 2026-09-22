@@ -64,3 +64,23 @@ git branch -d feat/короткое-название
 
 Если `gh` отвечает 401 Bad credentials — проверить зависший токен в окружении:
 `unset GITHUB_TOKEN GH_TOKEN`, затем повторить `gh auth login`.
+
+## Диагностика 403 (вывод прислать без токенов)
+
+```bash
+unset GITHUB_TOKEN GH_TOKEN 2>/dev/null; gh auth status 2>&1
+echo "=== user ==="; gh api user --jq '{login}' 2>&1
+echo "=== remote ==="; git remote -v
+echo "=== push dry ==="; git push --dry-run origin HEAD 2>&1 | head -10
+```
+
+Три частые причины:
+
+1. `Failed to log in ... using token (GITHUB_TOKEN)` — в окружении висит битый
+   GITHUB_TOKEN-плейсхолдер и перекрывает нормальный логин. Фикс в том же терминале:
+   `unset GITHUB_TOKEN GH_TOKEN && gh auth login -p https -w && gh auth setup-git`.
+2. 403 на push при пустом `gh auth status` — в `gh` вообще нет логина, git ходит
+   анонимно. Фикс: логин + `gh auth setup-git`, дальше git пойдет через `gh`.
+3. 403 только на push, clone/pull ок — не принят invite или пуш под чужим логином
+   (`gh api user` покажет чужой). Проверить `login == phpAtom1c` и Accept по ссылке
+   https://github.com/Zisvit/ideaton/invitations.
