@@ -1,14 +1,15 @@
 # Минутка — MVP поминутной аренды для локальной зоны
 
-SaaS-прототип: пользовательское веб-приложение + админка + API с биллингом.
+Бэкенд на Python: Flask 3 + Flask-Login (сессии в куках) + SQLite.
+Зависимостей всего две (requirements.txt), фронтенд без сборки.
 
 ## Запуск
 ```
-export PATH="$HOME/.local/share/node/bin:$PATH"
-npm install
-npm start
+python3 -m venv ~/.venvs/minutka
+~/.venvs/minutka/bin/pip install -r requirements.txt
+~/.venvs/minutka/bin/python app.py
 ```
-Открой http://localhost:3000
+Открой http://localhost:3000. Переменные окружения: `PORT`, `SECRET`, `DB_PATH`.
 
 ## Демо-доступ
 - Пользователь: `+79990001122` / `demo123` (баланс 1000₽)
@@ -20,6 +21,15 @@ npm start
 3. В приложении введи код → Старт. Тариф 12₽/мин, пауза 3₽/мин.
 4. Пауза → Продолжить → Завершить. Сумма спишется с баланса.
 5. Пополнение — кнопка +500₽ (mock вместо ЮKassa).
+6. Кнопка «Тема» в шапке: тёмная / светлая / авто по времени (7:00–19:00).
+
+## Тесты
+```
+python3 test_e2e.py     # один полный цикл аренды
+python3 test_stress.py  # 22 краевые проверки + 50 циклов + конкуренция
+```
+Тесты поднимают свой сервер на отдельных портах и базах (`/tmp/*.db`),
+боевой сервер не трогают.
 
 ## API
 - POST /api/register, POST /api/login, GET /api/me, POST /api/topup

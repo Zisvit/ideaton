@@ -78,7 +78,7 @@ small{color:var(--muted)} a{color:var(--blue);text-decoration:none}
 <body>
 <header>
   <div class="brand"><span class="logo">M</span><span>Минутка<small>ЖК Солнечный · поминутно</small></span></div>
-  <div class="head-right"><span id="user">—</span><button class="ghost theme-btn" id="themeBtn" onclick="cycleTheme()">Тема</button></div>
+  <div class="head-right"><span id="user">—</span><button class="ghost theme-btn" onclick="logout()">Выйти</button><button class="ghost theme-btn" id="themeBtn" onclick="cycleTheme()">Тема</button></div>
 </header>
 <div class="wrap">
   <div class="map-card"><div id="map"></div></div>
@@ -108,10 +108,9 @@ small{color:var(--muted)} a{color:var(--blue);text-decoration:none}
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let token = localStorage.getItem('t') || '';
+const H = () => ({ 'Content-Type': 'application/json' });
 const RU = { free:'Свободна', hold:'Бронь', rent:'Аренда', service:'Сервис', active:'Поездка', paused:'Пауза', finished:'Завершена', cancelled:'Отменена' };
 const ru = s => RU[s] || s;
-const H = () => ({ 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) });
 const map = L.map('map').setView([55.7887, 49.1221], 15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 L.circle([55.7887, 49.1221], { radius: 900, color: '#22c55e' }).addTo(map).bindPopup('Зона: ЖК Солнечный');
@@ -125,16 +124,17 @@ async function api(p, o = {}) {
 async function login() {
   try {
     const j = await api('/api/login', { method: 'POST', body: JSON.stringify({ phone: phone.value, password: pass.value }) });
-    token = j.token; localStorage.setItem('t', token); refresh();
+    refresh();
   } catch (e) { alert(e.message); }
 }
 async function register() {
   try {
     const j = await api('/api/register', { method: 'POST', body: JSON.stringify({ phone: phone.value, name: 'Гость', password: pass.value }) });
-    token = j.token; localStorage.setItem('t', token); refresh();
+    refresh();
   } catch (e) { alert(e.message); }
 }
 async function topup() { await api('/api/topup', { method: 'POST', body: JSON.stringify({ amount: 500 }) }); refresh(); }
+async function logout() { try { await api('/api/logout', { method: 'POST' }); } catch (e) {} location.reload(); }
 async function refresh() {
   try {
     const me = await api('/api/me');
@@ -192,7 +192,7 @@ async function act(op) {
     refresh();
   } catch (e) { alert(e.message); }
 }
-setInterval(() => { if (token) refresh(); }, 15000);
+setInterval(() => { refresh(); }, 15000);
 const THEME_RU = { dark:'Тёмная', light:'Светлая', auto:'Авто' };
 function currentTheme() {
   const t = localStorage.getItem('minutka-theme') || 'auto';
