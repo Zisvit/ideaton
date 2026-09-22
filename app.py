@@ -96,11 +96,11 @@ CREATE TABLE IF NOT EXISTS transactions(
                     ' VALUES(?,?,?,?,?,?,?)',
                     ('+79990001122', 'Демо', sha256('demo123'), 1000, 0, 1, t))
         for model, plate, lat, lng in [
-            ('Lada Granta', 'А111АА116', 55.7887, 49.1221),
-            ('Kia Rio', 'В222ВВ116', 55.7895, 49.1240),
-            ('Hyundai Solaris', 'С333СС116', 55.7875, 49.1205),
-            ('Chery Tiggo', 'Е444ЕЕ116', 55.7900, 49.1210),
-            ('Moskvich 3e (электро)', 'К555КК116', 55.7880, 49.1255),
+            ('Lada Granta', 'А111АА86', 61.2500, 73.3960),
+            ('Kia Rio', 'В222ВВ86', 61.2512, 73.3985),
+            ('Hyundai Solaris', 'С333СС86', 61.2488, 73.3945),
+            ('Chery Tiggo', 'Е444ЕЕ86', 61.2520, 73.3950),
+            ('Moskvich 3e (электро)', 'К555КК86', 61.2495, 73.3990),
         ]:
             _db.execute('INSERT INTO cars(model,plate,lat,lng,status,fuel,tariff_drive,tariff_pause,code_current)'
                         ' VALUES(?,?,?,?,?,?,?,?,?)',
