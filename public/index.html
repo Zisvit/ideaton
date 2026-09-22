@@ -62,12 +62,23 @@ small{color:var(--muted)} a{color:var(--blue);text-decoration:none}
 .hist-row .sum{font-weight:800;white-space:nowrap}
 .empty{color:var(--muted);font-size:13px;padding:6px 2px}
 @media(max-width:560px){ .wrap{padding:10px 10px 32px} #map{height:34vh} }
+[data-theme="light"]{--bg:#eef1f6;--panel:#ffffff;--panel2:#e7ecf3;--line:#d5dce7;--text:#141a24;--muted:#5b6572}
+[data-theme="light"] header{background:rgba(255,255,255,.92)}
+[data-theme="light"] input{background:#fff}
+[data-theme="light"] .plate{background:#eef1f6}
+[data-theme="light"] .fuel{background:#dde3ec}
+[data-theme="light"] .pill{color:#15803d;border-color:rgba(21,128,61,.4);background:rgba(34,197,94,.1)}
+[data-theme="light"] .tariff{color:#15803d}
+[data-theme="light"] #active{border-color:rgba(21,128,61,.4)}
+[data-theme="light"] #active .st{color:#15803d;background:rgba(34,197,94,.12)}
+.theme-btn{padding:7px 14px;font-size:12px;margin:0}
+.head-right{display:flex;gap:8px;align-items:center}
 </style>
 </head>
 <body>
 <header>
   <div class="brand"><span class="logo">M</span><span>Минутка<small>ЖК Солнечный · поминутно</small></span></div>
-  <span id="user">—</span>
+  <div class="head-right"><span id="user">—</span><button class="ghost theme-btn" id="themeBtn" onclick="cycleTheme()">Тема</button></div>
 </header>
 <div class="wrap">
   <div class="map-card"><div id="map"></div></div>
@@ -182,6 +193,25 @@ async function act(op) {
   } catch (e) { alert(e.message); }
 }
 setInterval(() => { if (token) refresh(); }, 15000);
+const THEME_RU = { dark:'Тёмная', light:'Светлая', auto:'Авто' };
+function currentTheme() {
+  const t = localStorage.getItem('minutka-theme') || 'auto';
+  if (t !== 'auto') return t;
+  const h = new Date().getHours();
+  return (h >= 7 && h < 19) ? 'light' : 'dark';
+}
+function applyTheme() {
+  const t = localStorage.getItem('minutka-theme') || 'auto';
+  document.documentElement.dataset.theme = currentTheme();
+  themeBtn.textContent = 'Тема: ' + THEME_RU[t];
+}
+function cycleTheme() {
+  const t = localStorage.getItem('minutka-theme') || 'auto';
+  localStorage.setItem('minutka-theme', t === 'dark' ? 'light' : t === 'light' ? 'auto' : 'dark');
+  applyTheme();
+}
+applyTheme();
+setInterval(applyTheme, 60000);
 refresh();
 </script>
 </body>
