@@ -1,11 +1,28 @@
-.sync.log
-*~
+# --- проект: Minutka (node + sqlite) ---
 node_modules/
 data.db
 data.db-journal
+data.db-shm
+data.db-wal
+*.sqlite
+*.sqlite3
 *.log
+npm-debug.log*
+coverage/
+dist/
+build/
+.env
+.env.local
+# --- ОС и редакторы ---
 .DS_Store
-# локальные worktree-папки координатора (не коммитить)
+Thumbs.db
+*~
+*.swp
+.vscode/
+.idea/
+# --- служебное ---
+.sync.log
+# --- локальные worktree-папки координатора (не коммитить) ---
 /mine/
 /friend/
 /merge/
