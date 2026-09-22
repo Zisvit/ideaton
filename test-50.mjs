@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 const PORT = 3131;
 const BASE = `http://localhost:${PORT}`;
 const srv = spawn(process.execPath, ['server.js'], {
-  env: { ...process.env, PORT: String(PORT) },
+  env: { ...process.env, PORT: String(PORT), DB_PATH: '/tmp/minutka-test50.db' },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 let srvLog = '';
