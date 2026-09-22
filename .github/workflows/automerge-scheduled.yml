@@ -26,11 +26,18 @@ jobs:
           set -u
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin
+          FETCH_OK=0
+          for i in 1 2 3; do
+            if git fetch origin; then FETCH_OK=1; break; fi
+            echo "::warning::fetch attempt $i failed, retry in 10s"
+            sleep 10
+          done
+          if [ "$FETCH_OK" != "1" ]; then echo "::error::fetch failed 3x, abort"; exit 1; fi
+          git checkout -B main origin/main
           FAILED=0
           for ref in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/feat/); do
             br="${ref#origin/}"
-            if [ -z "$(git diff "main...$ref")" ]; then
+            if [ -z "$(git diff "origin/main...$ref")" ]; then
               echo "skip $br: nothing new"
               continue
             fi

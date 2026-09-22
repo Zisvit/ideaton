@@ -27,12 +27,20 @@ jobs:
           set -u
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin
-          # петля-стоп: ветка не добавляет ничего нового поверх main — выходим без пустого мерж-коммита
-          if [ -z "$(git diff "main...origin/$BRANCH")" ]; then
+          # fetch с ретраями: сеть флапает, со stale-refs мержить нельзя
+          FETCH_OK=0
+          for i in 1 2 3; do
+            if git fetch origin; then FETCH_OK=1; break; fi
+            echo "::warning::fetch attempt $i failed, retry in 10s"
+            sleep 10
+          done
+          if [ "$FETCH_OK" != "1" ]; then echo "::error::fetch failed 3x, abort"; exit 1; fi
+          # сравниваем со СВЕЖИМ origin/main, а не локальным main (петля-стоп + stale-защита)
+          if [ -z "$(git diff "origin/main...origin/$BRANCH")" ]; then
             echo "nothing new in $BRANCH, skip"
             exit 0
           fi
+          git checkout -B main origin/main
           if git merge --no-ff "origin/$BRANCH" -m "auto-merge $BRANCH"; then
             git push origin main
           else
