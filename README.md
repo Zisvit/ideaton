@@ -1,11 +1,13 @@
 # Минутка — MVP поминутной аренды для локальной зоны
 
-Бэкенд на Python (только стандартная библиотека, без зависимостей):
-пользовательское веб-приложение + админка + API с биллингом.
+Бэкенд на Python: Flask 3 + Flask-Login (сессии в куках) + SQLite.
+Зависимостей всего две (requirements.txt), фронтенд без сборки.
 
 ## Запуск
 ```
-python3 app.py
+python3 -m venv ~/.venvs/minutka
+~/.venvs/minutka/bin/pip install -r requirements.txt
+~/.venvs/minutka/bin/python app.py
 ```
 Открой http://localhost:3000. Переменные окружения: `PORT`, `SECRET`, `DB_PATH`.
 
