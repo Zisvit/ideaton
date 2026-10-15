@@ -1,0 +1,183 @@
+name: CI
+
+# Гейт для Карьерного трекера. Все проверки толерантны к отсутствию файлов:
+# на origin/main пока нет ни services/api, ни tests, ни data/roles, ни apps/web.
+#
+# ВАЖНО (известная дыра, не закрывается этим файлом):
+#   automerge-*.yml пушат в main через GITHUB_TOKEN, а push с GITHUB_TOKEN
+#   НЕ порождает новых workflow-запусков. Значит этот CI на main для
+#   авто-мержей бота — пост-фактум, а не блокирующий гейт.
+#   Настоящее закрытие: branch protection на main (required status checks)
+#   и/или вызов этих проверок ИЗНУТРИ automerge ДО git push (repo settings).
+on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # --- 1. Синтаксис Python: services/api и tests (если есть) ---
+      - name: Compileall (services/api, tests)
+        run: |
+          set -u
+          PY="$(command -v python || command -v python3)" || { echo "::error::python не найден"; exit 1; }
+          # rc аккумулируем и выходим с ним ЯВНО: иначе финальный `if` в конце
+          # скрипта возвращает 0 и падение compileall маскируется.
+          rc=0
+          found=0
+          for d in services/api tests; do
+            if [ -d "$d" ]; then
+              echo "compileall: $d"
+              if ! "$PY" -m compileall -q "$d"; then
+                echo "::error::$d: ошибка компиляции Python"
+                rc=1
+              fi
+              found=1
+            else
+              echo "skip: $d отсутствует"
+            fi
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "нет python-каталогов — нечего компилировать"
+          fi
+          exit "$rc"
+
+      # --- 2. Валидация YAML ролей в data/roles (если каталог есть) ---
+      - name: Validate data/roles YAML
+        run: |
+          set -u
+          if [ ! -d data/roles ]; then
+            echo "skip: data/roles отсутствует"
+            exit 0
+          fi
+          PY="$(command -v python || command -v python3)" || { echo "::error::python не найден"; exit 1; }
+          "$PY" -m pip install --quiet --disable-pip-version-check pyyaml
+          "$PY" - <<'PY'
+          import glob
+          import sys
+          import yaml
+
+          files = sorted(glob.glob("data/roles/**/*.y*ml", recursive=True))
+          if not files:
+              print("в data/roles нет YAML — пропуск")
+              sys.exit(0)
+
+          bad = []
+          for path in files:
+              try:
+                  with open(path, encoding="utf-8") as fh:
+                      doc = yaml.safe_load(fh)
+                  if doc is None:
+                      bad.append((path, "пустой документ"))
+                  else:
+                      print(f"ok {path}")
+              except Exception as exc:  # noqa: BLE001
+                  bad.append((path, str(exc)))
+
+          for path, err in bad:
+              print(f"::error file={path}::невалидный YAML: {err}")
+          sys.exit(1 if bad else 0)
+          PY
+
+      # --- 3. Контрактные тесты (если есть) ---
+      - name: Contract check (tests/contract_check.py)
+        run: |
+          set -u
+          if [ -f tests/contract_check.py ]; then
+            PY="$(command -v python || command -v python3)" || { echo "::error::python не найден"; exit 1; }
+            "$PY" tests/contract_check.py
+          else
+            echo "skip: tests/contract_check.py отсутствует"
+          fi
+
+      # --- 4. Запреты: токены и ключ LLM во фронте. РАБОТАЕТ ВСЕГДА. ---
+      # Паттерны намеренно узкие (sk- + 16+ символов), чтобы не ловить
+      # ложные срабатывания на словах вида "risk-", "task-", "disk-".
+      # Самотестирования нет: строки в этом файле ("sk-[A-Za-z0-9]{16,}") не
+      # матчатся, т.к. после sk-/ghp_ идёт "[", а не [A-Za-z0-9].
+      - name: Forbidden patterns (secrets, llm key in frontend)
+        run: |
+          set -u
+          fail=0
+
+          echo "== 4a. секреты в репозитории (ghp_/github_pat_/sk-/AKIA) =="
+          HITS="$(grep -rInE --binary-files=without-match \
+              --exclude-dir=.git \
+              --exclude-dir=node_modules \
+              --exclude-dir=dist \
+              --exclude-dir=build \
+              -e 'ghp_[A-Za-z0-9]{20,}' \
+              -e 'github_pat_[A-Za-z0-9_]{20,}' \
+              -e 'sk-[A-Za-z0-9]{16,}' \
+              -e 'AKIA[0-9A-Z]{16}' \
+              -- . || true)"
+          if [ -n "$HITS" ]; then
+            echo "$HITS"
+            echo "::error::Найден секрет/токен в репозитории. Ключи — только в env/secrets, не в коде."
+            fail=1
+          else
+            echo "ok: паттернов токенов не найдено"
+          fi
+
+          echo "== 4b. ключ LLM во фронтенде (apps/web) =="
+          if [ -d apps/web ]; then
+            FHITS="$(grep -rInE --binary-files=without-match \
+                --exclude-dir=node_modules \
+                --exclude-dir=.next \
+                --exclude-dir=dist \
+                --exclude-dir=build \
+                -e 'LLM_API_KEY' \
+                -e 'OPENAI_API_KEY' \
+                -e 'ANTHROPIC_API_KEY' \
+                -e 'sk-[A-Za-z0-9]{16,}' \
+                -- apps/web || true)"
+            if [ -n "$FHITS" ]; then
+              echo "$FHITS"
+              echo "::error::Во фронтенде apps/web обнаружен ключ LLM. Фронт ходит только через API_URL."
+              fail=1
+            else
+              echo "ok: в apps/web ключей LLM нет"
+            fi
+          else
+            echo "skip: apps/web отсутствует"
+          fi
+
+          exit "$fail"
+
+      # --- 5. Сборка фронта (если apps/web/package.json есть) ---
+      - uses: actions/setup-node@v4
+        if: ${{ hashFiles('apps/web/package.json') != '' }}
+        with:
+          node-version: '22'
+
+      - name: Frontend build (apps/web)
+        run: |
+          set -u
+          if [ ! -f apps/web/package.json ]; then
+            echo "skip: apps/web/package.json отсутствует"
+            exit 0
+          fi
+          cd apps/web
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+          npm run build --if-present
