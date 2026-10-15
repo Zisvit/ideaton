@@ -1,0 +1,55 @@
+# Карьерный трекер — локальный стенд: web (apps/web) + api (services/api).
+#
+# Запуск ИЗ КОРНЯ репозитория (тогда .env читается, а не ищется рядом с этим файлом):
+#   docker-compose --env-file .env -f infra/docker-compose.yml up --build
+#
+# Сервисы без profiles => default profile, поднимаются оба сразу.
+# Все параметры — только через окружение (см. .env.example), в файле нет секретов.
+name: ideaton
+
+services:
+  api:
+    build:
+      context: ../services/api
+    image: ideaton-api:local
+    # .env опционален: на чистом клоне его нет, стенд всё равно валиден
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      PORT: ${PORT:-8000}
+      DB_PATH: ${DB_PATH:-/data/tracker.db}
+      LLM_ENABLED: ${LLM_ENABLED:-false}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    volumes:
+      - api-data:/data
+    healthcheck:
+      # читаем PORT из окружения контейнера в рантайме -> без подстановки compose
+      test: ["CMD-SHELL", "python -c \"import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('PORT','8000')+'/health')\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../apps/web
+    image: ideaton-web:local
+    # LLM_API_KEY сюда НЕ пробрасывается осознанно: фронт ходит только через API_URL.
+    # За это следит проверка 4b в .github/workflows/ci.yml.
+    environment:
+      PORT: 3000
+      API_URL: ${API_URL:-http://api:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      # service_started, а не service_healthy: web не должен ждать /health API
+      - api
+    restart: unless-stopped
+
+volumes:
+  api-data:
