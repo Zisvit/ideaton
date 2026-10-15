@@ -1,0 +1,23 @@
+skills:
+  html: {name: HTML, synonyms: [html, разметка]}
+  css: {name: CSS, synonyms: [css, стили]}
+  javascript: {name: JavaScript, synonyms: [javascript, js]}
+  typescript: {name: TypeScript, synonyms: [typescript, ts]}
+  react: {name: React, synonyms: [react, reactjs]}
+  nodejs: {name: Node.js, synonyms: [nodejs, node]}
+  sql: {name: SQL, synonyms: [sql, запросы]}
+  accounting: {name: Бухучёт, synonyms: [accounting, бухгалтерия]}
+  bpmn: {name: BPMN, synonyms: [bpmn, бизнес-процессы]}
+  manual_testing: {name: Ручное тестирование, synonyms: [manual testing, ручное тестирование]}
+  test_design: {name: Тест-дизайн, synonyms: [test design, тест-дизайн]}
+  automation: {name: Автотесты, synonyms: [automation, автотесты, selenium, playwright]}
+  python: {name: Python, synonyms: [python, питон]}
+  communication: {name: Коммуникация, synonyms: [communication, общение]}
+  troubleshooting: {name: Диагностика, synonyms: [troubleshooting, диагностика]}
+  crm: {name: CRM, synonyms: [crm]}
+  product_management: {name: Продакт, synonyms: [product management, продакт]}
+  marketing: {name: Маркетинг, synonyms: [marketing, маркетинг]}
+  finance: {name: Финансы, synonyms: [finance, финансы]}
+  team_management: {name: Управление командой, synonyms: [team management, тимлид]}
+  analytics: {name: Аналитика, synonyms: [analytics, аналитика]}
+  "1c": {name: '1С', synonyms: ['1с', '1c', '1с:предприятие']}

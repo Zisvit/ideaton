@@ -1,0 +1,18 @@
+id: startup
+title: Стартап / Продакт
+description: Запускает технологические стартапы, ищет продуктово-рыночное соответствие.
+skills_required:
+  - {id: product_management, weight: 0.9}
+  - {id: marketing, weight: 0.7}
+  - {id: finance, weight: 0.5}
+  - {id: team_management, weight: 0.6}
+  - {id: analytics, weight: 0.6}
+related_specialties: [founder, product-manager]
+development_steps:
+  - Сформулировать гипотезу продукта
+  - Провести проблемные интервью
+  - Создать MVP
+  - Настроить аналитику
+partner_companies: [ФРИИ, Сколково]
+resources:
+  - {title: Y Combinator Startup School, url: https://www.startupschool.org, minutes: 240}

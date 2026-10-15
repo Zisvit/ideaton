@@ -1,0 +1,22 @@
+id: web
+title: Веб-разработчик
+description: Создаёт сайты и веб-приложения на HTML, CSS и JavaScript.
+skills_required:
+  - {id: html, weight: 0.9}
+  - {id: css, weight: 0.9}
+  - {id: javascript, weight: 1.0}
+  - {id: typescript, weight: 0.7}
+  - {id: react, weight: 0.6}
+  - {id: nodejs, weight: 0.5}
+related_specialties: [frontend, backend, fullstack]
+development_steps:
+  - Изучить основы HTML и CSS, сверстать первую страницу
+  - Освоить JavaScript на уровне DOM и асинхронности
+  - Познакомиться с React
+  - Научиться работать с API и fetch-запросами
+  - 'Собрать проект: фронтенд + бэкенд + база данных'
+partner_companies: [Яндекс, Т-Банк, VK, Сбер, Ozon]
+resources:
+  - {title: MDN Web Docs, url: https://developer.mozilla.org, minutes: 60}
+  - {title: JavaScript.info, url: https://javascript.info, minutes: 120}
+  - {title: React Docs, url: https://react.dev, minutes: 90}

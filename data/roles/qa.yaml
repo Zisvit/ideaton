@@ -1,0 +1,18 @@
+id: qa
+title: Тестировщик
+description: 'Проверяет качество ПО: тест-кейсы, автотесты, дефекты до релиза.'
+skills_required:
+  - {id: manual_testing, weight: 0.9}
+  - {id: test_design, weight: 0.8}
+  - {id: sql, weight: 0.5}
+  - {id: automation, weight: 0.6}
+  - {id: python, weight: 0.5}
+related_specialties: [manual-qa, auto-qa]
+development_steps:
+  - Познакомиться с основами тестирования
+  - Научиться писать тест-кейсы и чек-листы
+  - Освоить баг-трекинг (Jira, YouTrack)
+  - Изучить автоматизацию на Python + pytest
+partner_companies: [Яндекс, Сбер, VK, Kaspersky]
+resources:
+  - {title: Основы тестирования ПО, url: https://testengineer.ru, minutes: 90}

@@ -1,0 +1,17 @@
+id: 1c
+title: Разработчик 1С
+description: Автоматизирует учёт и управление бизнесом на платформе 1С:Предприятие.
+skills_required:
+  - {id: "1c", weight: 1.0}
+  - {id: sql, weight: 0.5}
+  - {id: accounting, weight: 0.6}
+  - {id: bpmn, weight: 0.4}
+related_specialties: [1c-developer, erp]
+development_steps:
+  - Установить 1С:Предприятие и познакомиться с конфигурациями
+  - Изучить встроенный язык 1С
+  - Освоить язык запросов 1С и SQL
+  - Написать собственный отчёт и обработку
+partner_companies: ['1С', СКБ Контур]
+resources:
+  - {title: '1С:Предприятие — руководство разработчика', url: https://its.1c.ru, minutes: 120}
