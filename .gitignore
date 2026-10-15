@@ -1,18 +1,13 @@
-<<<<<<< HEAD
-data.db
-data.db-journal
-__pycache__/
-*.pyc
-=======
-# --- проект: Minutka (node + sqlite) ---
-node_modules/
+# --- проект: Minutka (python/flask + sqlite) ---
 data.db
 data.db-journal
 data.db-shm
 data.db-wal
 *.sqlite
 *.sqlite3
->>>>>>> origin/main
+__pycache__/
+*.pyc
+node_modules/
 *.log
 npm-debug.log*
 coverage/
@@ -22,8 +17,6 @@ build/
 .env.local
 # --- ОС и редакторы ---
 .DS_Store
-<<<<<<< HEAD
-=======
 Thumbs.db
 *~
 *.swp
@@ -35,4 +28,3 @@ Thumbs.db
 /mine/
 /friend/
 /merge/
->>>>>>> origin/main
