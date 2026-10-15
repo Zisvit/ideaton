@@ -113,6 +113,12 @@
             "description": "Тип ресурса",
             "enum": ["course", "article", "documentation", "video", "book"],
             "examples": ["course"]
+          },
+          "minutes": {
+            "type": "integer",
+            "description": "Оценка времени на ресурс, в минутах",
+            "minimum": 1,
+            "examples": [60]
           }
         }
       }
