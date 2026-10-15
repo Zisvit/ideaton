@@ -1,0 +1,17 @@
+id: support
+title: Специалист техподдержки
+description: Помогает пользователям решать проблемы, диагностирует сбои.
+skills_required:
+  - {id: communication, weight: 0.9}
+  - {id: troubleshooting, weight: 0.8}
+  - {id: sql, weight: 0.3}
+  - {id: crm, weight: 0.4}
+related_specialties: [support-engineer, customer-success]
+development_steps:
+  - Познакомиться с продуктом и базой знаний
+  - Освоить коммуникацию и работу с возражениями
+  - Научиться диагностировать типовые проблемы
+  - Освоить CRM-систему
+partner_companies: [Яндекс, МТС]
+resources:
+  - {title: Курс по техподдержке, url: https://atalent.ru, minutes: 60}

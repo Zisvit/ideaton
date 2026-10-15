@@ -1,0 +1,5 @@
+{"profiles": [
+  {"id": "anna", "skills": ["html", "css", "javascript"], "interests": ["веб"], "subjects": ["информатика"], "course": 3, "specialty": "Прикладная информатика"},
+  {"id": "ivan", "skills": ["1c", "sql"], "interests": ["учёт"], "subjects": ["экономика"], "course": 2, "specialty": "Экономика и бухучёт"},
+  {"id": "empty", "skills": [], "interests": [], "subjects": [], "course": 2, "specialty": ""}
+]}
