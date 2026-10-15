@@ -108,16 +108,18 @@ jobs:
           fi
 
       # --- 4. Запреты: токены и ключ LLM во фронте. РАБОТАЕТ ВСЕГДА. ---
-      # Паттерны намеренно узкие (sk- + 16+ символов), чтобы не ловить
-      # ложные срабатывания на словах вида "risk-", "task-", "disk-".
-      # Самотестирования нет: строки в этом файле ("sk-[A-Za-z0-9]{16,}") не
-      # матчатся, т.к. после sk-/ghp_ идёт "[", а не [A-Za-z0-9].
+      # Паттерны узкие, чтобы не ловить "risk-"/"task-"/"disk-", но покрывают
+      # реальные форматы ключей. ГОЛЫЙ 'sk-[A-Za-z0-9]{16,}' НЕ ДОСТАТОЧЕН:
+      # он пропускает sk-proj-... (OpenAI) и sk-ant-api03-... (Anthropic) —
+      # ровно те ключи, что нужны этому проекту, т.к. после "sk-" идёт дефис.
+      # Самотестирования нет: в самом файле после префикса идёт "[", а не
+      # символ из класса, поэтому свои же строки не матчатся.
       - name: Forbidden patterns (secrets, llm key in frontend)
         run: |
           set -u
           fail=0
 
-          echo "== 4a. секреты в репозитории (ghp_/github_pat_/sk-/AKIA) =="
+          echo "== 4a. секреты в репозитории (токены и приватные ключи) =="
           HITS="$(grep -rInE --binary-files=without-match \
               --exclude-dir=.git \
               --exclude-dir=node_modules \
@@ -125,8 +127,17 @@ jobs:
               --exclude-dir=build \
               -e 'ghp_[A-Za-z0-9]{20,}' \
               -e 'github_pat_[A-Za-z0-9_]{20,}' \
-              -e 'sk-[A-Za-z0-9]{16,}' \
+              -e 'glpat-[A-Za-z0-9_-]{20,}' \
+              -e 'sk-proj-[A-Za-z0-9_-]{20,}' \
+              -e 'sk-ant-[A-Za-z0-9_-]{20,}' \
+              -e 'sk-[A-Za-z0-9]{20,}' \
+              -e 'sk_live_[A-Za-z0-9]{20,}' \
               -e 'AKIA[0-9A-Z]{16}' \
+              -e 'AIza[0-9A-Za-z_-]{35}' \
+              -e 'xox[baprs]-[A-Za-z0-9-]{10,}' \
+              -e 'hf_[A-Za-z0-9]{30,}' \
+              -e 'npm_[A-Za-z0-9]{36}' \
+              -e '-----BEGIN [A-Z ]*PRIVATE KEY-----' \
               -- . || true)"
           if [ -n "$HITS" ]; then
             echo "$HITS"
@@ -146,7 +157,9 @@ jobs:
                 -e 'LLM_API_KEY' \
                 -e 'OPENAI_API_KEY' \
                 -e 'ANTHROPIC_API_KEY' \
-                -e 'sk-[A-Za-z0-9]{16,}' \
+                -e 'sk-proj-[A-Za-z0-9_-]{20,}' \
+                -e 'sk-ant-[A-Za-z0-9_-]{20,}' \
+                -e 'sk-[A-Za-z0-9]{20,}' \
                 -- apps/web || true)"
             if [ -n "$FHITS" ]; then
               echo "$FHITS"
