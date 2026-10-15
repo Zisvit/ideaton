@@ -1,0 +1,443 @@
+openapi: 3.0.3
+
+info:
+  title: Карьерный трекер — API контракты
+  description: >
+    API карьерного трекера для студентов. Студент описывает профиль
+    (навыки, интересы, предметы, курс, специальность), сервис возвращает
+    топ-5 карьерных траекторий с обоснованием, 30-дневный план по неделям
+    и чат-консультант для уточнений. Скоринг — rule-based, детерминированный.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Локальная разработка
+
+tags:
+  - name: recommend
+    description: Подбор карьерных траекторий
+  - name: plan
+    description: 30-дневный план развития
+  - name: chat
+    description: Чат-консультант по ролям и плану
+  - name: health
+    description: Проверка живости сервиса
+
+paths:
+  /recommend:
+    post:
+      tags: [recommend]
+      operationId: recommend
+      summary: Подобрать топ-5 карьерных траекторий
+      description: >
+        Принимает профиль студента и возвращает отсортированный список
+        из 5 наиболее подходящих ролей с оценкой совпадения (score 0–100),
+        обоснованием (why) и списком пробелов (gaps).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecommendRequest'
+            example:
+              profile:
+                skills: ["python", "git", "html"]
+                interests: ["веб-разработка", "аналитика"]
+                subjects: ["базы данных", "алгоритмы"]
+                course: 4
+                specialty: "Информационные системы и технологии"
+      responses:
+        '200':
+          description: Топ-5 траекторий, отсортированных по убыванию score
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendResponse'
+              example:
+                roles:
+                  - role_id: web
+                    title: "Frontend-разработчик"
+                    score: 87
+                    why:
+                      - "Совпадают навыки: python, git, html"
+                      - "Интерес «веб-разработка» напрямую соответствует роли"
+                    gaps:
+                      - "Нет JavaScript в навыках"
+                      - "Нет опыта сборки проектов"
+                  - role_id: qa
+                    title: "Инженер по тестированию (QA)"
+                    score: 74
+                    why:
+                      - "Предмет «алгоритмы» помогает в тестовой инженерии"
+                    gaps:
+                      - "Нет навыка автоматизации тестов"
+                  - role_id: 1c
+                    title: "1С-разработчик"
+                    score: 61
+                    why:
+                      - "Специальность «Информационные системы и технологии» близка к 1С"
+                    gaps:
+                      - "Нет опыта с платформой 1С"
+                  - role_id: support
+                    title: "Специалист технической поддержки"
+                    score: 48
+                    why:
+                      - "Базовые технические навыки позволяют начать"
+                    gaps:
+                      - "Нет опыта работы с тикет-системами"
+                  - role_id: startup
+                    title: "Продуктовый инженер в стартапе"
+                    score: 40
+                    why:
+                      - "Интересы позволяют рассматривать широкую продуктовую роль"
+                    gaps:
+                      - "Нет опыта продуктовой разработки"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /plan:
+    post:
+      tags: [plan]
+      operationId: plan
+      summary: Построить 30-дневный план развития
+      description: >
+        Принимает выбранную роль (role_id) и профиль студента, возвращает
+        план из 4 недель с задачами на каждую неделю и чек-лист пробелов,
+        который студент закрывает по ходу месяца.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanRequest'
+            example:
+              role_id: web
+              profile:
+                skills: ["python", "git", "html"]
+                interests: ["веб-разработка"]
+                subjects: ["алгоритмы"]
+                course: 4
+                specialty: "Информационные системы и технологии"
+      responses:
+        '200':
+          description: План из 4 недель и чек-лист пробелов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanResponse'
+              example:
+                weeks:
+                  - n: 1
+                    tasks:
+                      - "Изучить основы JavaScript: переменные, функции, массивы"
+                      - "Собрать простую страницу-визитку на чистом HTML/CSS"
+                      - "Настроить git-репозиторий и выложить код на GitHub"
+                  - n: 2
+                    tasks:
+                      - "Освоить основы React: компоненты и состояние"
+                      - "Сверстать форму регистрации с валидацией"
+                      - "Прочитать статью о доступности (a11y)"
+                  - n: 3
+                    tasks:
+                      - "Реализовать TODO-приложение на React"
+                      - "Подключить к проекту тесты (Jest)"
+                      - "Посмотреть 2 видеолекции по вёрстке"
+                  - n: 4
+                    tasks:
+                      - "Доработать портфолио-проект и оформить README"
+                      - "Опубликовать проект в GitHub Pages"
+                      - "Составить резюме и список из 5 компаний для отклика"
+                checklist:
+                  - "Освоен синтаксис JavaScript"
+                  - "Есть хотя бы один проект на React в портфолио"
+                  - "Проект опубликован и доступен по ссылке"
+                  - "Резюме готово к отправке"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /chat:
+    post:
+      tags: [chat]
+      operationId: chat
+      summary: Чат-консультант по ролям и плану
+      description: >
+        Отвечает на вопросы студента о роли и плане. Ответы опираются на
+        закрытую базу ролей и навыков (rule-based знания); LLM используется
+        только как интерфейс и не выдумывает факты вне базы. sources[]
+        перечисляет источники, на которых построен ответ.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            example:
+              role_id: web
+              profile:
+                skills: ["python", "git", "html"]
+                interests: ["веб-разработка"]
+                subjects: ["алгоритмы"]
+                course: 4
+                specialty: "Информационные системы и технологии"
+              message: "С чего начать изучение React, если я знаю Python?"
+      responses:
+        '200':
+          description: Ответ консультанта со списком источников
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              example:
+                reply: >
+                  Раз у вас уже есть Python, начните с основ JavaScript — это
+                  ближайший синтаксический мост. Затем пройдите вводный курс по
+                  React: освойте компоненты и состояние, после чего соберите
+                  мини-проект (например, список задач). Это соответствует неделям
+                  1–2 вашего плана.
+                sources:
+                  - "role:web — development_steps"
+                  - "role:web — skills_required"
+                  - "plan:week-1"
+                  - "plan:week-2"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /health:
+    get:
+      tags: [health]
+      operationId: health
+      summary: Проверка живости сервиса
+      description: Возвращает ok=true, если сервис работает.
+      responses:
+        '200':
+          description: Сервис жив
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                ok: true
+
+components:
+  schemas:
+    RoleId:
+      type: string
+      description: Идентификатор роли из закрытого словаря
+      enum: [web, 1c, qa, support, startup]
+      example: web
+
+    Profile:
+      type: object
+      description: Профиль студента
+      required: [skills, interests, subjects, course, specialty]
+      properties:
+        skills:
+          type: array
+          description: Навыки студента (из закрытого словаря навыков)
+          minItems: 1
+          items:
+            type: string
+          example: ["python", "git", "html"]
+        interests:
+          type: array
+          description: Интересы студента
+          minItems: 1
+          items:
+            type: string
+          example: ["веб-разработка", "аналитика"]
+        subjects:
+          type: array
+          description: Изучаемые предметы / дисциплины
+          minItems: 1
+          items:
+            type: string
+          example: ["базы данных", "алгоритмы"]
+        course:
+          type: integer
+          description: Курс обучения
+          minimum: 1
+          maximum: 6
+          example: 4
+        specialty:
+          type: string
+          description: Направление подготовки / специальность
+          example: "Информационные системы и технологии"
+
+    RecommendRequest:
+      type: object
+      required: [profile]
+      properties:
+        profile:
+          $ref: '#/components/schemas/Profile'
+
+    RoleScore:
+      type: object
+      description: Одна карьерная траектория из топ-5
+      required: [role_id, title, score, why, gaps]
+      properties:
+        role_id:
+          $ref: '#/components/schemas/RoleId'
+        title:
+          type: string
+          description: Человекочитаемое название роли
+          example: "Frontend-разработчик"
+        score:
+          type: integer
+          description: Оценка совпадения профиля с ролью, 0–100
+          minimum: 0
+          maximum: 100
+          example: 87
+        why:
+          type: array
+          description: Причины, почему роль подходит студенту
+          minItems: 1
+          items:
+            type: string
+          example: ["Совпадают навыки: python, git, html"]
+        gaps:
+          type: array
+          description: Пробелы, которые надо закрыть для роли
+          items:
+            type: string
+          example: ["Нет JavaScript в навыках"]
+
+    RecommendResponse:
+      type: object
+      required: [roles]
+      properties:
+        roles:
+          type: array
+          description: Ровно 5 траекторий, отсортированных по убыванию score
+          minItems: 5
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/RoleScore'
+
+    PlanRequest:
+      type: object
+      required: [role_id, profile]
+      properties:
+        role_id:
+          $ref: '#/components/schemas/RoleId'
+        profile:
+          $ref: '#/components/schemas/Profile'
+
+    Week:
+      type: object
+      description: Одна неделя плана (n от 1 до 4)
+      required: [n, tasks]
+      properties:
+        n:
+          type: integer
+          description: Номер недели
+          minimum: 1
+          maximum: 4
+          example: 1
+        tasks:
+          type: array
+          description: Задачи недели (3–5 конкретных действий)
+          minItems: 1
+          items:
+            type: string
+          example: ["Изучить основы JavaScript"]
+
+    PlanResponse:
+      type: object
+      required: [weeks, checklist]
+      properties:
+        weeks:
+          type: array
+          description: Ровно 4 недели плана
+          minItems: 4
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/Week'
+        checklist:
+          type: array
+          description: Чек-лист пробелов, которые закрывает студент
+          items:
+            type: string
+          example: ["Освоен синтаксис JavaScript"]
+
+    ChatRequest:
+      type: object
+      required: [role_id, profile, message]
+      properties:
+        role_id:
+          $ref: '#/components/schemas/RoleId'
+        profile:
+          $ref: '#/components/schemas/Profile'
+        message:
+          type: string
+          description: Вопрос студента консультанту
+          minLength: 1
+          example: "С чего начать изучение React, если я знаю Python?"
+
+    ChatResponse:
+      type: object
+      required: [reply, sources]
+      properties:
+        reply:
+          type: string
+          description: Ответ консультанта
+          example: "Начните с основ JavaScript, затем переходите к React."
+        sources:
+          type: array
+          description: Источники из закрытой базы, на которых построен ответ
+          items:
+            type: string
+          example: ["role:web — development_steps", "plan:week-1"]
+
+    HealthResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+          description: true, если сервис жив
+          example: true
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Человекочитаемое описание ошибки
+          example: "Неизвестная роль"
+
+  responses:
+    BadRequest:
+      description: Некорректный запрос (malformed JSON)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Некорректный JSON в теле запроса"
+    ValidationError:
+      description: Тело запроса не прошло валидацию схемы
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Поле profile.course должно быть целым числом от 1 до 6"
+    NotFound:
+      description: Ресурс не найден (неизвестный role_id)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Неизвестная роль: допустимы web, 1c, qa, support, startup"

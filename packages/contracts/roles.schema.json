@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ideaton.local/schemas/role.schema.json",
+  "title": "Карьерная роль",
+  "description": "Описание одной карьерной роли для rule-based скоринга карьерного трекера. Роль используется при подборе топ-5 траекторий, построении 30-дневного плана и в чате-консультанте.",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "description",
+    "skills_required",
+    "related_specialties",
+    "development_steps",
+    "partner_companies",
+    "resources"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Стабильный идентификатор роли из закрытого словаря",
+      "enum": ["web", "1c", "qa", "support", "startup"],
+      "examples": ["web"]
+    },
+    "title": {
+      "type": "string",
+      "description": "Человекочитаемое название роли",
+      "minLength": 1,
+      "examples": ["Frontend-разработчик"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Краткое описание роли: чем занимается, какие задачи решает",
+      "minLength": 1,
+      "examples": ["Создаёт интерфейсы веб-приложений: вёрстка, логика на клиенте, работа с API"]
+    },
+    "skills_required": {
+      "type": "array",
+      "description": "Требуемые навыки с весом вклада в роль (0–1). Сумма весов может быть больше 1 — веса нормализуются при скоринге.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "weight"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Идентификатор навыка из закрытого словаря навыков",
+            "minLength": 1,
+            "examples": ["javascript"]
+          },
+          "weight": {
+            "type": "number",
+            "description": "Вес навыка для роли, от 0 до 1",
+            "minimum": 0,
+            "maximum": 1,
+            "examples": [0.8]
+          }
+        }
+      }
+    },
+    "related_specialties": {
+      "type": "array",
+      "description": "Специальности / направления подготовки, близкие к роли",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "examples": [["Информационные системы и технологии", "Программная инженерия"]]
+    },
+    "development_steps": {
+      "type": "array",
+      "description": "Конкретные шаги развития по роли (порядок важен) — используются для 30-дневного плана и чата",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "examples": [["Освоить синтаксис JavaScript", "Собрать страницу на чистом HTML/CSS", "Изучить основы React"]]
+    },
+    "partner_companies": {
+      "type": "array",
+      "description": "Компании-партнёры / типичные работодатели по роли",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "examples": [["Яндекс", "Тинькофф", "Лаборатория Касперского"]]
+    },
+    "resources": {
+      "type": "array",
+      "description": "Образовательные ресурсы (курсы, статьи, документация) по роли",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["title", "url"],
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Название ресурса",
+            "minLength": 1,
+            "examples": ["learn.javascript.ru"]
+          },
+          "url": {
+            "type": "string",
+            "description": "Ссылка на ресурс",
+            "format": "uri",
+            "examples": ["https://learn.javascript.ru"]
+          },
+          "type": {
+            "type": "string",
+            "description": "Тип ресурса",
+            "enum": ["course", "article", "documentation", "video", "book"],
+            "examples": ["course"]
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "web",
+      "title": "Frontend-разработчик",
+      "description": "Создаёт интерфейсы веб-приложений: вёрстка, логика на клиенте, работа с API",
+      "skills_required": [
+        { "id": "html", "weight": 0.7 },
+        { "id": "css", "weight": 0.7 },
+        { "id": "javascript", "weight": 1.0 },
+        { "id": "react", "weight": 0.8 },
+        { "id": "git", "weight": 0.4 }
+      ],
+      "related_specialties": [
+        "Информационные системы и технологии",
+        "Программная инженерия"
+      ],
+      "development_steps": [
+        "Освоить синтаксис JavaScript",
+        "Сверстать проект на чистом HTML/CSS",
+        "Изучить основы React и собрать мини-проект"
+      ],
+      "partner_companies": ["Яндекс", "Тинькофф"],
+      "resources": [
+        {
+          "title": "JavaScript.ru — учебник",
+          "url": "https://learn.javascript.ru",
+          "type": "course"
+        }
+      ]
+    }
+  ]
+}
