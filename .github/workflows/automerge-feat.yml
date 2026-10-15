@@ -1,6 +1,8 @@
 name: automerge feat → main
 on:
-  # push-триггер ВРЕМЕННО снят на время чистки веток (вернуть после)
+  push:
+    branches:
+      - 'feat/**'
   workflow_dispatch:
 permissions:
   contents: write
@@ -10,7 +12,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   merge-to-main:
-    if: github.ref_name != 'main'
+    # mine/ (feat/zisvit-part) бот НЕ трогает: там только работа владельца,
+    # мерж в main — только руками и осознанно, иначе удаления улетят в main
+    if: github.ref_name != 'main' && github.ref_name != 'feat/zisvit-part'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

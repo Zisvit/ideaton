@@ -2,7 +2,8 @@ name: automerge scheduled sweep
 # Страховка: сводит в main все feat/* с новым содержимым, даже если push-событие потерялось.
 # Пустые ветки пропускаются (петель нет), конфликты уходят в PR.
 on:
-  # расписание ВРЕМЕННО снято на время чистки веток (вернуть после)
+  schedule:
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 permissions:
   contents: write
@@ -36,6 +37,11 @@ jobs:
           FAILED=0
           for ref in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/feat/); do
             br="${ref#origin/}"
+            # mine/ бот НЕ трогает (только работа владельца, мерж руками)
+            if [ "$br" = "feat/zisvit-part" ]; then
+              echo "skip $br: owner branch, manual merge only"
+              continue
+            fi
             if [ -z "$(git diff "origin/main...$ref")" ]; then
               echo "skip $br: nothing new"
               continue
