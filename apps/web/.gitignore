@@ -3,3 +3,4 @@ node_modules
 out
 *.pem
 .env*.local
+next-env.d.ts
