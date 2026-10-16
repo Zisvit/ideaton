@@ -1,51 +1,37 @@
 import React from 'react'
-import Image from 'next/image'
-
-type Match = {
-  title: string
-  why: string
-  matchScore: number
-}
+import Link from 'next/link'
+import {
+  apiFetch,
+  getStoredProfile,
+  RecommendResponse,
+  RoleScore,
+  saveRoleId,
+} from '../lib/api'
 
 export default function Result() {
-  const [matches, setMatches] = React.useState<Match[]>([])
+  const [roles, setRoles] = React.useState<RoleScore[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-
-  const fetchResults = async (query: string) => {
+  // Контракт: POST /recommend { profile } → { roles: [5 × RoleScore] }
+  const fetchResults = async () => {
     setLoading(true)
     setError(null)
-    try {
-      const res = await fetch(`${apiBase}/recommend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
-        cache: 'no-store',
-      })
-
-      if (!res.ok) {
-        const errData = await res.json()
-        throw new Error(errData.detail || 'Ошибка сервера')
-      }
-
-      const data = await res.json()
-      setMatches(data)
-    } catch (e: any) {
-      setError(e.message || 'Неизвестная ошибка')
-    } finally {
-      setLoading(false)
+    const res = await apiFetch<RecommendResponse>('/recommend', {
+      method: 'POST',
+      body: { profile: getStoredProfile() },
+    })
+    if (res.success && res.data) {
+      setRoles(res.data.roles)
+    } else {
+      setRoles([])
+      setError(res.error || 'Неизвестная ошибка')
     }
+    setLoading(false)
   }
 
   React.useEffect(() => {
-    const storedQuery = localStorage.getItem('career-tracker-query')
-    if (storedQuery) {
-      fetchResults(storedQuery)
-    } else {
-      fetchResults('Python TypeScript React')
-    }
+    fetchResults()
   }, [])
 
   return (
@@ -66,41 +52,51 @@ export default function Result() {
         )}
 
         <div className="space-y-4">
-          {matches.map((match, i) => (
+          {roles.map((role) => (
             <div
-              key={i}
+              key={role.role_id}
               className="p-6 rounded-xl bg-white shadow-sm border-l-4 border-primary-500 hover:shadow-md transition-shadow"
             >
-              <h2 className="text-xl font-bold mb-2">{match.title}</h2>
-              <p className="text-gray-600 line-clamp-3">{match.why}</p>
-              <div className="mt-4">
-                <span className="text-sm text-gray-500">Соответствие: </span>
-                <span
-                  className={`text-primary-600 font-medium px-2 py-1 rounded text-xs ${match.matchScore > 80 ? 'bg-primary-100' : ''}`}
+              <h2 className="text-xl font-bold mb-2">{role.title}</h2>
+              <p className="text-gray-600 line-clamp-3">
+                {role.why.join(' · ')}
+              </p>
+              {role.gaps.length > 0 && (
+                <p className="mt-2 text-sm text-amber-700">
+                  Пробелы: {role.gaps.join('; ')}
+                </p>
+              )}
+              <div className="mt-4 flex items-center justify-between">
+                <div>
+                  <span className="text-sm text-gray-500">Соответствие: </span>
+                  <span
+                    className={`text-primary-600 font-medium px-2 py-1 rounded text-xs ${role.score > 80 ? 'bg-primary-100' : ''}`}
+                  >
+                    {role.score}%
+                  </span>
+                </div>
+                <Link
+                  href="/plan"
+                  onClick={() => saveRoleId(role.role_id)}
+                  className="text-primary-600 hover:underline text-sm font-medium"
                 >
-                  {match.matchScore}%
-                </span>
+                  План на 30 дней →
+                </Link>
               </div>
             </div>
           ))}
 
-          {matches.length === 0 && (
-            <p className="text-gray-500">Введите запрос на странице «Ввод», чтобы получить рекомендации.</p>
+          {roles.length === 0 && !loading && !error && (
+            <p className="text-gray-500">
+              Заполните профиль на странице «Ввод», чтобы получить
+              рекомендации.
+            </p>
           )}
         </div>
 
         <div className="mt-8 pt-8 border-t border-gray-200">
           <button
-            onClick={() => {
-              const input = document.querySelector('textarea') as HTMLTextAreaElement | null
-              if (input && input.value.trim()) {
-                fetchResults(input.value.trim())
-                localStorage.setItem('career-tracker-query', input.value.trim())
-              } else {
-                fetchResults('Python TypeScript React')
-                localStorage.setItem('career-tracker-query', 'Python TypeScript React')
-              }
-            }}
+            onClick={fetchResults}
             className="px-6 py-3 bg-primary-600 text-white rounded-lg text-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-opacity"
           >
             Обновить рекомендации

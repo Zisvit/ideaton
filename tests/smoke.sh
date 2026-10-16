@@ -357,11 +357,13 @@ def students(d):
     if isinstance(d, list):
         return [s for s in d if isinstance(s, dict)]
     if isinstance(d, dict):
-        val = d.get("students")
-        if isinstance(val, list):
-            return [s for s in val if isinstance(s, dict)]
-        if isinstance(val, dict):
-            return [s for s in val.values() if isinstance(s, dict)]
+        # Демо-файл в репозитории использует "profiles"; "students" — совместимость
+        for key in ("profiles", "students"):
+            val = d.get(key)
+            if isinstance(val, list):
+                return [s for s in val if isinstance(s, dict)]
+            if isinstance(val, dict):
+                return [s for s in val.values() if isinstance(s, dict)]
         return [d]
     return []
 

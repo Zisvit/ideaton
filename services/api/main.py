@@ -355,6 +355,9 @@ app = FastAPI(title="Карьерный трекер — API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    # Локальный демо-фронт может жить на любом порту localhost (3000 занят
+    # чужим процессом) — разрешаем localhost/127.0.0.1 с любым портом.
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

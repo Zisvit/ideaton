@@ -1,6 +1,6 @@
 import React from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
+import { EXAMPLE_PROFILE, Profile, saveProfile } from '../lib/api'
 
 export default function Home() {
   const chips = [
@@ -14,6 +14,35 @@ export default function Home() {
     'Kubernetes',
   ]
 
+  const [selected, setSelected] = React.useState<string[]>([])
+  const [text, setText] = React.useState('')
+
+  const toggleChip = (chip: string) => {
+    setSelected((prev) =>
+      prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev, chip]
+    )
+  }
+
+  const fillExample = () => {
+    saveProfile(EXAMPLE_PROFILE)
+    setSelected(EXAMPLE_PROFILE.skills)
+    setText('')
+  }
+
+  // Собираем профиль (контракт Profile) и кладём в localStorage → /result.
+  const goResult = () => {
+    const typed = text
+      .split(/[,\s]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+    const skills = Array.from(new Set([...selected, ...typed]))
+    const profile: Profile =
+      skills.length > 0
+        ? { skills, interests: [], subjects: [] }
+        : EXAMPLE_PROFILE
+    saveProfile(profile)
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
@@ -22,6 +51,8 @@ export default function Home() {
         <div className="space-y-4">
           <textarea
             rows={4}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             placeholder="Введите ваши навыки, опыт или карьерные цели..."
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none resize-none"
           />{' '}
@@ -29,16 +60,21 @@ export default function Home() {
             {chips.map((chip) => (
               <button
                 key={chip}
-                onClick={() => alert(`Добавлен чíp: ${chip}`)}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                onClick={() => toggleChip(chip)}
+                className={`px-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                  selected.includes(chip)
+                    ? 'bg-primary-700 text-white'
+                    : 'bg-primary-600 text-white hover:bg-primary-700'
+                }`}
               >
-                {chip}
+                {selected.includes(chip) ? `✓ ${chip}` : chip}
               </button>
             ))}
           </div>
 
           <div>
             <button
+              onClick={fillExample}
               className="px-6 py-3 bg-primary-600 text-white rounded-lg text-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-opacity"
             >
               Подставить пример
@@ -49,6 +85,7 @@ export default function Home() {
         <div className="mt-8 pt-8 border-t border-gray-200">
           <Link
             href="/result"
+            onClick={goResult}
             className="text-primary-600 hover:underline"
           >
             Предсказать топ-5 →
