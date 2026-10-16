@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 import {
   apiFetch,
   ChatResponse,
@@ -6,24 +7,22 @@ import {
   getStoredRoleId,
 } from '../lib/api'
 
-type ConsultantState = {
-  chat: ChatResponse | null
-  loading: boolean
-  error: string | null
-  input: string
-}
+const SUGGESTIONS = [
+  'С чего начать учить React?',
+  'Где взять первую практику?',
+  'Что показать в портфолио?',
+]
 
 export default function Consultant() {
-  const [state, setState] = React.useState<ConsultantState>({
-    chat: null,
-    loading: false,
-    error: null,
-    input: '',
-  })
+  const [input, setInput] = React.useState('')
+  const [chat, setChat] = React.useState<ChatResponse | null>(null)
+  const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
-  // Контракт: POST /chat { message, profile, role_id } → { reply, sources }
   const ask = async (question: string) => {
-    setState({ ...state, loading: true, error: null })
+    if (!question.trim()) return
+    setLoading(true)
+    setError(null)
     const res = await apiFetch<ChatResponse>('/chat', {
       method: 'POST',
       body: {
@@ -33,64 +32,90 @@ export default function Consultant() {
       },
     })
     if (res.success && res.data) {
-      setState({ ...state, chat: res.data, loading: false })
+      setChat(res.data)
     } else {
-      setState({
-        ...state,
-        chat: null,
-        error: res.error || 'Неизвестная ошибка',
-        loading: false,
-      })
+      setError(res.error || 'Неизвестная ошибка')
     }
+    setLoading(false)
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Консультант</h1>
+    <>
+      <header className="site-header">
+        <div className="container site-header__inner">
+          <Link href="/" className="brand">Карьерный трекер</Link>
+          <span className="step-pill">Консультант</span>
+        </div>
+      </header>
 
-        <div className="space-y-4">
-          <div>
-            <textarea
-              placeholder="Задайте вопрос консультанту..."
-              rows={3}
-              value={state.input}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setState({ ...state, input: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none resize-none"
-            />
+      <main className="container" style={{ paddingTop: 40, paddingBottom: 80, maxWidth: 760 }}>
+        <section className="fade-in">
+          <h1>Консультант</h1>
+          <p className="hero__sub">
+            Задай вопрос по выбранному направлению — отвечу только по рубрике, без выдумок.
+          </p>
+        </section>
+
+        <section className="card" style={{ marginTop: 28 }}>
+          <textarea
+            placeholder="Например: с чего начать учить React?"
+            rows={3}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="input"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault()
+                ask(input)
+              }
+            }}
+          />
+          <div className="row-between" style={{ marginTop: 12 }}>
+            <div className="suggest">
+              {SUGGESTIONS.map((s) => (
+                <button key={s} type="button" onClick={() => { setInput(s); ask(s) }}>
+                  {s}
+                </button>
+              ))}
+            </div>
             <button
-              onClick={() => state.input && ask(state.input)}
-              className="mt-2 px-6 py-3 bg-primary-600 text-white rounded-lg text-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-opacity"
-              disabled={state.loading}
+              type="button"
+              onClick={() => ask(input)}
+              className="btn btn-primary"
+              disabled={loading || !input.trim()}
             >
-              {state.loading ? 'Отправка...' : 'Отправить'}
+              {loading ? 'Думаю…' : 'Отправить'}
             </button>
           </div>
+        </section>
 
-          {state.error && (
-            <div className="p-4 rounded bg-red-100 text-red-800">
-              <p>{state.error}</p>
-            </div>
-          )}
+        {error && (
+          <div className="alert alert-warn" style={{ marginTop: 20 }} role="alert">
+            {error}
+          </div>
+        )}
 
-          {state.chat && (
-            <div className="p-4 rounded bg-gray-800 text-white">
-              <p>
-                <strong>Консультант:</strong> {state.chat.reply}
-              </p>
-              {state.chat.sources.length > 0 && (
-                <p className="mt-3 text-xs text-gray-400">
-                  Источники: {state.chat.sources.join('; ')}
-                </p>
-              )}
-            </div>
-          )}
+        {loading && !chat && (
+          <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted)' }}>
+            <span className="loader"><span /><span /><span /></span>
+            Формируется ответ...
+          </div>
+        )}
 
-          {state.loading && !state.chat && (
-            <p className="text-gray-500">Формируется ответ...</p>
-          )}
+        {chat && (
+          <div className="chat-bubble fade-in" style={{ marginTop: 24 }}>
+            <p style={{ margin: 0, lineHeight: 1.6 }}>{chat.reply}</p>
+            {chat.sources.length > 0 && (
+              <p className="sources">Источники: {chat.sources.join('; ')}</p>
+            )}
+          </div>
+        )}
+
+        <div className="cta-bar" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <Link href="/plan" className="btn btn-ghost">← К плану</Link>
+          <Link href="/result" className="btn btn-ghost">Сменить направление</Link>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   )
 }
