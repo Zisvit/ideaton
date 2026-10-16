@@ -1,7 +1,13 @@
 import React from 'react'
+import {
+  apiFetch,
+  ChatResponse,
+  getStoredProfile,
+  getStoredRoleId,
+} from '../lib/api'
 
 type ConsultantState = {
-  response: string | null
+  chat: ChatResponse | null
   loading: boolean
   error: string | null
   input: string
@@ -9,33 +15,32 @@ type ConsultantState = {
 
 export default function Consultant() {
   const [state, setState] = React.useState<ConsultantState>({
-    response: null,
+    chat: null,
     loading: false,
     error: null,
     input: '',
   })
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-
+  // Контракт: POST /chat { message, profile, role_id } → { reply, sources }
   const ask = async (question: string) => {
     setState({ ...state, loading: true, error: null })
-    try {
-      const res = await fetch(`${apiBase}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
-        cache: 'no-store',
+    const res = await apiFetch<ChatResponse>('/chat', {
+      method: 'POST',
+      body: {
+        message: question,
+        profile: getStoredProfile(),
+        role_id: getStoredRoleId(),
+      },
+    })
+    if (res.success && res.data) {
+      setState({ ...state, chat: res.data, loading: false })
+    } else {
+      setState({
+        ...state,
+        chat: null,
+        error: res.error || 'Неизвестная ошибка',
+        loading: false,
       })
-
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.detail || 'Ошибка консультанта')
-      }
-
-      const data = await res.json()
-      setState({ ...state, response: data.answer || 'Нет ответа', loading: false })
-    } catch (e: any) {
-      setState({ ...state, error: e.message || 'Неизвестная ошибка', loading: false })
     }
   }
 
@@ -68,13 +73,20 @@ export default function Consultant() {
             </div>
           )}
 
-          {state.response && (
+          {state.chat && (
             <div className="p-4 rounded bg-gray-800 text-white">
-              <p><strong>Консультант:</strong> {state.response}</p>
+              <p>
+                <strong>Консультант:</strong> {state.chat.reply}
+              </p>
+              {state.chat.sources.length > 0 && (
+                <p className="mt-3 text-xs text-gray-400">
+                  Источники: {state.chat.sources.join('; ')}
+                </p>
+              )}
             </div>
           )}
 
-          {state.loading && !state.response && (
+          {state.loading && !state.chat && (
             <p className="text-gray-500">Формируется ответ...</p>
           )}
         </div>

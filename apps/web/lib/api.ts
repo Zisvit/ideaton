@@ -1,7 +1,104 @@
 /**
  * API client for the Career Tracker application.
  * Handles fetching with error handling, loading states, and type safety.
+ *
+ * Типы ниже — контракт packages/contracts/openapi.yaml (источник истины):
+ * recommend → { roles: [5 × RoleScore] }, plan → { weeks: [4 × Week], checklist },
+ * chat → { reply, sources }, ошибки 400/404/422 → { error }.
  */
+
+// ---- контрактные типы (openapi.yaml) ---------------------------------------
+
+type Profile = {
+  skills: string[]
+  interests: string[]
+  subjects: string[]
+  course?: number
+  specialty?: string
+}
+
+type RoleScore = {
+  role_id: string
+  title: string
+  score: number
+  why: string[] // контракт: массив human-причин, minItems 1
+  matched?: string[]
+  gaps: string[]
+}
+
+type RecommendResponse = {
+  roles: RoleScore[] // ровно 5, по убыванию score
+}
+
+type Week = {
+  n: number // 1–4
+  tasks: string[]
+}
+
+type PlanResponse = {
+  weeks: Week[] // ровно 4
+  checklist: string[]
+  role_id: string
+  title: string
+  summary?: string
+  disclaimer?: string
+}
+
+type ChatResponse = {
+  reply: string
+  sources: string[]
+}
+
+// ---- профиль в localStorage (перетекает между страницами демо-флоу) --------
+
+const PROFILE_KEY = 'career-tracker-profile'
+const ROLE_KEY = 'career-tracker-role'
+
+// Пример профиля — дословно из openapi.yaml (example /recommend).
+const EXAMPLE_PROFILE: Profile = {
+  skills: ['python', 'git', 'html'],
+  interests: ['веб-разработка', 'аналитика'],
+  subjects: ['базы данных', 'алгоритмы'],
+  course: 4,
+  specialty: 'Информационные системы и технологии',
+}
+
+function getStoredProfile(): Profile {
+  if (typeof window === 'undefined') return { ...EXAMPLE_PROFILE }
+  try {
+    const raw = window.localStorage.getItem(PROFILE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<Profile>
+      return {
+        skills: Array.isArray(parsed.skills) ? parsed.skills : [],
+        interests: Array.isArray(parsed.interests) ? parsed.interests : [],
+        subjects: Array.isArray(parsed.subjects) ? parsed.subjects : [],
+        course: typeof parsed.course === 'number' ? parsed.course : undefined,
+        specialty: typeof parsed.specialty === 'string' ? parsed.specialty : undefined,
+      }
+    }
+  } catch {
+    /* битый localStorage — откат к примеру */
+  }
+  return { ...EXAMPLE_PROFILE }
+}
+
+function saveProfile(profile: Profile) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile))
+}
+
+function getStoredRoleId(): string {
+  if (typeof window === 'undefined') return 'web'
+  return window.localStorage.getItem(ROLE_KEY) || 'web'
+}
+
+function saveRoleId(roleId: string) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(ROLE_KEY, roleId)
+}
+
+// ---- fetch-обёртка ----------------------------------------------------------
 
 type ApiResponse<T> = {
   success: boolean
@@ -50,13 +147,14 @@ export async function apiFetch<T>(
 
     const data = (await response.json()) as {
       success: boolean
-      detail?: string
+      error?: string // контракт ErrorResponse {error}
+      detail?: string // FastAPI-фолбэк
     }
 
     if (!response.ok) {
       return {
         success: false,
-        error: data.detail || `HTTP ${response.status}`,
+        error: data.error || data.detail || `HTTP ${response.status}`,
       }
     }
 
@@ -84,4 +182,12 @@ export async function apiFetch<T>(
   }
 }
 
-export { BASE_URL }
+export {
+  BASE_URL,
+  EXAMPLE_PROFILE,
+  getStoredProfile,
+  saveProfile,
+  getStoredRoleId,
+  saveRoleId,
+}
+export type { Profile, RoleScore, RecommendResponse, Week, PlanResponse, ChatResponse }
