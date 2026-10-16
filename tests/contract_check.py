@@ -13,8 +13,12 @@
   2. data/roles/*.yaml — парсинг каждого файла, обязательные поля роли
      (берём из packages/contracts/roles.schema.json, иначе встроенный список)
      и сверка id навыков из skills_required со закрытым словарём skills.yaml.
-     Дубликаты id ролей между файлами — ошибка.
-  3. data/students_demo.json — парсинг и наличие студента с ПУСТЫМ профилем.
+     Дубликаты id ролей между файлами — ошибка. Файлы без skills_required
+     в корне (словарь skills.yaml, служебные документы) — не роли:
+     не FAIL, а пропуск.
+  3. data/students_demo.json — парсинг и наличие студента с ПУСТЫМ профилем
+     (нет профиля с пустыми skills — это FAIL). Список профилей принимаем
+     из корня или под ключами "profiles"/"students"; нет обоих ключей — FAIL.
 
 Поведение на отсутствующих файлах: SKIP с предупреждением, код выхода 0 —
 CI зелёный с первого дня, пока артефакты параллельных потоков не приземлились.
@@ -26,7 +30,8 @@ STRICT_MISSING=1 превращает пропуски в ошибки (для �
   OPENAPI_FILE    packages/contracts/openapi.yaml
   ROLES_DIR       data/roles
   ROLES_SCHEMA    packages/contracts/roles.schema.json
-  SKILLS_FILE     data/skills.yaml
+  SKILLS_FILE     override пути к словарю; без него перебор кандидатов
+                  data/skills.yaml → data/roles/skills.yaml (первый сущ.)
   DEMO_FILE       data/students_demo.json
   STRICT_MISSING  1 → отсутствующие файлы это FAIL, а не SKIP
 """
@@ -48,9 +53,28 @@ def _p(env_name, default_rel):
 OPENAPI_FILE = _p("OPENAPI_FILE", "packages/contracts/openapi.yaml")
 ROLES_DIR = _p("ROLES_DIR", "data/roles")
 ROLES_SCHEMA = _p("ROLES_SCHEMA", "packages/contracts/roles.schema.json")
-SKILLS_FILE = _p("SKILLS_FILE", "data/skills.yaml")
+# Словарь навыков: явный override из SKILLS_FILE, иначе перебор кандидатов —
+# первый существующий файл (словарь лежит либо в data/, либо в data/roles/).
+SKILLS_FILE_OVERRIDE = os.environ.get("SKILLS_FILE") or None
+SKILLS_CANDIDATES = (ROOT / "data/skills.yaml", ROOT / "data/roles/skills.yaml")
 DEMO_FILE = _p("DEMO_FILE", "data/students_demo.json")
 STRICT_MISSING = os.environ.get("STRICT_MISSING") == "1"
+
+
+def _skills_file():
+    """Путь к словарю навыков или None, если ни один кандидат не существует.
+
+    SKILLS_FILE в окружении — override (возвращается как есть, проверка
+    is_file — на вызывающей стороне). Без override — первый существующий
+    из SKILLS_CANDIDATES; если нет ни одного — None.
+    """
+    if SKILLS_FILE_OVERRIDE:
+        return Path(SKILLS_FILE_OVERRIDE)
+    for cand in SKILLS_CANDIDATES:
+        if cand.is_file():
+            return cand
+    return None
+
 
 # Группы эндпоинтов, которые дожны быть в контракте (smoke.sh гоняет их же).
 ENDPOINT_GROUPS = [
@@ -598,6 +622,22 @@ def _entry_skill_id(entry):
     return None
 
 
+def _is_role_doc(doc):
+    """True, если корень файла выглядит как роль или контейнер ролей.
+
+    data/roles/*.yaml рядом с ролями лежит и словарь skills.yaml (корень
+    со skills:, без skills_required) и возможны служебные файлы — такие
+    не роли: их не проверяем и не фейлим, а пропускаем.
+    """
+    if isinstance(doc, list):
+        return True  # список ролей
+    if isinstance(doc, dict):
+        if isinstance(doc.get("roles"), list):
+            return True  # контейнер {"roles": [...]}
+        return "skills_required" in doc  # одиночная роль
+    return False  # None/скаляр — не роль
+
+
 def _extract_skill_ids(doc):
     ids = set()
 
@@ -650,28 +690,36 @@ def check_roles():
         return
 
     catalog = None
-    if SKILLS_FILE.is_file():
+    skills_path = _skills_file()
+    if skills_path is not None and skills_path.is_file():
         try:
-            sdoc, _ = load_yaml(SKILLS_FILE)
+            sdoc, _ = load_yaml(skills_path)
         except YamlError as exc:
-            REPORT.failed("skills.yaml: %s" % exc)
+            REPORT.failed("skills.yaml (%s): %s" % (skills_path.name, exc))
         else:
             catalog = _extract_skill_ids(sdoc)
             if catalog:
-                REPORT.good("skills.yaml: %d навыков в закрытом словаре" % len(catalog))
+                REPORT.good(
+                    "skills.yaml (%s): %d навыков в закрытом словаре"
+                    % (skills_path, len(catalog))
+                )
             else:
                 REPORT.warning(
-                    "skills.yaml: не удалось извлечь id навыков "
-                    "(неизвестная форма) — сверка навыков ролей пропущена"
+                    "skills.yaml (%s): не удалось извлечь id навыков "
+                    "(неизвестная форма) — сверка навыков ролей пропущена" % skills_path
                 )
                 catalog = (
                     None  # пустой словарь ≠ закрытый пустой словарь: роли не фейлим
                 )
-    else:
-        REPORT.skipped(
-            "skills.yaml: %s — файл отсутствует; сверка id навыков "
-            "пропущена, остальные проверки ролей выполняются" % SKILLS_FILE
+    elif skills_path is None:
+        REPORT.missing(
+            "словарь skills.yaml",
+            SKILLS_CANDIDATES[0],
+            "перебраны кандидаты: %s"
+            % ", ".join(str(c.relative_to(ROOT)) for c in SKILLS_CANDIDATES),
         )
+    else:
+        REPORT.missing("словарь skills.yaml", skills_path, "override SKILLS_FILE")
 
     required, role_enum = _load_role_schema()
     seen = {}
@@ -683,7 +731,13 @@ def check_roles():
             REPORT.failed("%s: %s" % (label, exc))
             continue
         if doc is None:
-            REPORT.failed("%s: пустой документ" % label)
+            REPORT.skipped("%s: пустой документ — не роль; пропущен" % label)
+            continue
+        if not _is_role_doc(doc):
+            REPORT.skipped(
+                "%s: нет skills_required в корне — словарь/служебный файл, "
+                "не роль; пропущен" % label
+            )
             continue
         try:
             roles = _normalize_roles(doc, path)
@@ -783,16 +837,24 @@ def check_roles():
 
 
 def _students_of(doc):
+    """Список профилей студентов.
+
+    Принимаем корневой список либо ключи "profiles" и "students"
+    (демо-файл в репозитории использует "profiles"). None — ключи
+    profiles/students отсутствуют или некорректны: вызывающая сторона
+    трактует это как FAIL.
+    """
     if isinstance(doc, list):
         return [s for s in doc if isinstance(s, dict)]
     if isinstance(doc, dict):
-        val = doc.get("students")
-        if isinstance(val, list):
-            return [s for s in val if isinstance(s, dict)]
-        if isinstance(val, dict):
-            return [s for s in val.values() if isinstance(s, dict)]
-        return [doc]
-    return []
+        for key in ("profiles", "students"):
+            val = doc.get(key)
+            if isinstance(val, list):
+                return [s for s in val if isinstance(s, dict)]
+            if isinstance(val, dict):
+                return [s for s in val.values() if isinstance(s, dict)]
+        return None
+    return None
 
 
 def _profile_of(student):
@@ -821,13 +883,19 @@ def check_demo():
         REPORT.failed("students_demo.json: не парсится: %s" % exc)
         return
     students = _students_of(doc)
+    if students is None:
+        REPORT.failed(
+            "students_demo.json: нет ни ключа profiles, ни ключа students "
+            "со списком профилей"
+        )
+        return
     if not students:
         REPORT.failed("students_demo.json: не найдено ни одного студента")
         return
     empties = [s for s in students if _is_empty_profile(s)]
     if not empties:
         REPORT.failed(
-            "students_demo.json: нет студента с пустым профилем "
+            "students_demo.json: нет профиля с пустыми skills "
             "(ожидаем skills: [] или отсутствие skills) — "
             "демо холодного старта невозможно"
         )
