@@ -13,7 +13,6 @@ export default function Result() {
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
 
-  // Контракт: POST /recommend { profile } → { roles: [5 × RoleScore] }
   const fetchResults = async () => {
     setLoading(true)
     setError(null)
@@ -34,75 +33,122 @@ export default function Result() {
     fetchResults()
   }, [])
 
+  const top = roles[0]
+  const rest = roles.slice(1)
+
   return (
-    <main className="min-h-screen bg-gray-100 p-4 md:p-8">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Топ-5 подходящих направлений</h1>
+    <>
+      <header className="site-header">
+        <div className="container site-header__inner">
+          <Link href="/" className="brand">Карьерный трекер</Link>
+          <span className="step-pill">Шаг 2 из 3</span>
+        </div>
+      </header>
+
+      <main className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+        <section className="fade-in">
+          <h1>Твои 5 направлений</h1>
+          <p className="hero__sub">
+            Отсортированы по совпадению с твоим профилем. Выбери одно — получишь план на 30 дней.
+          </p>
+        </section>
 
         {loading && (
-          <div className="animate-pulse rounded bg-white p-8">
-            <span className="sr-only">Загрузка...</span>
+          <div style={{ marginTop: 32, display: 'grid', gap: 14 }}>
+            <div className="skeleton" style={{ height: 180 }} />
+            <div className="skeleton" style={{ height: 110 }} />
+            <div className="skeleton" style={{ height: 110 }} />
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 rounded bg-red-100 text-red-800">
-            <p>{error}</p>
+          <div className="alert alert-warn" style={{ marginTop: 24 }} role="alert">
+            {error}
+            <div style={{ marginTop: 10 }}>
+              <button onClick={fetchResults} className="btn btn-ghost">Повторить</button>
+            </div>
           </div>
         )}
 
-        <div className="space-y-4">
-          {roles.map((role) => (
-            <div
-              key={role.role_id}
-              className="p-6 rounded-xl bg-white shadow-sm border-l-4 border-primary-500 hover:shadow-md transition-shadow"
-            >
-              <h2 className="text-xl font-bold mb-2">{role.title}</h2>
-              <p className="text-gray-600 line-clamp-3">
-                {role.why.join(' · ')}
-              </p>
-              {role.gaps.length > 0 && (
-                <p className="mt-2 text-sm text-amber-700">
-                  Пробелы: {role.gaps.join('; ')}
-                </p>
-              )}
-              <div className="mt-4 flex items-center justify-between">
-                <div>
-                  <span className="text-sm text-gray-500">Соответствие: </span>
-                  <span
-                    className={`text-primary-600 font-medium px-2 py-1 rounded text-xs ${role.score > 80 ? 'bg-primary-100' : ''}`}
-                  >
-                    {role.score}%
-                  </span>
+        {!loading && !error && roles.length === 0 && (
+          <div className="empty">
+            <h3>Профиль пуст</h3>
+            <p>Заполни навыки на первой странице — и получишь рекомендации.</p>
+            <div style={{ marginTop: 16 }}>
+              <Link href="/" className="btn btn-primary">Заполнить профиль</Link>
+            </div>
+          </div>
+        )}
+
+        {!loading && top && (
+          <div className="stagger" style={{ marginTop: 32, display: 'grid', gap: 14 }}>
+            <article className="hero-card fade-in">
+              <div className="row-between">
+                <span className="tag tag-match">Лучшее совпадение</span>
+                <span className="score-ring" style={{ background: 'rgba(255,255,255,.12)', color: '#fff' }}>
+                  {top.score}% совпадение
+                </span>
+              </div>
+              <h2 style={{ marginTop: 16, fontSize: 'clamp(26px,4vw,40px)', color: '#fff' }}>{top.title}</h2>
+              <ul style={{ marginTop: 16, display: 'grid', gap: 6, listStyle: 'none', padding: 0 }}>
+                {top.why.map((w, i) => (
+                  <li key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', color: 'rgba(255,255,255,.85)', fontSize: 15 }}>
+                    <span style={{ color: '#6EE7B7', fontWeight: 700 }}>✓</span>
+                    <span>{w}</span>
+                  </li>
+                ))}
+              </ul>
+              {top.gaps.length > 0 && (
+                <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  <span className="small" style={{ color: 'rgba(255,255,255,.6)' }}>Не хватает:</span>
+                  {top.gaps.map((g, i) => (
+                    <span key={i} className="tag tag-gap">{g}</span>
+                  ))}
                 </div>
-                <Link
-                  href="/plan"
-                  onClick={() => saveRoleId(role.role_id)}
-                  className="text-primary-600 hover:underline text-sm font-medium"
-                >
-                  План на 30 дней →
+              )}
+              <div style={{ marginTop: 22 }}>
+                <Link href="/plan" onClick={() => saveRoleId(top.role_id)} className="btn btn-primary" style={{ background: '#fff', color: '#12141A', boxShadow: 'none' }}>
+                  Сделать план на 30 дней →
                 </Link>
               </div>
-            </div>
-          ))}
+            </article>
 
-          {roles.length === 0 && !loading && !error && (
-            <p className="text-gray-500">
-              Заполните профиль на странице «Ввод», чтобы получить
-              рекомендации.
-            </p>
-          )}
-        </div>
+            {rest.map((role, idx) => (
+              <article key={role.role_id} className="role-card fade-in">
+                <div className="role-card__top">
+                  <div>
+                    <div className="small" style={{ marginBottom: 4 }}>#{idx + 2}</div>
+                    <h3 className="role-card__title">{role.title}</h3>
+                  </div>
+                  <span className="score-ring">{role.score}%</span>
+                </div>
+                <p className="role-card__why">{role.why.join(' · ')}</p>
+                {role.gaps.length > 0 && (
+                  <div className="role-card__gaps">
+                    {role.gaps.map((g, i) => (
+                      <span key={i} className="tag tag-gap">{g}</span>
+                    ))}
+                  </div>
+                )}
+                <div className="role-card__foot">
+                  <span className="small">Совпадение {role.score}%</span>
+                  <Link href="/plan" onClick={() => saveRoleId(role.role_id)} className="btn btn-ghost" style={{ padding: '8px 14px', fontSize: 14 }}>
+                    План →
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
 
-        <div className="mt-8 pt-8 border-t border-gray-200">
-          <button
-            onClick={fetchResults}
-            className="px-6 py-3 bg-primary-600 text-white rounded-lg text-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-opacity"
-          >
-            Обновить рекомендации
-          </button>
-        </div>
-      </div>
-    </main>
+        {!loading && roles.length > 0 && (
+          <div className="cta-bar">
+            <button onClick={fetchResults} className="btn btn-ghost">
+              Обновить рекомендации
+            </button>
+          </div>
+        )}
+      </main>
+    </>
   )
 }

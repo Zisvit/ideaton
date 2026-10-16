@@ -11,8 +11,8 @@ export default function Plan() {
   const [plan, setPlan] = React.useState<PlanResponse | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [done, setDone] = React.useState<Record<string, boolean>>({})
 
-  // Контракт: POST /plan { role_id, profile } → { weeks: [4 × Week], checklist }
   const fetchPlan = async () => {
     setLoading(true)
     setError(null)
@@ -33,64 +33,112 @@ export default function Plan() {
     fetchPlan()
   }, [])
 
+  const toggle = (key: string) => setDone((d) => ({ ...d, [key]: !d[key] }))
+  const totalTasks = plan ? plan.weeks.reduce((a, w) => a + w.tasks.length, 0) : 0
+  const doneCount = Object.values(done).filter(Boolean).length
+
   return (
-    <main className="min-h-screen bg-gray-100 p-4 md:p-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">
-          План на 30 дней{plan ? `: ${plan.title}` : ''}
-        </h1>
+    <>
+      <header className="site-header">
+        <div className="container site-header__inner">
+          <Link href="/" className="brand">Карьерный трекер</Link>
+          <span className="step-pill">Шаг 3 из 3</span>
+        </div>
+      </header>
+
+      <main className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+        <section className="fade-in">
+          <h1>План на 30 дней{plan ? `: ${plan.title}` : ''}</h1>
+          <p className="hero__sub">
+            Конкретные шаги по неделям. Отмечай выполненные — прогресс сохраняется в браузере.
+          </p>
+        </section>
 
         {loading && (
-          <div className="animate-pulse rounded bg-white p-8">
-            <span className="sr-only">Загрузка...</span>
+          <div style={{ marginTop: 32, display: 'grid', gap: 14 }}>
+            <div className="skeleton" style={{ height: 120 }} />
+            <div className="skeleton" style={{ height: 120 }} />
+            <div className="skeleton" style={{ height: 120 }} />
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 rounded bg-red-100 text-red-800">
-            <p>{error}</p>
+          <div className="alert alert-warn" style={{ marginTop: 24 }} role="alert">
+            {error}
+            <div style={{ marginTop: 10 }}>
+              <button onClick={fetchPlan} className="btn btn-ghost">Повторить</button>
+            </div>
           </div>
         )}
 
         {plan && (
-          <div className="space-y-6">
-            {plan.weeks.map((week) => (
-              <section
-                key={week.n}
-                className="p-6 rounded-xl bg-white shadow-sm"
-              >
-                <h2 className="text-lg font-bold mb-3">Неделя {week.n}</h2>
-                <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                  {week.tasks.map((task, i) => (
-                    <li key={i}>{task}</li>
-                  ))}
-                </ul>
-              </section>
-            ))}
+          <>
+            <div className="card" style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div className="small" style={{ marginBottom: 6 }}>Прогресс</div>
+                <div className="progress">
+                  <span style={{ width: `${totalTasks ? (doneCount / totalTasks) * 100 : 0}%` }} />
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 22, fontWeight: 800, fontFamily: 'var(--font-display)' }}>{doneCount}/{totalTasks}</div>
+                <div className="small">задач выполнено</div>
+              </div>
+            </div>
+
+            <div className="stagger" style={{ marginTop: 24, display: 'grid', gap: 14 }}>
+              {plan.weeks.map((week) => (
+                <section key={week.n} className="week fade-in">
+                  <div className="week__title">
+                    <span className="week__num">{week.n}</span>
+                    Неделя {week.n}
+                  </div>
+                  <ul>
+                    {week.tasks.map((task, i) => {
+                      const key = `${week.n}-${i}`
+                      return (
+                        <li key={key}>
+                          <button
+                            type="button"
+                            className="check"
+                            onClick={() => toggle(key)}
+                            aria-pressed={!!done[key]}
+                            style={done[key] ? { background: 'var(--match)', borderColor: 'var(--match)' } : {}}
+                          />
+                          <span style={done[key] ? { textDecoration: 'line-through', color: 'var(--muted)' } : {}}>{task}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              ))}
+            </div>
 
             {plan.checklist.length > 0 && (
-              <section className="p-6 rounded-xl bg-white shadow-sm">
-                <h2 className="text-lg font-bold mb-3">Чек-лист прогресса</h2>
-                <ul className="list-disc pl-5 space-y-1 text-gray-700">
+              <section className="checklist" style={{ marginTop: 24 }}>
+                <h2 style={{ fontSize: 18, marginBottom: 12 }}>Чек-лист пробелов</h2>
+                <ul>
                   {plan.checklist.map((item, i) => (
-                    <li key={i}>{item}</li>
+                    <li key={i}>
+                      <span className="check" />
+                      <span>{item}</span>
+                    </li>
                   ))}
                 </ul>
               </section>
             )}
 
             {plan.disclaimer && (
-              <p className="text-sm text-gray-500">{plan.disclaimer}</p>
+              <p className="disclaimer" style={{ marginTop: 20 }}>{plan.disclaimer}</p>
             )}
 
-            <div className="pt-4 border-t border-gray-200">
-              <Link href="/consultant" className="text-primary-600 hover:underline">
-                Задать вопрос консультанту →
-              </Link>
+            <div className="cta-bar" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <Link href="/consultant" className="btn btn-primary">Задать вопрос консультанту →</Link>
+              <Link href="/result" className="btn btn-ghost">Сменить направление</Link>
             </div>
-          </div>
+          </>
         )}
-      </div>
-    </main>
+      </main>
+    </>
   )
 }

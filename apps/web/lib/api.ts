@@ -1,13 +1,7 @@
 /**
  * API client for the Career Tracker application.
- * Handles fetching with error handling, loading states, and type safety.
- *
- * Типы ниже — контракт packages/contracts/openapi.yaml (источник истины):
- * recommend → { roles: [5 × RoleScore] }, plan → { weeks: [4 × Week], checklist },
- * chat → { reply, sources }, ошибки 400/404/422 → { error }.
+ * Контракт: packages/contracts/openapi.yaml (источник истины).
  */
-
-// ---- контрактные типы (openapi.yaml) ---------------------------------------
 
 type Profile = {
   skills: string[]
@@ -21,22 +15,19 @@ type RoleScore = {
   role_id: string
   title: string
   score: number
-  why: string[] // контракт: массив human-причин, minItems 1
+  why: string[]
   matched?: string[]
   gaps: string[]
 }
 
 type RecommendResponse = {
-  roles: RoleScore[] // ровно 5, по убыванию score
+  roles: RoleScore[]
 }
 
-type Week = {
-  n: number // 1–4
-  tasks: string[]
-}
+type Week = { n: number; tasks: string[] }
 
 type PlanResponse = {
-  weeks: Week[] // ровно 4
+  weeks: Week[]
   checklist: string[]
   role_id: string
   title: string
@@ -49,12 +40,9 @@ type ChatResponse = {
   sources: string[]
 }
 
-// ---- профиль в localStorage (перетекает между страницами демо-флоу) --------
-
 const PROFILE_KEY = 'career-tracker-profile'
 const ROLE_KEY = 'career-tracker-role'
 
-// Пример профиля — дословно из openapi.yaml (example /recommend).
 const EXAMPLE_PROFILE: Profile = {
   skills: ['python', 'git', 'html'],
   interests: ['веб-разработка', 'аналитика'],
@@ -98,13 +86,7 @@ function saveRoleId(roleId: string) {
   window.localStorage.setItem(ROLE_KEY, roleId)
 }
 
-// ---- fetch-обёртка ----------------------------------------------------------
-
-type ApiResponse<T> = {
-  success: boolean
-  data?: T
-  error?: string
-}
+type ApiResponse<T> = { success: boolean; data?: T; error?: string }
 
 type FetchOptions = {
   method?: 'GET' | 'POST'
@@ -119,66 +101,28 @@ export async function apiFetch<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
-  const {
-    method = 'GET',
-    body,
-    headers = {},
-    timeout = 15000,
-  } = options
-
+  const { method = 'GET', body, headers = {}, timeout = 15000 } = options
   const signal = AbortSignal.timeout(timeout)
-
   const config: RequestInit = {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
+    headers: { 'Content-Type': 'application/json', ...headers },
     cache: 'no-store',
     signal,
   }
-
-  if (body !== undefined) {
-    config.body = JSON.stringify(body)
-  }
+  if (body !== undefined) config.body = JSON.stringify(body)
 
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, config)
-
-    const data = (await response.json()) as {
-      success: boolean
-      error?: string // контракт ErrorResponse {error}
-      detail?: string // FastAPI-фолбэк
-    }
-
+    const data = (await response.json()) as { error?: string; detail?: string }
     if (!response.ok) {
-      return {
-        success: false,
-        error: data.error || data.detail || `HTTP ${response.status}`,
-      }
+      return { success: false, error: data.error || data.detail || `HTTP ${response.status}` }
     }
-
-    return {
-      success: true,
-      data: data as T,
-    }
+    return { success: true, data: data as T }
   } catch (error: any) {
     if (error.name === 'AbortError') {
-      return {
-        success: false,
-        error: 'Превышено время ожидания ответа сервера',
-      }
+      return { success: false, error: 'Превышено время ожидания ответа сервера' }
     }
-
-    const message =
-      error.message ||
-      (error.error && error.error.message) ||
-      'Произошла ошибка при подключении к серверу'
-
-    return {
-      success: false,
-      error: message,
-    }
+    return { success: false, error: error.message || 'Произошла ошибка при подключении к серверу' }
   }
 }
 
