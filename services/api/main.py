@@ -43,6 +43,7 @@ import scoring
 from schemas import (
     ChatRequest,
     ChatResponse,
+    Check,
     ErrorResponse,
     HealthResponse,
     PlanRequest,
@@ -486,6 +487,89 @@ def recommend(req: RecommendRequest) -> RecommendResponse | JSONResponse:
     return resp
 
 
+# Запрет лексики в проверках: проверка не «продаёт» результат и не обещает
+# трудоустройство (запрет заказчика; DISCLAIMER глобальный не отменяет это).
+_FORBIDDEN_CHECK_WORDS = ("гарант", "оффер", "офер", "трудоустро", "зарплат")
+
+
+def _build_checks(role: dict[str, Any], all_roles: list[dict[str, Any]]) -> list[Check]:
+    """Самопроверка понимания (совет раунда 2: «1 CHOICE + 1 SELF» на роль).
+
+    Детерминированная генерация из СЫРЫХ строк рубрики роли — из description и
+    закрытого словаря навыков. Не через _rephrase_or_draft: LLM-перефраз сломал
+    бы дословность source и воспроизводимость cached-ответов. Без
+    первоисточника — проверки нет (не выдумываем факты вне рубрики).
+    """
+    rid = str(role.get("id", ""))
+    title = str(role.get("title") or rid)
+    description = str(role.get("description") or "")
+    if not description:
+        return []
+    if any(w in description.lower() for w in _FORBIDDEN_CHECK_WORDS):
+        return []
+
+    # Формат CHOICE: «Что делает X?» — три дословных описания ролей;
+    # верное = текущая роль. Варианты — только из чужих описаний рубрик,
+    # чтобы факт не вылезал за пределы базы. Позиция верного сдвигается
+    # детерминированно.
+    others = [
+        r
+        for r in all_roles
+        if r.get("id") != rid
+        and r.get("description")
+        and not any(
+            w in str(r.get("description", "")).lower() for w in _FORBIDDEN_CHECK_WORDS
+        )
+    ]
+    if len(others) >= 2:
+        pos = len(rid) % 3  # web→1, 1c→2, qa→0, support→1, startup→2
+        options = [str(others[0]["description"]), str(others[1]["description"])]
+        options.insert(pos, description)
+        checks: list[Check] = [
+            Check(
+                id=f"{rid}-what-is",
+                kind="choice",
+                prompt=f"Что делает {title}?",
+                options=options,
+                correct=pos,
+                hint="",
+                source=f"role:{rid} — description",
+                week=4,
+            )
+        ]
+    else:
+        checks = []
+
+    # Формат SELF: «объясни своими словами» про навык с максимальным весом
+    # (tie-break по id), ориентир — дословное description роли.
+    sk = sorted(
+        (s for s in role.get("skills_required") or [] if s.get("id")),
+        key=lambda s: (-float(s.get("weight") or 0), str(s.get("id"))),
+    )
+    skill_id = str(sk[0]["id"]) if sk else ""
+    skill_name = SKILL_NAMES.get(skill_id, skill_id or "")
+    if skill_name:
+        prompt = (
+            f"Объясни своими словами: что такое {skill_name} "
+            f"и зачем оно в роли «{title}»?"
+        )
+    else:
+        prompt = f"Объясни своими словами: в чём суть роли «{title}»?"
+        skill_id = ""
+    checks.append(
+        Check(
+            id=f"{rid}-own-words",
+            kind="self",
+            prompt=prompt,
+            hint=description,
+            source=f"role:{rid} — description",
+            skill=skill_id,
+            week=3,
+        )
+    )
+    return checks
+
+
 @app.post("/plan", response_model=PlanResponse)
 def plan(req: PlanRequest) -> PlanResponse:
     role = _validate_role_id(req.role_id)
@@ -577,6 +661,9 @@ def plan(req: PlanRequest) -> PlanResponse:
         profile_hash=phash,
         llm_used=llm_used,  # type: ignore[arg-type]
         cached=False,
+        # Аддитивная самопроверка (1 CHOICE + 1 SELF): факты из сырых строк
+        # рубрики, детерминированно → cached-ответ идентичен свежему.
+        checks=_build_checks(role, ROLES),
     )
     _CACHE[key] = resp.model_dump()
     return resp

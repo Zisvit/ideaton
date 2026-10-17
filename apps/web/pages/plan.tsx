@@ -2,10 +2,12 @@ import React from 'react'
 import Link from 'next/link'
 import {
   apiFetch,
+  getChecks,
   getDone,
   getStoredProfile,
   getStoredRoleId,
   PlanResponse,
+  saveChecks,
   saveDone,
 } from '../lib/api'
 
@@ -14,6 +16,9 @@ export default function Plan() {
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [done, setDone] = React.useState<Record<string, boolean>>({})
+  // Результат самопроверки — отдельное хранилище (не подмешивается в done,
+  // иначе doneCount считает чужие ключи → ложное «Маршрут пройден»)
+  const [checked, setChecked] = React.useState<Record<string, boolean>>({})
   const roleId = React.useRef<string>('')
 
   // Контракт: POST /plan { role_id, profile } → { weeks[], checklist[], title, disclaimer }
@@ -38,6 +43,7 @@ export default function Plan() {
     // «Прогресс сохраняется в браузере» теперь говорит правду: done-набор
     // хранится по роли (localStorage или память в гостевом режиме)
     setDone(getDone(roleId.current))
+    setChecked(getChecks(roleId.current))
     fetchPlan()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -49,9 +55,34 @@ export default function Plan() {
       saveDone(roleId.current, next)
       return next
     })
+
+  // Проверка поняла себя (CHOICE верно / SELF «Разобрался») — пишет в своё хранилище.
+  const settle = (id: string) =>
+    setChecked((c) => {
+      const next = { ...c, [id]: true }
+      saveChecks(roleId.current, next)
+      return next
+    })
+
+  // Ключ задачи: неделя + позиция + хэш ТЕКСТА задачи. Индекс-ключ (${n}-${i})
+  // сдвигался тихо, когда персональные вставки меняли состав недели при смене
+  // профиля → «галочки на чужих задачах». Хэш делает ключ привязанным к смыслу.
+  const taskKey = (weekN: number, i: number, task: string) => {
+    let h = 0
+    for (let c = 0; c < task.length; c++) h = (h * 31 + task.charCodeAt(c)) | 0
+    return `${weekN}-${i}:${h}`
+  }
   const totalTasks = plan ? plan.weeks.reduce((a, w) => a + w.tasks.length, 0) : 0
-  const doneCount = Object.values(done).filter(Boolean).length
+  // Счёт только по КЛЮЧАМ текущего плана: stale-записи (смена роли/профиля)
+  // физически не считаются → isComplete и конфетти не срабатывают «впустую».
+  const taskKeys = plan
+    ? plan.weeks.flatMap((w) => w.tasks.map((t, i) => taskKey(w.n, i, t)))
+    : []
+  const doneCount = taskKeys.filter((k) => done[k]).length
   const isComplete = totalTasks > 0 && doneCount >= totalTasks
+  // Аддитивное поле /plan: рендерим блок только при непустом массиве.
+  // Слепой каст apiFetch -> T не валидирует форму, поэтому рантайм-гвард тут.
+  const checks = Array.isArray(plan && plan.checks) ? (plan as PlanResponse).checks ?? [] : []
 
   return (
     <>
@@ -137,7 +168,7 @@ export default function Plan() {
                   </div>
                   <ul>
                     {week.tasks.map((task, i) => {
-                      const key = `${week.n}-${i}`
+                      const key = taskKey(week.n, i, task)
                       return (
                         <li key={key} className={done[key] ? 'done' : ''}>
                           <button
@@ -155,6 +186,29 @@ export default function Plan() {
                 </section>
               ))}
             </div>
+
+            {checks.length > 0 && (
+              <section
+                className="card plan-print-hide"
+                style={{ marginTop: 24, display: 'grid', gap: 16 }}
+                aria-label="Проверь, что понял"
+              >
+                <div>
+                  <h2 style={{ fontSize: 18, marginBottom: 6 }}>Проверь, что понял</h2>
+                  <p className="small" style={{ margin: 0 }}>
+                    Не экзамен и не оценка: проверка для тебя. Ответ берётся из той же закрытой
+                    базы ролей, повторить можно сколько угодно.
+                  </p>
+                </div>
+                {checks.map((check) =>
+                  check.kind === 'choice' ? (
+                    <ChoiceCard key={check.id} check={check} settled={!!checked[check.id]} onSettle={settle} />
+                  ) : (
+                    <SelfCard key={check.id} check={check} settled={!!checked[check.id]} onSettle={settle} />
+                  )
+                )}
+              </section>
+            )}
 
             {plan.checklist.length > 0 && (
               <section className="checklist" style={{ marginTop: 24 }}>
@@ -198,5 +252,129 @@ export default function Plan() {
         )}
       </main>
     </>
+  )
+}
+
+type Check = {
+  id: string
+  prompt: string
+  kind: 'self' | 'choice'
+  options?: string[]
+  correct?: number | null
+  hint?: string
+  source?: string
+  skill?: string
+  week?: number
+}
+
+type CheckCardProps = {
+  check: Check
+  settled: boolean
+  onSettle: (id: string) => void
+}
+
+// Кнопка-вариант CHOICE: состояния нейтральные (без красного/ошибок по UX.md),
+// верный ответ даёт фразу «Разобрался», неверный — молча reveal точного текста
+// из рубрики + source; повтор клика разрешён, счётов и процентов нет.
+const optionBtn = (active: boolean, revealed: boolean): React.CSSProperties => ({
+  width: '100%',
+  justifyContent: 'flex-start',
+  textAlign: 'left',
+  height: 'auto',
+  padding: '10px 14px',
+  borderRadius: 12,
+  whiteSpace: 'normal',
+  ...(active && !revealed
+    ? { borderColor: 'var(--accent)', color: 'var(--accent)', fontWeight: 600 }
+    : {}),
+  ...(revealed ? { background: 'var(--accent-soft)', borderColor: 'var(--accent)' } : {}),
+})
+
+function ChoiceCard({ check, settled, onSettle }: CheckCardProps) {
+  const [picked, setPicked] = React.useState<number | null>(null)
+  const options = Array.isArray(check.options) ? check.options : []
+  const correct = typeof check.correct === 'number' ? check.correct : -1
+
+  if (settled) {
+    return (
+      <div className="small" style={{ color: 'var(--accent)' }}>
+        ✓ Разобрался — {check.prompt}
+      </div>
+    )
+  }
+  return (
+    <div style={{ display: 'grid', gap: 8 }}>
+      <div style={{ fontWeight: 600 }}>{check.prompt}</div>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {options.map((option, i) => {
+          const revealed = picked !== null && i === correct
+          return (
+            <button
+              key={i}
+              type="button"
+              className="btn btn-ghost"
+              style={{
+                ...optionBtn(picked === i, revealed),
+                border: '1px solid var(--line)',
+              }}
+              aria-pressed={picked === i}
+              onClick={() => {
+                setPicked(i)
+                if (i === correct) onSettle(check.id)
+              }}
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
+      {picked !== null && picked !== correct && correct >= 0 && (
+        <div className="small" role="status">
+          Вот как это записано в базе: <b>{options[correct]}</b>
+          {check.source ? ` · ${check.source}` : ''}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SelfCard({ check, settled, onSettle }: CheckCardProps) {
+  const [open, setOpen] = React.useState(false)
+  if (settled) {
+    return (
+      <div className="small" style={{ color: 'var(--accent)' }}>
+        ✓ Разобрался — объяснил своими словами
+      </div>
+    )
+  }
+  return (
+    <div style={{ display: 'grid', gap: 8 }}>
+      <div style={{ fontWeight: 600 }}>{check.prompt}</div>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          style={{ border: '1px solid var(--line)' }}
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? 'Скрыть ориентир' : 'Показать ориентир'}
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          style={{ border: '1px solid var(--line)' }}
+          onClick={() => onSettle(check.id)}
+        >
+          Разобрался
+        </button>
+      </div>
+      {open && check.hint && (
+        <div className="small" role="note">
+          Ориентир из рубрики: «{check.hint}»
+          {check.source ? ` · ${check.source}` : ''}
+        </div>
+      )}
+    </div>
   )
 }
