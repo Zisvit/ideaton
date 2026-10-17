@@ -67,6 +67,13 @@ export default function Result() {
   const top = roles[0]
   const rest = roles.slice(1)
   const topScore = useCountUp(top ? top.score : 0)
+  // «N из M навыков» — главный счётчик (UX.md:74), % — вторичная строка.
+  const hasCounts =
+    !!top &&
+    typeof top.matched_count === 'number' &&
+    typeof top.needed_count === 'number' &&
+    top.needed_count > 0
+  const topGapCount = top ? top.gaps.length : 0
 
   return (
     <>
@@ -127,14 +134,38 @@ export default function Result() {
             <article className="hero-card fade-in">
               <div className="row-between">
                 <span className="tag tag-match">Лучшее совпадение</span>
-                <span className="num" style={{ fontSize: 15 }} aria-hidden>
-                  {topScore}% совпадение
+                {hasCounts ? (
+                  <span
+                    className="num"
+                    style={{ fontSize: 22, lineHeight: 1.2 }}
+                    aria-hidden
+                  >
+                    {top!.matched_count} из {top!.needed_count}
+                  </span>
+                ) : (
+                  <span className="num" style={{ fontSize: 15 }} aria-hidden>
+                    {topScore}% совпадение
+                  </span>
+                )}
+                <span className="sr-only">
+                  {hasCounts
+                    ? `${top!.matched_count} из ${top!.needed_count} ключевых навыков роли`
+                    : `${top!.score}% совпадение`}
                 </span>
-                <span className="sr-only">{top.score}% совпадение</span>
               </div>
               <h2 style={{ marginTop: 16, fontSize: 'clamp(24px,3.4vw,34px)', fontWeight: 600, color: '#fff' }}>
-                {top.title}
+                {top!.title}
               </h2>
+              <p className="small" style={{ margin: '10px 0 0', color: 'rgba(255,255,255,.72)' }}>
+                {hasCounts
+                  ? `${top!.matched_count} из ${top!.needed_count} ключевых навыков роли — в твоём профиле`
+                  : ''}
+                {hasCounts
+                  ? topGapCount > 0
+                    ? ` · ${topGapCount} пробелов закрывают недели 1–2 плана`
+                    : ' · все ключевые навыки на месте'
+                  : ''}
+              </p>
               <ul style={{ marginTop: 16, display: 'grid', gap: 6, listStyle: 'none', padding: 0 }}>
                 {top.why.map((w, i) => (
                   <li
@@ -177,7 +208,22 @@ export default function Result() {
                     <div className="num-order">#{String(idx + 2).padStart(2, '0')}</div>
                     <h3 className="role-card__title">{role.title}</h3>
                   </div>
-                  <span className="score-ring num">{role.score}%</span>
+                  <span
+                    className="score-ring num"
+                    title={
+                      typeof role.matched_count === 'number' &&
+                      typeof role.needed_count === 'number' &&
+                      role.needed_count > 0
+                        ? `${role.matched_count} из ${role.needed_count} ключевых навыков`
+                        : undefined
+                    }
+                  >
+                    {typeof role.matched_count === 'number' &&
+                    typeof role.needed_count === 'number' &&
+                    role.needed_count > 0
+                      ? `${role.matched_count}/${role.needed_count}`
+                      : `${role.score}%`}
+                  </span>
                 </div>
                 <p className="role-card__why">{role.why.join(' · ')}</p>
                 {role.gaps.length > 0 && (

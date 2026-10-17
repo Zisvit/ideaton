@@ -110,11 +110,20 @@ export default function Consultant() {
         )}
 
         {chat && (
-          <div className="chat-bubble fade-in" style={{ marginTop: 24 }} aria-live="polite">
-            <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{chat.reply}</p>
-            {chat.sources.length > 0 && (
-              <p className="sources">Источники: {chat.sources.join('; ')}</p>
-            )}
+          <div className="chat-block fade-in" style={{ marginTop: 24 }}>
+            {/* честный бейдж режима: llm_used отдаёт бэкенд (stub/external) */}
+            <span
+              className={chat.llm_used === 'external' ? 'badge badge-live' : 'badge badge-demo'}
+              style={{ marginBottom: 10 }}
+            >
+              {chat.llm_used === 'external' ? 'ИИ-консультант' : 'Демо-режим'}
+            </span>
+            <div className="chat-bubble" aria-live="polite">
+              <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{chat.reply}</p>
+              {chat.sources.length > 0 && (
+                <p className="sources">Источники: {chat.sources.join('; ')}</p>
+              )}
+            </div>
           </div>
         )}
 
