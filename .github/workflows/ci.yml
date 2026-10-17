@@ -194,3 +194,35 @@ jobs:
             npm install --no-audit --no-fund
           fi
           npm run build --if-present
+
+      # --- 6. Юнит- и интеграционные тесты Python (pytest) ---
+      # test_scoring.py — формула/тай-брейк/счётчики/gap-задачи;
+      # test_api_http.py — настоящие запросы на приложение (TestClient):
+      # /health /recommend /plan /chat + 400/404/422 + кэш + CORS preflight;
+      # test_contract_live.py — app.openapi() против openapi.yaml.
+      - name: Python tests (pytest)
+        run: |
+          set -u
+          if [ ! -d tests ] || ! ls tests/test_*.py >/dev/null 2>&1; then
+            echo "skip: pytest-тестов нет"
+            exit 0
+          fi
+          PY="$(command -v python || command -v python3)"
+          "$PY" -m pip install --quiet --disable-pip-version-check \
+            fastapi httpx pytest pydantic pyyaml
+          "$PY" -m pytest tests/ -q
+
+      # --- 7. Smoke e2e без фронтенда (API-цепочка health→recommend→plan→chat) ---
+      # SMOKE_SKIP_FE=1: не нужен node-стенд; полный e2e с фронтендом гоняется
+      # локально (день демо) и/или после подъёма branch protection.
+      - name: Smoke e2e (API-only)
+        if: ${{ hashFiles('tests/smoke.sh') != '' }}
+        run: |
+          set -u
+          PY="$(command -v python || command -v python3)"
+          "$PY" -m pip install --quiet --disable-pip-version-check \
+            fastapi httpx pydantic pyyaml uvicorn
+          export PATH="$(dirname "$PY"):$PATH"
+          SMOKE_SKIP_FE=1 SMOKE_API_PORT=8117 SMOKE_FE_PORT=3117 \
+            SMOKE_READY_TRIES=60 SMOKE_READY_SLEEP=1 \
+            timeout 540 bash tests/smoke.sh

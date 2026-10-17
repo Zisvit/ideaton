@@ -310,6 +310,16 @@ components:
           items:
             type: string
           example: ["Нет JavaScript в навыках"]
+        matched_count:
+          type: integer
+          description: "ТЗ-расширение: сколько уникальных требуемых навыков закрыто (для счётчика «N из M»)"
+          minimum: 0
+          example: 7
+        needed_count:
+          type: integer
+          description: "ТЗ-расширение: сколько всего уникальных требуемых навыков у роли"
+          minimum: 0
+          example: 10
 
     RecommendResponse:
       type: object
@@ -368,6 +378,10 @@ components:
           items:
             type: string
           example: ["Освоен синтаксис JavaScript"]
+        cached:
+          type: boolean
+          description: "ТЗ-расширение: ответ отдан из кэша (симметрично /recommend)"
+          example: false
 
     ChatRequest:
       type: object
@@ -397,6 +411,11 @@ components:
           items:
             type: string
           example: ["role:web — development_steps", "plan:week-1"]
+        llm_used:
+          type: string
+          description: "ТЗ-расширение: режим консультанта (stub — демо-режим)"
+          enum: [stub, external]
+          example: "stub"
 
     HealthResponse:
       type: object

@@ -24,6 +24,8 @@ from typing import Any
 import yaml
 
 INTEREST_BONUS_CAP = 3
+GAP_TASK_LIMIT = 3
+GAP_TASK_TMPL = "Закрыть пробел «{name}»: обязательный навык роли, в профиле его нет"
 
 
 def _put_alias(alias_to_id: dict[str, str], alias: str, canonical: str) -> None:
@@ -76,6 +78,29 @@ def normalize_skill(skill: str, alias_to_id: dict[str, str]) -> str:
     """Нормализует навык профиля к каноническому id (или к lower/strip виду)."""
     key = str(skill).strip().lower()
     return alias_to_id.get(key, key)
+
+
+def load_skill_names(path: Path) -> dict[str, str]:
+    """id → человеческое имя навыка из skills.yaml (вложенный формат).
+
+    Плоский legacy-формат имён не содержит — остаётся пустым словарём
+    (потребители используют фолбэк id). Нечитаемый/отсутствующий файл → {}.
+    """
+    names: dict[str, str] = {}
+    if not path.is_file():
+        return names
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return names
+    if not isinstance(data, dict):
+        return names
+    inner = data.get("skills")
+    container = inner if isinstance(inner, dict) else data
+    for cid, meta in container.items():
+        if isinstance(meta, dict) and meta.get("name"):
+            names[str(cid).strip().lower()] = str(meta["name"])
+    return names
 
 
 def role_tags(role: dict[str, Any]) -> set[str]:
@@ -177,6 +202,22 @@ def build_why(
     return why
 
 
+def match_counts(matched: list[str], role: dict[str, Any]) -> tuple[int, int]:
+    """Счётчики для UI «N из M навыков»: (сколько закрыто, сколько всего).
+
+    Оба числа — по УНИКАЛЬНЫМ требуемым id роли (дубликаты в skills_required
+    не раздут знаменатель). matched может содержать синонимы/чужие id — берём
+    пересечение с требуемым набором.
+    """
+    needed = {
+        str(req.get("id", "")).strip().lower()
+        for req in role.get("skills_required") or []
+        if req.get("id")
+    }
+    covered = {str(m).strip().lower() for m in matched if m} & needed
+    return len(covered), len(needed)
+
+
 def rank_roles(
     profile: dict[str, Any],
     roles: list[dict[str, Any]],
@@ -186,6 +227,7 @@ def rank_roles(
     rows: list[dict[str, Any]] = []
     for role in roles:
         score, matched, gaps, overlap = score_role(profile, role, alias_to_id)
+        matched_count, needed_count = match_counts(matched, role)
         rows.append(
             {
                 "role_id": role["id"],
@@ -194,7 +236,41 @@ def rank_roles(
                 "matched": matched,
                 "gaps": gaps,
                 "overlap_interests": overlap,
+                "matched_count": matched_count,
+                "needed_count": needed_count,
             }
         )
     rows.sort(key=lambda r: (-r["score"], r["role_id"]))
     return rows
+
+
+def gap_tasks(
+    profile: dict[str, Any],
+    role: dict[str, Any],
+    alias_to_id: dict[str, str],
+    skill_names: dict[str, str] | None = None,
+    limit: int = GAP_TASK_LIMIT,
+) -> list[str]:
+    """Персональные задачи плана: закрыть верхние пробелы ПРОФИЛЯ в этой роли.
+
+    Связывает /plan с профилем студента (сейчас план строится только из
+    рубрики роли): недели 1–2 получают задачи по навыкам, которых не хватает
+    именно этому профилю. Детерминированно: сортировка по (−weight, id),
+    максимум `limit` задач. Пустой профиль → [] (остаётся базовый план роли).
+    Имя навыка — из skill_names (id → name), фолбэк — сам id.
+    """
+    if not (
+        profile.get("skills") or profile.get("interests") or profile.get("subjects")
+    ):
+        return []
+    prof = {normalize_skill(s, alias_to_id) for s in profile.get("skills") or []}
+    missing: list[tuple[float, str]] = []
+    for req in role.get("skills_required") or []:
+        rid = str(req.get("id", "")).strip().lower()
+        if rid and rid not in prof:
+            missing.append((float(req.get("weight", 0.0)), rid))
+    missing.sort(key=lambda t: (-t[0], t[1]))
+    names = skill_names or {}
+    return [
+        GAP_TASK_TMPL.format(name=names.get(rid, rid)) for _, rid in missing[:limit]
+    ]

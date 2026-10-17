@@ -18,14 +18,12 @@ services:
         required: false
     environment:
       PORT: ${PORT:-8000}
-      DB_PATH: ${DB_PATH:-/data/tracker.db}
       LLM_ENABLED: ${LLM_ENABLED:-false}
+      LLM_URL: ${LLM_URL:-}
       LLM_MODEL: ${LLM_MODEL:-}
       LLM_API_KEY: ${LLM_API_KEY:-}
     ports:
       - "${PORT:-8000}:${PORT:-8000}"
-    volumes:
-      - api-data:/data
     healthcheck:
       # читаем PORT из окружения контейнера в рантайме -> без подстановки compose
       test: ["CMD-SHELL", "python -c \"import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('PORT','8000')+'/health')\""]
@@ -50,6 +48,3 @@ services:
       # service_started, а не service_healthy: web не должен ждать /health API
       - api
     restart: unless-stopped
-
-volumes:
-  api-data:

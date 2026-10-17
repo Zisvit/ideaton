@@ -67,7 +67,16 @@ class RoleScore(BaseModel):
     matched: list[str] = Field(
         default_factory=list, description="Совпавшие навыки (ТЗ)"
     )
-    gaps: list[str] = Field(default_factory=list, description="Пробелы профиля")
+    # Контракт: gaps входит в required [role_id, title, score, why, gaps]
+    # — обязательное без default (расхождение с дефолтом ловит контракт-тест на живом приложении).
+    gaps: list[str] = Field(description="Пробелы профиля")
+    # ТЗ-расширение для «N из M навыков» вместо голого процента (UX.md:74).
+    matched_count: int = Field(
+        default=0, ge=0, description="Сколько уникальных требуемых навыков закрыто"
+    )
+    needed_count: int = Field(
+        default=0, ge=0, description="Сколько всего уникальных требуемых навыков"
+    )
 
 
 class RecommendResponse(BaseModel):
@@ -126,6 +135,8 @@ class PlanResponse(BaseModel):
     disclaimer: str = ""
     profile_hash: str = ""
     llm_used: Literal["stub", "external"] = "stub"
+    # ТЗ-расширение: симметрично /recommend — флаг кэша в ответе.
+    cached: bool = Field(default=False, description="Ответ отдан из кэша (ТЗ)")
 
 
 class ChatRequest(BaseModel):
@@ -143,6 +154,8 @@ class ChatResponse(BaseModel):
     answer: str = Field(default="", description="Алиас reply (ТЗ)")
     sources: list[str] = Field(default_factory=list)
     profile_hash: str = ""
+    # ТЗ-расширение: режим консультанта для UI-бейджа (демо-режим / ИИ).
+    llm_used: Literal["stub", "external"] = "stub"
 
 
 class HealthResponse(BaseModel):
