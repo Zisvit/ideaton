@@ -3,9 +3,9 @@
 // охвате сверху (scrollY>0 = уже вовлечён, не мешаем), Reduce → никогда.
 // Важно: закрытие сцены — ТОЛЬКО по JS-таймеру/клику/Esc (animationend гасится
 // глобальным prefers-reduced-motion {animation:none} в globals.css).
-export const INTRO_MS = 3200
+export const INTRO_MS = 4200
 
-const INTRO_KEY = 'career-tracker-intro:v1'
+const INTRO_KEY = 'career-tracker-intro:v2'
 
 export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false

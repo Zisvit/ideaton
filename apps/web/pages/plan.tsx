@@ -170,7 +170,7 @@ export default function Plan() {
                     {week.tasks.map((task, i) => {
                       const key = taskKey(week.n, i, task)
                       return (
-                        <li key={key} className={done[key] ? 'done' : ''}>
+                        <li key={key} className={done[key] ? 'done is-done' : ''}>
                           <button
                             type="button"
                             className="check"
@@ -276,19 +276,8 @@ type CheckCardProps = {
 // Кнопка-вариант CHOICE: состояния нейтральные (без красного/ошибок по UX.md),
 // верный ответ даёт фразу «Разобрался», неверный — молча reveal точного текста
 // из рубрики + source; повтор клика разрешён, счётов и процентов нет.
-const optionBtn = (active: boolean, revealed: boolean): React.CSSProperties => ({
-  width: '100%',
-  justifyContent: 'flex-start',
-  textAlign: 'left',
-  height: 'auto',
-  padding: '10px 14px',
-  borderRadius: 12,
-  whiteSpace: 'normal',
-  ...(active && !revealed
-    ? { borderColor: 'var(--accent)', color: 'var(--accent)', fontWeight: 600 }
-    : {}),
-  ...(revealed ? { background: 'var(--accent-soft)', borderColor: 'var(--accent)' } : {}),
-})
+// Варианты/состояния размечены классами (.opt-list/.opt/.is-*) — анимации
+// (лесенка входа, поп reveal) правит CSS в globals.css (микро-слой v5).
 
 function ChoiceCard({ check, settled, onSettle }: CheckCardProps) {
   const [picked, setPicked] = React.useState<number | null>(null)
@@ -297,7 +286,7 @@ function ChoiceCard({ check, settled, onSettle }: CheckCardProps) {
 
   if (settled) {
     return (
-      <div className="small" style={{ color: 'var(--accent)' }}>
+      <div className="small is-settled" style={{ color: 'var(--accent)' }}>
         ✓ Разобрался — {check.prompt}
       </div>
     )
@@ -305,17 +294,23 @@ function ChoiceCard({ check, settled, onSettle }: CheckCardProps) {
   return (
     <div style={{ display: 'grid', gap: 8 }}>
       <div style={{ fontWeight: 600 }}>{check.prompt}</div>
-      <div style={{ display: 'grid', gap: 8 }}>
+      <div className="opt-list" style={{ display: 'grid', gap: 8 }}>
         {options.map((option, i) => {
           const revealed = picked !== null && i === correct
           return (
             <button
               key={i}
               type="button"
-              className="btn btn-ghost"
+              className={`btn btn-ghost opt${picked === i ? ' is-active' : ''}${revealed ? ' is-reveal' : ''}`}
               style={{
-                ...optionBtn(picked === i, revealed),
-                border: '1px solid var(--line)',
+                width: '100%',
+                justifyContent: 'flex-start',
+                textAlign: 'left',
+                height: 'auto',
+                padding: '10px 14px',
+                borderRadius: 12,
+                whiteSpace: 'normal',
+                ...(revealed ? { background: 'var(--accent-soft)', borderColor: 'var(--accent)' } : {}),
               }}
               aria-pressed={picked === i}
               onClick={() => {
@@ -329,7 +324,7 @@ function ChoiceCard({ check, settled, onSettle }: CheckCardProps) {
         })}
       </div>
       {picked !== null && picked !== correct && correct >= 0 && (
-        <div className="small" role="status">
+        <div className="small is-hint fade-in" role="status">
           Вот как это записано в базе: <b>{options[correct]}</b>
           {check.source ? ` · ${check.source}` : ''}
         </div>
@@ -342,7 +337,7 @@ function SelfCard({ check, settled, onSettle }: CheckCardProps) {
   const [open, setOpen] = React.useState(false)
   if (settled) {
     return (
-      <div className="small" style={{ color: 'var(--accent)' }}>
+      <div className="small is-settled" style={{ color: 'var(--accent)' }}>
         ✓ Разобрался — объяснил своими словами
       </div>
     )
@@ -370,7 +365,7 @@ function SelfCard({ check, settled, onSettle }: CheckCardProps) {
         </button>
       </div>
       {open && check.hint && (
-        <div className="small" role="note">
+        <div className="small fade-in" role="note">
           Ориентир из рубрики: «{check.hint}»
           {check.source ? ` · ${check.source}` : ''}
         </div>

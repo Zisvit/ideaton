@@ -177,15 +177,9 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
 .hero { max-width: 720px; }
 .hero__sub { font-size: 17px; line-height: 1.55; color: var(--muted); margin-top: 14px; max-width: 52ch; }
 
-/* точечная сетка-«чертёж» на hero-блоке главной (фоновая текстура, не фишка) */
+/* точечная сетка-«чертёж» снята (совет v5, 2:1): единственный dot-grid теперь
+   в FixLayer (.fix-bg__dots, дрейф 18s) — две точечные текстуры на экране = шум */
 .band { position: relative; }
-.band::before {
-  content: ''; position: absolute; inset: 0;
-  background-image: radial-gradient(var(--ink) 1px, transparent 1.4px);
-  background-size: 24px 24px; opacity: .04; pointer-events: none;
-  mask-image: radial-gradient(60% 100% at 25% 0%, #000 40%, transparent 80%);
-  -webkit-mask-image: radial-gradient(60% 100% at 25% 0%, #000 40%, transparent 80%);
-}
 .band > * { position: relative; }
 
 /* градиентный текст: фирменный приём только на index, 2 стопа одного тона */
@@ -355,16 +349,37 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
 }
 
 /* =========================================================================
-   СЦЕНЫ v4: «тишина на базе — шедевр в сценах» (манифест совета, зафиксирован
-   в коде, как требует красная команда). Правило: двигается сцена, читается база.
-   Сцены — три: (1) интро на первом заходе, (2) фоновый слой (текстура,
-   медленный дрейф — ВНЕ счётчика анимаций страницы), (3) конфетти плана.
-   Внутренние страницы: новые @keyframes запрещены, только микровзаимо-
-   действия 150–300мс. prefers-reduced-motion: сцены не рендерятся вовсе.
+   СЦЕНЫ v5 + микро-слой: «живая база — шедевр в сценах» (манифест v5).
+   Секции: 1) TOKENS · 2) ФОН · 3) ИНТРО+ЛИСА · 4) МИКРО · 5) MUTE.
+   Контракты (совет, раунд 2): только transform/opacity в @keyframes
+   (гейт: tests/test_motion_css.py ловит paint/layout-свойства); @keyframes
+   ≤ 30 имён; stagger 50 ms × cap 8; sheen 400 ms; интро 4200 ms.
+   Append-only для базы v1–v3 (правок середины нет, кроме снятия .band::before);
+   сцены правятся хирургически внутри этого хвоста.
    ========================================================================= */
 
-/* ---- общий фоновый слой (FixLayer): aurora без blur + микро-фигуры ----
-   Только transform/opacity (композитинг), will-change на одном контейнере. */
+/* ---- 1. TOKENS v5 (единственный источник таймингов) ---- */
+:root {
+  --m-fast: 120ms;   /* hover/press/focus: отклик ≤ 120 ms (критерий приёмки) */
+  --m-base: 220ms;   /* галочка/цвета/reveal/выход строки */
+  --m-slow: 350ms;   /* вход секций */
+  --m-stagger: 50ms; /* шаг лесенки; cap 8 ⇒ окно ≤ 400 ms */
+  --m-ease-inout: cubic-bezier(.4, 0, .2, 1);
+  --m-ease-back: cubic-bezier(.34, 1.3, .64, 1); /* пружина, только transform */
+  --m-sheen: 400ms;  /* блик: декор-проход один раз */
+  /* фон: медленный, но заметный дрейф (≈2.7 px/s на 1440) */
+  --bg-drift-amp: 2.5%;
+  --bg-drift-period: 36s;
+  /* лиса v5: детали геометрии (талисман проекта, не бренд вуза) */
+  --fox-deep: #C25A1B;  /* носки/глубина leg-ов */
+  --fox-dark: #8A3D10;  /* штрихи меха */
+  --fox-nose: #3A2A22;
+  --fox-eye: #1C232B;
+}
+
+/* ---- 2. ФОН: aurora 4 блоба без blur + dot-grid + 3 микро-фигуры ----
+   5 композитных узлов; скорости ≤ 4 px/s (longcat), одна палитра бренда:
+   4-й блоб — --brand-blue .09 (не чужой #2563EB — упало на совете). */
 main, .site-header { position: relative; z-index: 1; }
 .fix-bg {
   position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
@@ -375,38 +390,57 @@ main, .site-header { position: relative; z-index: 1; }
   background:
     radial-gradient(46vmax 46vmax at 18% 22%, rgba(91,76,255,.10), transparent 62%),
     radial-gradient(40vmax 40vmax at 78% 16%, rgba(78,140,255,.08), transparent 60%),
-    radial-gradient(44vmax 44vmax at 62% 84%, rgba(139,92,246,.07), transparent 62%);
-  animation: fixDrift 30s ease-in-out infinite alternate;
+    radial-gradient(44vmax 44vmax at 62% 84%, rgba(139,92,246,.07), transparent 62%),
+    radial-gradient(30vmax 30vmax at 40% 50%, rgba(78,140,255,.09), transparent 58%);
+  animation: fixDrift5 var(--bg-drift-period) ease-in-out infinite alternate;
   will-change: transform;
 }
-@keyframes fixDrift {
-  from { transform: translate3d(-1.2%, -0.8%, 0) scale(1); }
-  to { transform: translate3d(1.2%, 0.8%, 0) scale(1.04); }
+@keyframes fixDrift5 {
+  from { transform: translate3d(calc(var(--bg-drift-amp) * -1), calc(var(--bg-drift-amp) * -.64), 0) scale(1); }
+  to   { transform: translate3d(var(--bg-drift-amp), calc(var(--bg-drift-amp) * .64), 0) scale(1.05); }
 }
-/* микро-фигуры: круг · линия · капсула — «различные элементы», тихие */
-.fix-bg__shape { position: absolute; border: 1.5px solid; opacity: .12; }
+/* dot-grid: бесшовный дрейф — тайл 24px == сдвиг 24px за 18s (1.33 px/s) */
+.fix-bg__dots {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(18,20,26,.05) 1px, transparent 1.5px);
+  background-size: 24px 24px;
+  animation: dotDrift 18s linear infinite;
+  will-change: transform;
+}
+@keyframes dotDrift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(0, -24px, 0); }
+}
+/* микро-фигуры: ОДИН keyframe bgShape, развёртка через --sx/--sy/--sr (deepseek) */
+.fix-bg__shape {
+  position: absolute; border: 1.5px solid; opacity: .12; will-change: transform;
+  animation: bgShape var(--dur, 36s) ease-in-out var(--del, 0s) infinite alternate;
+}
 .fix-bg__shape--ring {
   width: 7.5vmax; height: 7.5vmax; border-radius: 50%; border-color: var(--accent);
-  top: 13%; right: 7%; animation: shapeA 36s ease-in-out infinite alternate;
+  top: 13%; right: 7%;
+  --sx: -3vmax;  --sy: 2.6vmax;  --sr: 0deg;   --sw: 6deg; --dur: 36s;
 }
 .fix-bg__shape--line {
   width: 15vmax; height: 0; border-color: var(--brand-blue);
-  top: 66%; left: 5%; transform: rotate(-16deg);
-  animation: shapeB 42s ease-in-out infinite alternate;
+  top: 66%; left: 5%;
+  --sx: 2.8vmax; --sy: -2.2vmax; --sr: -18deg; --sw: 4deg; --dur: 42s;
 }
 .fix-bg__shape--capsule {
   width: 5vmax; height: 9vmax; border-radius: 999px; border-color: var(--brand-violet);
-  bottom: 9%; right: 15%; animation: shapeC 40s ease-in-out infinite alternate;
+  bottom: 9%; right: 15%;
+  --sx: -1.9vmax; --sy: -2vmax; --sr: 0deg;    --sw: 3deg; --dur: 40s; --del: -8s;
 }
-@keyframes shapeA { to { transform: translate3d(-2vmax, 2.4vmax, 0); } }
-@keyframes shapeB { to { transform: translate3d(2.2vmax, -1.8vmax, 0) rotate(-16deg); } }
-@keyframes shapeC { to { transform: translate3d(-1.6vmax, -2vmax, 0); } }
+@keyframes bgShape {
+  from { transform: translate3d(calc(var(--sx) * -1), calc(var(--sy) * -1), 0) rotate(var(--sr)) scale(1); }
+  to   { transform: translate3d(var(--sx), var(--sy), 0) rotate(calc(var(--sr) + var(--sw, 5deg))) scale(1.02); }
+}
 
-/* ---- интро-сцена: лис Идея → знак «СИ» → переливание → панельки ----
-   Единая шкала --tl (INTRO_MS из lib/intro.ts); все длительности в %/. Закрытие
-   ТОЛЬКО по JS-таймеру/клику/Esc: animationend «застревает» при
-   prefers-reduced-motion (глобальный animation:none). Длительность: 3200 мс
-   (1.2 с — пробег до посадки), скип с любой точки, скролл не блокируем. */
+/* ---- 3. ИНТРО-сцена: лис Идея → знак «СИ» → переливание → панельки ----
+   Единая шкала --tl (INTRO_MS = 4200, lib/intro.ts). Таймер бега: 0–1720 мс,
+   посадка 1560–1860, пыль, реакция знака, блик 2160–3060, idle-дыхание до 4200.
+   Закрытие ТОЛЬКО JS-таймер/клик/Esc/колесо/тач (animationend под
+   reduced-motion мёртв — потому не используется вовсе). Скролл не блокируем. */
 .intro-overlay {
   position: fixed; inset: 0; z-index: 200;
   display: grid; place-items: center;
@@ -415,14 +449,14 @@ main, .site-header { position: relative; z-index: 1; }
   cursor: pointer;
 }
 @keyframes introVeil {
-  0% { opacity: 0; }
-  7% { opacity: 1; }
-  87% { opacity: 1; }
+  0%   { opacity: 0; }
+  3%   { opacity: 1; }
+  89%  { opacity: 1; }
   100% { opacity: 0; }
 }
 .intro-scene {
-  position: relative; display: grid; place-items: center;
-  width: min(620px, 92vw); aspect-ratio: 5 / 3;
+  position: relative; display: grid; place-items: center; row-gap: 4px;
+  width: min(620px, 92vw); aspect-ratio: 4 / 3; /* 4/3: стек mark+fox влезает на мобиле */
   animation: introIn .4s var(--ease) both;
 }
 @keyframes introIn { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
@@ -433,9 +467,10 @@ main, .site-header { position: relative; z-index: 1; }
     radial-gradient(34vmax 34vmax at 72% 30%, rgba(91,76,255,.14), transparent 62%),
     radial-gradient(36vmax 36vmax at 50% 86%, rgba(139,92,246,.12), transparent 64%);
 }
-/* знак проекта: монограмма «СИ» (НЕ официальный логотип вуза; подменяется
-   настоящим знаком, когда появится файл). Спокойная поверхность, без свечений. */
+/* знак проекта: монограмма «СИ» (НЕ официальный логотип вуза). Статичный
+   градиент (paint один раз) + блик-слой-layer с translateX, только transform */
 .intro-mark {
+  position: relative; overflow: hidden;
   width: clamp(88px, 18vw, 112px); aspect-ratio: 1;
   border-radius: 28px; background: var(--surface);
   border: 1px solid var(--line); box-shadow: var(--shadow);
@@ -446,70 +481,184 @@ main, .site-header { position: relative; z-index: 1; }
   font-size: clamp(30px, 6vw, 38px); font-weight: 600; letter-spacing: .02em;
   color: var(--accent); /* фолбэк без background-clip: сплошной акцент */
 }
-/* переливание — медленный сдвиг градиента по background-position (2 s, не мигание:
-   WCAG 2.3.1 — цикл > 2 с, без полнокадровой смены яркости) */
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .intro-mark__glyph {
     background-image: linear-gradient(94deg, #D9E7FF 0%, var(--brand-blue) 38%, var(--accent) 72%, var(--brand-violet) 100%);
     background-size: 220% 100%; background-repeat: no-repeat;
     -webkit-background-clip: text; background-clip: text; color: transparent;
-    background-position: 0% 50%;
   }
 }
-.intro-fox-wrap {
-  width: clamp(96px, 20vw, 124px); aspect-ratio: 4 / 3;
-  position: relative; margin-bottom: -4%;
-  transform: translate3d(-55vw, 10px, 0); opacity: 0; /* статичная поза до .is-run */
+/* блик знака: НЕ background-position (paint каждый кадр) — белый градиентный
+   слой с translateX (big-pickle/super-vl, раунд 2). 900ms, один проход. */
+.intro-mark::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  /* переливание палитры бренда (голубой → белый глянец): видно и на белой
+     плашке, и на голубом глифе; только transform (не background-position) */
+  background: linear-gradient(115deg, transparent 26%, rgba(78,140,255,.36) 42%, rgba(255,255,255,.7) 50%, transparent 64%);
+  transform: translateX(-130%); pointer-events: none;
 }
+.is-run .intro-mark::after { animation: markSweep 900ms var(--ease) 2160ms 1 both; }
+@keyframes markSweep {
+  from { transform: translateX(-130%); }
+  to   { transform: translateX(130%); }
+}
+/* знак отвечает импульсом на приземление (привязан к шкале сцены) */
+.is-run .intro-mark { animation: markReact var(--tl) linear 1 both; }
+@keyframes markReact {
+  0%, 39%     { transform: scale(1); }
+  41.4%       { transform: scale(1.07); }
+  43.5%       { transform: scale(1.012); }
+  45.7%, 100% { transform: scale(1); }
+}
+/* лиса: дискретные ступени ширины (208 / 176 на ≤720px) — амплитуды в user
+   units считаются от width, плавный clamp «плыл» бы между ступенями */
+.intro-fox-wrap {
+  width: 208px; aspect-ratio: 4 / 3;
+  position: relative; margin-top: -14%; /* в прыжке -48uu лис касается низа знака */
+  transform: translate3d(-58vw, 0, 0); opacity: 0; /* статичная поза до .is-run */
+}
+@media (max-width: 720px) {
+  .intro-fox-wrap { width: 176px; margin-top: -10%; }
+}
+.intro-fox { width: 100%; height: 100%; overflow: visible; }
+/* суставы: transform-box: view-box (дефолт SVG) + origin из inline --ox/--oy */
+.intro-fox, .intro-fox * {
+  transform-box: view-box;
+  transform-origin: var(--ox, 50%) var(--oy, 50%);
+}
+/* ==== хореография (бег 0–1720, посадка 1560–1860, idle до 4200) ==== */
+.is-run .intro-fox-wrap { animation: foxRun 1720ms cubic-bezier(.3, 0, .38, 1) both; }
+@keyframes foxRun {
+  0%    { opacity: 0; transform: translate3d(-58vw, 0, 0); }
+  5.8%  { opacity: 1; }
+  42%   { transform: translate3d(-32vw, 0, 0); }
+  68%   { transform: translate3d(-14vw, 0, 0); }
+  90.7% { transform: translate3d(0, 0, 0); }
+  100%  { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+/* тело: боб в беге + прыжок-дуга со squash-посадкой (второй в списке
+   animation-name перекрывает transform с 1560 мс — поздний прав) */
+.is-run .fox-bob {
+  animation:
+    foxBob 430ms ease-in-out 50ms 4 both,
+    foxLand 300ms ease-in-out 1560ms 1 both;
+}
+@keyframes foxBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4.5px) rotate(-.6deg); }
+}
+@keyframes foxLand {
+  0%   { transform: translateY(0) scale(1.06, 1); }
+  43%  { transform: translateY(-48px) scale(1.06, 1); }
+  60%  { transform: translateY(0) scale(1.16, .84); }
+  80%  { transform: translateY(4px) scale(.98, 1.03); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+/* голова: противофаза бобу (знак минус в keyframe) + «осмотрелся» */
+.is-run .fx-head {
+  animation:
+    headBob 430ms ease-in-out 90ms 4 both,
+    headScan 240ms ease-in-out 1880ms 1 both;
+}
+@keyframes headBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(2.2px) rotate(-1.4deg); }
+}
+@keyframes headScan {
+  0%   { transform: rotate(0); }
+  30%  { transform: rotate(-9deg); }
+  60%  { transform: rotate(8deg); }
+  84%  { transform: rotate(-3deg); }
+  100% { transform: rotate(0); }
+}
+/* ноги: 4 отдельных хода (диагональный галоп), у голени/носка свои суставы;
+   215 ms × 8 = ровно окно бега 1720 ms */
+.is-run .fx-leg-fh   { animation: legStride 215ms ease-in-out 0ms   8 both; }
+.is-run .fx-leg-ff   { animation: legStride 215ms ease-in-out 161ms 8 both; }
+.is-run .fx-thigh-nh { animation: legStride 215ms ease-in-out 54ms 8 both; }
+.is-run .fx-thigh-nf { animation: legStride 215ms ease-in-out 0ms   8 both; }
+.is-run .fx-shin-nh  { animation: shinBend 215ms ease-in-out 80ms 8 both; }
+.is-run .fx-shin-nf  { animation: shinBend 215ms ease-in-out 26ms 8 both; }
+.is-run .fx-paw-nh   { animation: toeLift  215ms ease-in-out 64ms 8 both; }
+.is-run .fx-paw-nf   { animation: toeLift  215ms ease-in-out 10ms 8 both; }
+@keyframes legStride {
+  0%   { transform: scaleY(1)   rotate(-7deg); }
+  22%  { transform: scaleY(.82) rotate(-2deg); }
+  46%  { transform: scaleY(1.1) rotate(4deg); }
+  62%  { transform: scaleY(.72) rotate(6deg); }
+  84%  { transform: scaleY(.52) rotate(0deg); }
+  100% { transform: scaleY(1)   rotate(-7deg); }
+}
+@keyframes shinBend {
+  0%, 20% { transform: scaleY(1); }
+  45%     { transform: scaleY(.86) rotate(-9deg); }
+  70%     { transform: scaleY(1.06) rotate(6deg); }
+  100%    { transform: scaleY(1); }
+}
+@keyframes toeLift {
+  0%, 18% { transform: rotate(0); }
+  46%     { transform: rotate(-26deg); }
+  100%    { transform: rotate(0); }
+}
+/* хвост: run-волна двух суставов (--tw inline: 6deg / 9deg) + idle после бег */
+.is-run .fox-tail-a  { animation: tailWave 215ms ease-in-out 0ms  8 both; }
+.is-run .fox-tail-b  { animation: tailWave 215ms ease-in-out 70ms 8 both; }
+@keyframes tailWave {
+  0%, 100% { transform: rotate(calc(var(--tw) * -1)); }
+  50%      { transform: rotate(var(--tw)); }
+}
+.is-run .fx-tail-idle-a { animation: tailIdle 1900ms ease-in-out 2120ms infinite alternate; }
+.is-run .fx-tail-idle-b { animation: tailIdle 1900ms ease-in-out 2270ms infinite alternate; }
+@keyframes tailIdle {
+  0%, 100% { transform: rotate(0); }
+  50%      { transform: rotate(var(--tw, 5deg)); }
+}
+/* уши: два тика, дальнее позже; амплитуды inline --ea/--eb на внешней группе */
+.is-run .fx-ear { animation: earFlick 300ms linear 1740ms 1 both; }
+.is-run .fx-ear-far { animation: earFlick 300ms linear 1790ms 1 both; }
+@keyframes earFlick {
+  0%, 100% { transform: rotate(0); }
+  22%      { transform: rotate(var(--ea, -16deg)); }
+  38%      { transform: rotate(calc(var(--eb, -8deg) * -.5)); }
+  52%      { transform: rotate(var(--eb, -8deg)); }
+  70%      { transform: rotate(calc(var(--eb, -8deg) / 3)); }
+}
+/* дыхание грудки — единственный бесконечный цикл в лисе, живёт до вуали */
+.is-run .fox-chest { animation: breath 2400ms ease-in-out 1740ms infinite; }
+@keyframes breath {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.012); }
+}
+/* глаза: три моргания (0.71/с, площадь меньше 0.1% — WCAG 2.3.1 PASS) */
+.is-run .fx-eye {
+  animation:
+    blink 120ms linear 1900ms 1 both,
+    blink 120ms linear 2200ms 1 both,
+    blink 120ms linear 2900ms 1 both;
+}
+@keyframes blink {
+  0%, 44%, 100% { transform: scaleY(1); }
+  50%, 72%      { transform: scaleY(.06); }
+}
+/* пыль под лапами при приземлении (расширяется и гаснет) */
+.is-run .fx-dust { animation: dust 320ms ease-out 1740ms 1 both; }
+@keyframes dust {
+  0%   { transform: scale(.4); opacity: .45; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+/* усы: один прогон микродрожи, не цикл */
+.is-run .fx-whiskers { animation: whiskTw 240ms ease-in-out 1900ms 1 both; }
+@keyframes whiskTw {
+  0%, 100% { transform: rotate(0); }
+  30%      { transform: rotate(1.4deg); }
+  70%      { transform: rotate(-1.4deg); }
+}
+.is-run .intro-caption { animation: introIn .4s var(--ease) 2.12s backwards; }
 .intro-caption {
-  position: absolute; bottom: 4%;
   font-size: 12px; color: var(--muted-2); letter-spacing: .01em; text-align: center;
 }
 
-/* запуск сцены ТОЛЬКО классом .is-run (fonts-гейт в JS): иначе FOUT в середине */
-.intro-fox { width: 100%; height: 100%; overflow: visible; }
-.is-run .intro-fox-wrap {
-  animation: foxRun 1.2s cubic-bezier(.3, 0, .38, 1) both;
-}
-@keyframes foxRun {
-  0% { opacity: 0; transform: translate3d(-55vw, 10px, 0); }
-  8% { opacity: 1; }
-  30% { transform: translate3d(-34vw, -2px, 0); }
-  52% { transform: translate3d(-18vw, -8px, 0); }
-  74% { transform: translate3d(-6vw, -4px, 0); }
-  92% { transform: translate3d(0, -12px, 0); animation-timing-function: cubic-bezier(.34, 1.4, .64, 1); }
-  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1.02, .98); }
-}
-.is-run .intro-fox__body { animation: foxBob .3s ease-in-out 4; }
-@keyframes foxBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
-.is-run .intro-fox__tail {
-  animation: foxTail .4s ease-in-out 3 alternate; transform-box: fill-box;
-  transform-origin: 80% 90%;
-}
-@keyframes foxTail { from { transform: rotate(-7deg); } to { transform: rotate(8deg); } }
-/* ноги: 2 противофазных цикла по 300 мс × 4 = ровно 1.2 с, замирание на 100% */
-/* ключевание: transform-box нужен на каждой анимируемой SVG-части,
-   иначе scale-процент считает от viewBox, а не от элемента */
-.intro-fox__leg { transform-box: fill-box; transform-origin: 50% 0%; }
-.is-run .leg-a1, .is-run .leg-a2 { animation: legPhaseA .3s ease-in-out 4; }
-.is-run .leg-b1, .is-run .leg-b2 { animation: legPhaseB .3s ease-in-out 4; }
-@keyframes legPhaseA { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.4) rotate(4deg); } }
-@keyframes legPhaseB { 0%, 100% { transform: scaleY(.4) rotate(4deg); } 50% { transform: scaleY(1); } }
-/* знак реагирует на посадку и переливается: гашение лисы не нужно —
-   финальный масштаб лисы подрезает перекрытие */
-.is-run .intro-mark { animation: markReact var(--tl) linear 1 both; }
-@keyframes markReact {
-  0%, 37% { transform: scale(1); }
-  41% { transform: scale(1.055); }
-  47% { transform: scale(1.008); }
-  55%, 100% { transform: scale(1); }
-}
-.is-run .intro-mark__glyph { animation: markSweep 1.3s var(--ease) 1.75s 1 both; }
-@keyframes markSweep { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
-
-.is-run .intro-caption { animation: introIn .4s .25s var(--ease) backwards; }
-
-/* кнопка скипа: видимая всегда, 44px тач-цель, первая по фокусу */
+/* кнопка скипа: видимая всегда, 44px тач-цель */
 .intro-skip {
   position: fixed; top: max(14px, env(safe-area-inset-top)); right: 14px; z-index: 201;
   min-height: 44px; min-width: 44px; padding: 10px 16px;
@@ -519,12 +668,84 @@ main, .site-header { position: relative; z-index: 1; }
 .intro-skip:hover { background: rgba(18,20,26,.95); }
 .intro-skip:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
-/* reduced-motion: сцены молча не рендерятся (JS тоже не монтирует), фон замирает */
+/* ---- 4. МИКРО-слой (повсеместный): отклик и вход, не «декорация» ---- */
+/* 4.1 пружинные попы: state-change (галочка / выбор / settled) */
+@keyframes mPop {
+  0%   { transform: scale(.2); }
+  70%  { transform: scale(var(--pop, 1.15)); }
+  100% { transform: scale(var(--rest, 1)); }
+}
+/* 4.2 блик CTA (sheen 400, once) и рост полосы (один keyframe — N применений) */
+@keyframes mSweep {
+  from { transform: translateX(-102%); }
+  to   { transform: translateX(102%); }
+}
+@keyframes mGrowX {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+/* 4.3 гейты (hover — только на устройствах с точным указателем) */
+@media (hover: hover) {
+  .chip:hover { transform: translateY(-1px); }
+  .role-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+  .suggest button:hover { transform: translateY(-1px); }
+  .btn-primary:hover::after { animation: mSweep var(--m-sheen) var(--ease) 1 both; }
+}
+/* 4.4 overrides (аддитивно, каскадно позже базы v1–v3) */
+.chip {
+  transition: border-color var(--m-fast) var(--ease), color var(--m-fast) var(--ease),
+    background-color var(--m-fast) var(--ease), transform var(--m-fast) var(--ease);
+}
+.chip:active { transform: scale(.96); }
+.btn:active { transform: translateY(1px) scale(.985); }
+.btn-primary { position: relative; overflow: hidden; }
+.btn-primary::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.35) 45%, transparent 60%);
+  transform: translateX(-102%);
+}
+.btn-primary:disabled::after { display: none; }
+.check { transition: transform var(--m-fast) var(--ease); }
+.check:active { transform: scale(.92); }
+.check[aria-pressed="true"]::after { animation: mPop var(--m-base) var(--m-ease-back) both; }
+.stagger > *:nth-child(2){animation-delay:.05s}
+.stagger > *:nth-child(3){animation-delay:.1s}
+.stagger > *:nth-child(4){animation-delay:.15s}
+.stagger > *:nth-child(5){animation-delay:.2s}
+.stagger > *:nth-child(6){animation-delay:.25s}
+.stagger > *:nth-child(7){animation-delay:.3s}
+.stagger > *:nth-child(8){animation-delay:.35s}
+.stagger > *:nth-child(n+8){animation-delay:.35s} /* flat-cap: окно ≤ 400 ms */
+/* choice-варианты: вход лесенкой 60 ms; верный — мягкий reveal (не красный) */
+.opt-list .opt { animation: fadeIn .3s var(--ease) both; }
+.opt-list .opt:nth-child(2) { animation-delay: 60ms; }
+.opt-list .opt:nth-child(3) { animation-delay: 120ms; }
+.opt-list .opt:nth-child(4) { animation-delay: 180ms; }
+.opt { transition: background-color var(--m-fast) var(--ease), border-color var(--m-fast) var(--ease), color var(--m-fast) var(--ease); }
+.opt.is-reveal { animation: mPop var(--m-base) var(--m-ease-back) both; }
+.is-settled { animation: mPop var(--m-base) var(--m-ease-back) both; }
+/* отметка недели: галочка попает; зачёркивание — scaleX (transform), печать
+   переопределяет статично (MUTE ниже) */
+.week li > span { position: relative; transition: color var(--m-base) var(--ease); }
+.week li.done span { text-decoration: none; }
+.week li.done span::after {
+  content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 1.5px;
+  background: currentColor;
+  transform: scaleX(0); transform-origin: left center;
+  animation: mGrowX var(--m-base) var(--ease) both;
+}
+
+/* ---- 5. MUTE: reduced-motion и печать (сквозные контракты) ---- */
 @media (prefers-reduced-motion: reduce) {
   .intro-overlay { display: none !important; }
-  .fix-bg__aurora, .fix-bg__shape { animation: none !important; }
+  .fix-bg__aurora, .fix-bg__dots, .fix-bg__shape { animation: none !important; }
+  .btn-primary::after { display: none !important; }
 }
-/* печать: карта маршрута без фона и интро (даже если сцена была вынуждена) */
 @media print {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
   .intro-overlay, .intro-skip, .fix-bg { display: none !important; }
+  .btn-primary::after { display: none !important; }
+  /* зачёркивание на бумаге статично (is-done ::after не рисуем) */
+  .week li.done span { text-decoration: line-through !important; }
+  .week li.done span::after { display: none !important; }
 }

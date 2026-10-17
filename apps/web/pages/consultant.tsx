@@ -18,6 +18,9 @@ export default function Consultant() {
   const [chat, setChat] = React.useState<ChatResponse | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  // № ответа: key на chat-block — вход (fade-in) переигрывается и на втором
+  // ответе, иначе React переиспользует DOM и анимация не видна (mimo, раунд 2)
+  const [askN, setAskN] = React.useState(0)
 
   // Контракт: POST /chat { message, profile, role_id } → { reply, sources[] }
   const ask = async (question: string) => {
@@ -34,6 +37,7 @@ export default function Consultant() {
     })
     if (res.success && res.data) {
       setChat(res.data)
+      setAskN((n) => n + 1)
     } else {
       setError(res.error || 'Неизвестная ошибка')
     }
@@ -110,7 +114,7 @@ export default function Consultant() {
         )}
 
         {chat && (
-          <div className="chat-block fade-in" style={{ marginTop: 24 }}>
+          <div className="chat-block fade-in" key={askN} style={{ marginTop: 24 }}>
             {/* честный бейдж режима: llm_used отдаёт бэкенд (stub/external) */}
             <span
               className={chat.llm_used === 'external' ? 'badge badge-live' : 'badge badge-demo'}
