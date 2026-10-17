@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # Канонический закрытый словарь ролей (контракт: components.schemas.RoleId).
 RoleId = Literal["web", "1c", "qa", "support", "startup"]
@@ -116,6 +116,58 @@ class Week(BaseModel):
     tasks: list[str] = Field(min_length=1)
 
 
+class Check(BaseModel):
+    """Самопроверка понимания (аддитивное поле PlanResponse, совет раунда 2).
+
+    Формат «1 CHOICE + 1 SELF» на роль: choice = «опознай роль/шаг» с вариантами
+    — ДОСЛОВНЫМИ строками рубрик (анти-галлюцинация), self = «объясни своими
+    словами» с дословным ориентиром. Результат прохождения хранится только на
+    клиенте (как done), серверный state не появляется.
+    """
+
+    id: str = Field(min_length=1, description="Стабильный ключ клиентского хранилища")
+    prompt: str = Field(
+        min_length=1, description="Вопрос проверки — только факты рубрики роли"
+    )
+    kind: Literal["self", "choice"] = Field(
+        default="self", description="self — своими словами; choice — выбор из цитат"
+    )
+    options: list[str] = Field(
+        default_factory=list,
+        description="Только для kind=choice; дословные цитаты рубрик",
+    )
+    correct: int | None = Field(
+        default=None, ge=0, description="Индекс верного варианта в options"
+    )
+    hint: str = Field(
+        default="", description="Ориентир (self): дословная цитата рубрики"
+    )
+    source: str = Field(
+        default="",
+        description="role:{id} — {поле}; прослеживаемость факта (как sources в /chat)",
+    )
+    skill: str = Field(
+        default="", description="id навыка из закрытого словаря (для kind=self)"
+    )
+    week: int = Field(default=1, ge=1, le=4, description="Подсказка UI: к какой неделе")
+
+    # choice обязан быть согласованным; иначе тихо деградируем в self —
+    # факт-объект не роняем: skill-проверка остаётся честной без вариантов.
+    @model_validator(mode="after")
+    def _self_if_options_broken(self) -> "Check":
+        if self.kind == "choice":
+            if (
+                len(self.options) >= 2
+                and self.correct is not None
+                and 0 <= self.correct < len(self.options)
+            ):
+                return self
+            self.kind = "self"
+            self.options = []
+            self.correct = None
+        return self
+
+
 class PlanResponse(BaseModel):
     """Контракт обязывает weeks (ровно 4) и checklist; остальное — расширения ТЗ."""
 
@@ -137,6 +189,12 @@ class PlanResponse(BaseModel):
     llm_used: Literal["stub", "external"] = "stub"
     # ТЗ-расширение: симметрично /recommend — флаг кэша в ответе.
     cached: bool = Field(default=False, description="Ответ отдан из кэша (ТЗ)")
+    # Аддитивная самопроверка понимания (совет: 1 CHOICE + 1 SELF из рубрики).
+    # НЕ в required: UI рендерит блок только при непустом массиве.
+    checks: list[Check] = Field(
+        default_factory=list,
+        description="Самопроверка понимания (аддитивно; факты только из рубрики роли)",
+    )
 
 
 class ChatRequest(BaseModel):

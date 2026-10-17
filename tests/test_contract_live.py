@@ -79,6 +79,8 @@ def test_openapi_yaml_documents_new_additive_fields() -> None:
     # Объявлены в YAML
     assert {"matched_count", "needed_count"} <= set(schemas["RoleScore"]["properties"])
     assert "cached" in schemas["PlanResponse"]["properties"]
+    assert "checks" in schemas["PlanResponse"]["properties"]
+    assert "Check" in schemas  # схема самопроверки объявлена рядом с PlanResponse
     assert "llm_used" in schemas["ChatResponse"]["properties"]
     # И присутствуют в схемах приложения
     app_schemas = main.app.openapi()["components"]["schemas"]
@@ -86,6 +88,7 @@ def test_openapi_yaml_documents_new_additive_fields() -> None:
         app_schemas["RoleScore"]["properties"]
     )
     assert "cached" in app_schemas["PlanResponse"]["properties"]
+    assert "checks" in app_schemas["PlanResponse"]["properties"]
     assert "llm_used" in app_schemas["ChatResponse"]["properties"]
 
 
@@ -98,4 +101,5 @@ def test_additive_fields_are_optional_and_not_breaking() -> None:
     assert "matched_count" not in schemas["RoleScore"]["required"]
     assert "needed_count" not in schemas["RoleScore"]["required"]
     assert "cached" not in schemas["PlanResponse"]["required"]
+    assert "checks" not in schemas["PlanResponse"]["required"]
     assert "llm_used" not in schemas["ChatResponse"]["required"]

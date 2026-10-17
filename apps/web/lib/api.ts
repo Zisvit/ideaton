@@ -29,6 +29,18 @@ type RecommendResponse = {
 
 type Week = { n: number; tasks: string[] }
 
+type Check = {
+  id: string
+  prompt: string
+  kind: 'self' | 'choice'
+  options?: string[]
+  correct?: number | null
+  hint?: string
+  source?: string
+  skill?: string
+  week?: number
+}
+
 type PlanResponse = {
   weeks: Week[]
   checklist: string[]
@@ -37,6 +49,8 @@ type PlanResponse = {
   summary?: string
   disclaimer?: string
   cached?: boolean
+  // Аддитивное поле /plan: рендерим только при непустом массиве (no-signal)
+  checks?: Check[]
 }
 
 type ChatResponse = {
@@ -153,6 +167,27 @@ function saveDone(roleId: string, done: Record<string, boolean>): void {
   writeStore(doneKey(roleId), JSON.stringify(done))
 }
 
+// ---- Самопроверка понимания: результат хранится по роли, НЕ подмешивается в done ----
+// (pickle, красная команда: чужой ключ сдвигает doneCount → ложное «пройдено»)
+const checksKey = (roleId: string) => `career-tracker-checks:${roleId}`
+
+function getChecks(roleId: string): Record<string, boolean> {
+  const raw = readStore(checksKey(roleId))
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    const clean: Record<string, boolean> = {}
+    for (const [k, v] of Object.entries(parsed)) clean[k] = v === true
+    return clean
+  } catch {
+    return {}
+  }
+}
+
+function saveChecks(roleId: string, checks: Record<string, boolean>): void {
+  writeStore(checksKey(roleId), JSON.stringify(checks))
+}
+
 type ApiResponse<T> = { success: boolean; data?: T; error?: string }
 
 type FetchOptions = {
@@ -202,5 +237,7 @@ export {
   saveRoleId,
   getDone,
   saveDone,
+  getChecks,
+  saveChecks,
 }
-export type { Profile, RoleScore, RecommendResponse, Week, PlanResponse, ChatResponse }
+export type { Profile, RoleScore, RecommendResponse, Week, PlanResponse, ChatResponse, Check }

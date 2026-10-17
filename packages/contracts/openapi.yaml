@@ -361,6 +361,55 @@ components:
             type: string
           example: ["Изучить основы JavaScript"]
 
+    Check:
+      type: object
+      description: >
+        Самопроверка понимания (аддитивное поле PlanResponse, НЕ в required).
+        Формат «1 CHOICE + 1 SELF» на роль (совет): choice — варианты только из
+        дословных строк рубрик (анти-галлюцинация), self — «объясни своими
+        словами» с дословным ориентиром. Результат прохождения хранится только
+        на клиенте. Факты строго из рубрики роли; без первоисточника проверки
+        нет. Запрещена лексика обещания трудоустройства.
+      required: [id, prompt, kind]
+      properties:
+        id:
+          type: string
+          description: Стабильный ключ клиентского хранилища (career-tracker-checks:*)
+          minLength: 1
+        prompt:
+          type: string
+          description: Вопрос проверки — только факты рубрики роли
+          minLength: 1
+          example: "Что делает Веб-разработчик?"
+        kind:
+          type: string
+          description: "self — своими словами; choice — выбор из цитат рубрик"
+          enum: [self, choice]
+        options:
+          type: array
+          description: Только для kind=choice; дословные цитаты рубрик ролей
+          items:
+            type: string
+        correct:
+          type: integer
+          description: Индекс верного варианта в options
+          minimum: 0
+        hint:
+          type: string
+          description: Ориентир (self) — дословная цитата рубрики
+        source:
+          type: string
+          description: Прослеживаемость факта, как sources[] в /chat
+          example: "role:web — description"
+        skill:
+          type: string
+          description: id навыка из закрытого словаря (для kind=self)
+        week:
+          type: integer
+          description: Подсказка UI — к какой неделе относится проверка
+          minimum: 1
+          maximum: 4
+
     PlanResponse:
       type: object
       required: [weeks, checklist]
@@ -378,6 +427,13 @@ components:
           items:
             type: string
           example: ["Освоен синтаксис JavaScript"]
+        checks:
+          type: array
+          description: >
+            Самопроверка понимания (аддитивное поле, не в required): блок UI
+            рендерится только при непустом массиве, absence = no-signal режим.
+          items:
+            $ref: '#/components/schemas/Check'
         cached:
           type: boolean
           description: "ТЗ-расширение: ответ отдан из кэша (симметрично /recommend)"
