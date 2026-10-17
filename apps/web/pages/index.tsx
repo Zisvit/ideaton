@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { EXAMPLE_PROFILE, isGuestMode, Profile, saveProfile } from '../lib/api'
+import { INTRO_MS, prefersReducedMotion, shouldShowIntro } from '../lib/intro'
 
 const SKILLS = [
   'Python', 'JavaScript', 'TypeScript', 'React',
@@ -18,6 +19,21 @@ export default function Home() {
   const [guest, setGuest] = React.useState(false)
   React.useEffect(() => {
     setGuest(isGuestMode())
+    // v6: conic-рамка — ЕДИНЫЙ оборот (transition 12s, НЕ keyframe-бесконеч-
+    // ность, гейты §8 соблюены), старт после интро (или ≤300ms, если интро
+    // пропущено). is-swept-done снимает слой (teardown, big-pickle).
+    const card = document.querySelector('.fx-conic')
+    const delay =
+      shouldShowIntro() && !prefersReducedMotion() ? INTRO_MS + 120 : 300
+    const t1 = window.setTimeout(() => card?.classList.add('is-swept'), delay)
+    const t2 = window.setTimeout(
+      () => card?.classList.add('is-swept-done'),
+      delay + 12300
+    )
+    return () => {
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+    }
   }, [])
 
   const toggleChip = (chip: string) => {
@@ -85,7 +101,7 @@ export default function Home() {
           </p>
         )}
 
-        <section className="card" style={{ marginTop: 28 }}>
+        <section className="card fx-conic" style={{ marginTop: 28 }}>
           <label className="label" htmlFor="skills-text">Твои навыки</label>
           <textarea
             id="skills-text"

@@ -749,3 +749,221 @@ main, .site-header { position: relative; z-index: 1; }
   .week li.done span { text-decoration: line-through !important; }
   .week li.done span::after { display: none !important; }
 }
+
+/* =========================================================================
+   СЦЕНЫ v6: мини-проверки + скриптовый консультант + fx-декор (append).
+   Секции: 1) TOKENS · 2) ДЕКОР (шум/conic/glass) · 3) МИНИ-ПРОВЕРКИ ·
+   4) СКРИПТ-ЧАТ · 5) ЛИС-МИНИ · 6) MUTE v6.
+   Контракты (совет v6, раунд 2, 9/9): НОВЫЙ keyframe ровно один —
+   foxMiniBlink (29→30/30: свободный слот гейта, решён советом); всё
+   остальное — реюз fadeIn/mPop/bounce/breath/tailIdle и transitions.
+   Conic = РОВНО ОДИН оборот (transition 12s, класс .is-swept) только на
+   index-карте навыков; result/plan — статика. Шум = запечённый PNG
+   (alpha в пикселях), БЕЗ mix-blend-mode и БЕЗ backdrop-filter (гейт
+   проверяет и то, и другое), внутри .fix-bg — не поверх контента.
+   ========================================================================= */
+
+/* ---- 1. TOKENS v6 (локальные, глобальные --m-* не тронуты) ---- */
+:root {
+  --fx-conic: 12s;      /* один оборот conic-рамки (once) */
+  --chat-stagger: 70ms; /* лесенка строк скрипта (разговорный ритм) */
+}
+
+/* ---- 2. ДЕКОР v6 ----
+   Шум: запечённая плёнка 64×64 (public/noise-64.png, alpha в пикселях:
+   CSS opacity не нужен → слой не промоутится, композит цена ноль).
+   2-й background .fix-bg: node не добавляем, blend-а нет (big-pickle:
+   blend над анимированными блобами = blend-storm). Зерно на карточках
+   НЕ содержит — читаемость «наставника» дороже (longcat/beam). */
+.fix-bg {
+  background-image: url('/noise-64.png');
+  background-size: 64px 64px;
+  background-repeat: repeat;
+}
+
+/* conic: кольцо-дуга рисуется один раз как фон слоя-псевдо 220%, который
+   делает ЕДИНСТВЕННЫЙ оборот transform'ом (не @property — интерполируется
+   сам transform: translate+rotate; paint-гейтов в CSS нет). Плита ::after
+   рисует карточку поверх конуса, контент — z1 над плитой. */
+.fx-conic { position: relative; overflow: hidden; isolation: isolate; }
+.fx-conic > * { position: relative; z-index: 1; }
+.fx-conic::after {
+  content: ''; position: absolute; inset: 2px; z-index: 0;
+  border-radius: calc(var(--radius) - 2px); background: var(--surface);
+  pointer-events: none;
+}
+@supports (background: conic-gradient(#000, #fff)) {
+  .fx-conic::before {
+    content: ''; position: absolute; left: 50%; top: 50%; z-index: -1;
+    width: 220%; height: 220%;
+    transform: translate(-50%, -50%) rotate(0turn);
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg, transparent 88deg,
+      var(--accent) 118deg, var(--accent) 122deg, transparent 135deg,
+      var(--brand-violet) 224deg, var(--brand-violet) 228deg, transparent 247deg,
+      var(--brand-blue) 330deg, var(--brand-blue) 338deg, transparent 356deg
+    );
+    transition: transform var(--fx-conic) linear;
+    pointer-events: none;
+  }
+  /* один оборот по загрузке (.is-swept вешает index.tsx после интро) */
+  .fx-conic.is-swept::before { transform: translate(-50%, -50%) rotate(1turn); }
+  /* teardown (big-pickle): после оборота слой отпускается, 1turn ≡ 0turn */
+  .fx-conic.is-swept-done::before {
+    transition: none; transform: translate(-50%, -50%) rotate(0turn);
+  }
+}
+/* старые браузеры без conic: дефолтная рамка .card остаётся — no-signal */
+
+/* стекло-блик: 1px световая полоса, статично; blur НЕ применяем —
+   репейнт под липким хедером (paint-trap, big-pickle/longcat) */
+.site-header::after, .cta-bar::before {
+  content: ''; position: absolute; left: 0; right: 0; height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    transparent, rgba(255,255,255,.9) 20%,
+    rgba(255,255,255,.9) 80%, transparent);
+}
+.site-header { position: sticky; }
+.site-header::after { top: 0; }
+.cta-bar { position: relative; }
+.cta-bar::before { top: -1px; }
+
+/* ---- 3. МИНИ-ПРОВЕРКИ пунктов плана ----
+   Чип-строка 44px + тело на grid-rows: ЕДИНСТВЕННОЕ layout-исключение
+   волны (transition НЕ @keyframes — paint-гейт не задет; allowlist в
+   тестах: ровно один селектор). Аккордеон: 1 открытая, закрытие
+   предыдущей мгновенно. Слоты hint/статус резервируют высоту ⇒ CLS=0. */
+.mini-row {
+  display: block; /* .week li задаёт flex-row — чип и тело держим стопкой */
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.mini__head {
+  min-height: 44px; width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  background: none; border: none; cursor: pointer; padding: 6px 4px;
+  font: inherit; color: var(--ink);
+  transition: color var(--m-fast) var(--ease), transform var(--m-fast) var(--ease);
+}
+@media (pointer: coarse) { .mini__head { min-height: 44px; } }
+.mini__head:hover { color: var(--accent); }
+.mini__head:active { transform: scale(.985); }
+.mini__mark {
+  width: 22px; height: 22px; flex: none; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  font-size: 12px; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.mini__head-text { font-size: 13px; font-weight: 600; color: var(--muted); }
+.mini__chev { margin-left: auto; color: var(--muted); font-size: 12px; }
+.mini__body { display: grid; grid-template-rows: 0fr; }
+/* Договорное layout-исключение (совет v6): раскрытие ПО КЛИКУ, 220ms */
+.mini__body { transition: grid-template-rows var(--m-base) var(--m-ease-inout); }
+.mini-row.is-open .mini__body { grid-template-rows: 1fr; }
+/* аккордеон: закрытие предыдущей — мгновенно (вне кадров анимации) */
+.mini-row:not(.is-open) .mini__body { transition: none; }
+.mini__inner { min-height: 0; overflow: hidden; }
+.mini__task { font-size: 14px; font-weight: 700; padding-top: 4px; }
+.mini__opts { display: grid; gap: 6px; margin-top: 8px; }
+.mini__v {
+  width: 100%;
+  text-align: left; white-space: normal;
+  font-size: 13px; line-height: 1.45;
+  padding: 9px 12px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+  cursor: pointer; font: inherit;
+  transition: background-color var(--m-fast) var(--ease),
+    border-color var(--m-fast) var(--ease), transform var(--m-fast) var(--ease);
+}
+.mini__v:hover { border-color: var(--accent); transform: translateY(-1px); }
+.mini__opts .mini__v { animation: fadeIn .3s var(--ease) both; }
+.mini__opts .mini__v:nth-child(2) { animation-delay: 60ms; }
+.mini__opts .mini__v:nth-child(3) { animation-delay: 120ms; }
+.mini__v.is-picked { border-color: var(--accent); background: var(--accent-soft); }
+.mini__v.is-reveal { animation: mPop var(--m-base) var(--m-ease-back) both; }
+.mini__v.is-go { border-color: var(--accent); color: var(--accent); }
+.mini__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.mini__actions .mini__v { width: auto; }
+/* зарезервированные слоты: появления/исчезновения текста не двигают поток */
+.mini__hint { min-height: 22px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.mini__hint span { animation: fadeIn var(--m-base) var(--ease) both; display: block; }
+.mini__gotcha { min-height: 24px; margin-top: 8px; font-size: 12.5px; color: var(--match); font-weight: 700; }
+.mini-row .mini__gotcha:not(:empty) { animation: mPop var(--m-base) var(--m-ease-back) both; }
+
+/* ---- 4. СКРИПТ-ЧАТ консультанта ----
+   Лог — порт фиксированной высоты (CLS 0), строки входов в DOM сразу
+   (без JS-тайпинга), лесенка fadeIn с --chat-stagger (cap 8 у caption)   */
+.chatBot { display: flex; flex-direction: column; gap: 12px; }
+.chatBot__head { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.chatBot__head-text { display: grid; gap: 3px; }
+.badge--script { background: var(--accent-soft); color: var(--accent); }
+.chatBot__hint { font-size: 11.5px; color: var(--muted); }
+.chatBot__log {
+  height: clamp(240px, 38vh, 380px); overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 10px;
+  padding-right: 4px;
+}
+.chatLine { display: flex; gap: 8px; align-items: flex-end;
+  animation: fadeIn var(--m-base) var(--ease) both;
+  animation-delay: calc(min(var(--j, 0), 8) * var(--chat-stagger, 70ms));
+}
+.chatLine--user { justify-content: flex-end; }
+.chatLine__bubble {
+  position: relative; max-width: 78%;
+  padding: 12px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5;
+}
+.chatLine__bubble--bot { background: var(--ink); color: #fff; }
+/* световая полоса на тёмной поверхности (стекло-блик, статично) */
+.chatLine__bubble--bot::before {
+  content: ''; position: absolute; left: 10px; right: 10px; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.5) 40%, transparent);
+  pointer-events: none;
+}
+.chatLine__bubble--user { background: var(--accent-soft); color: var(--ink); }
+.chatLine__row { margin: 0 0 6px; }
+.chatLine__row:last-of-type { margin-bottom: 0; }
+/* лесенка строк: каждый абзац свой шаг (cap 8 — как v5) */
+.chatLine__row {
+  animation: fadeIn var(--m-base) var(--ease) both;
+  animation-delay: calc(min(var(--j, 0), 8) * var(--chat-stagger, 70ms));
+}
+.chatLine__title { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: 6px; }
+.chatLine__cta-wrap { margin-top: 10px; }
+.chatLine__meta { margin-top: 8px; font-size: 11px; color: rgba(255,255,255,.45); }
+.chatBot__form { display: grid; }
+.chatBot .suggest button { animation: fadeIn var(--m-base) var(--ease) both; }
+
+/* ---- 5. ЛИС-МИНИ (44×36): талисман проекта, декор-акцент ----
+   Реюз idles v5 + ЕДИНСТВЕННЫЙ новый keyframe (слот 30/30): */
+.foxMini { width: 44px; height: 36px; flex: none; display: block; }
+.foxMini__body {
+  transform-box: fill-box; transform-origin: 50% 100%;
+  animation: breath 3.4s ease-in-out infinite;
+}
+.foxMini__eye {
+  transform-box: fill-box; transform-origin: 60% 70%;
+  animation: foxMiniBlink 4.8s linear 1.2s infinite;
+}
+@keyframes foxMiniBlink {
+  0%, 93%, 100% { transform: scaleY(1); }
+  95%, 97%      { transform: scaleY(.08); }
+}
+.foxMini__tail {
+  transform-box: fill-box; transform-origin: 12% 60%;
+  animation: tailIdle 2.8s ease-in-out infinite alternate;
+  --tw: -7deg;
+}
+
+/* ---- 6. MUTE v6 (печать + reduced-motion;irse глобальный kill уже есть) ---- */
+@media print {
+  .fx-conic::before, .fx-conic::after, .chatBot__head { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-conic::before { transition: none !important; }
+  /* чат-лесенка и мини-входы гасятся универсальным kill (сразу видны) */
+}
