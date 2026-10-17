@@ -87,7 +87,7 @@ export default function Result() {
 
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
         <section className="fade-in">
-          <h1>Твои 5 направлений</h1>
+          <h1><span className="grad">Твои 5 направлений</span></h1>
           <p className="hero__sub">
             Отсортированы по совпадению с твоим профилем. Выбери одно — получишь план на 30 дней.
           </p>

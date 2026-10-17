@@ -129,10 +129,12 @@ def test_fox_classes_are_wired_between_tsx_and_css():
 
 def test_print_is_static():
     # зачёркивание на бумаге статично; сцены и микро-блик скрыты (big-pickle K4)
-    print_block = CSS.split("@media print")[-1]
+    # v6: блоков print в файле теперь два (v1 + хвост v6) — собираем ВСЕ,
+    # чтобы «последний блок» не ломал контракты (гейт устойчив к хвостовым
+    # блокам v6)
+    print_block = "\n".join(CSS.split("@media print")[1:])
     assert "text-decoration: line-through !important" in print_block
     assert "week li.done span::after { display: none !important; }" in print_block
-    assert (
-        "display: none !important; }"
-        in CSS.split("@media (prefers-reduced-motion: reduce)")[-1]
+    assert "display: none !important; }" in "\n".join(
+        CSS.split("@media (prefers-reduced-motion: reduce)")[1:]
     )
