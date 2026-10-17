@@ -188,6 +188,28 @@ function saveChecks(roleId: string, checks: Record<string, boolean>): void {
   writeStore(checksKey(roleId), JSON.stringify(checks))
 }
 
+// ---- v6: мини-проверки пунктов плана — СВОЁ хранилище, versioned (deepseek) ----
+// Отдельно от done («сделал») и checks («Проверь, что понял»); ключ mini:v1 —
+// контракт формы мог бы измениться: старая карта не читается, а не врёт.
+const miniKey = (roleId: string) => `career-tracker-mini:v1:${roleId}`
+
+function getMini(roleId: string): Record<string, boolean> {
+  const raw = readStore(miniKey(roleId))
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    const clean: Record<string, boolean> = {}
+    for (const [k, v] of Object.entries(parsed)) clean[k] = v === true
+    return clean
+  } catch {
+    return {} // битый JSON → пустая карта (deepseek, раунд 2)
+  }
+}
+
+function saveMini(roleId: string, mini: Record<string, boolean>): void {
+  writeStore(miniKey(roleId), JSON.stringify(mini))
+}
+
 type ApiResponse<T> = { success: boolean; data?: T; error?: string }
 
 type FetchOptions = {
@@ -239,5 +261,7 @@ export {
   saveDone,
   getChecks,
   saveChecks,
+  getMini,
+  saveMini,
 }
 export type { Profile, RoleScore, RecommendResponse, Week, PlanResponse, ChatResponse, Check }
