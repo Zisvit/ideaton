@@ -18,7 +18,7 @@ const ROLE_COLORS: Record<string, string> = {
 }
 
 // Счётчик, плавно бегущий от 0 до target (уважает prefers-reduced-motion)
-function useCountUp(target: number, duration = 700): number {
+function useCountUp(target: number, duration = 500): number {
   const [val, setVal] = React.useState(0)
   React.useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -80,9 +80,7 @@ export default function Result() {
 
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
         <section className="fade-in">
-          <h1>
-            Твои <span className="grad">5 направлений</span>
-          </h1>
+          <h1>Твои 5 направлений</h1>
           <p className="hero__sub">
             Отсортированы по совпадению с твоим профилем. Выбери одно — получишь план на 30 дней.
           </p>
@@ -94,9 +92,9 @@ export default function Result() {
             role="status"
             aria-live="polite"
           >
-            <div className="skeleton" style={{ height: 180 }} />
-            <div className="skeleton" style={{ height: 110 }} />
-            <div className="skeleton" style={{ height: 110 }} />
+            <div className="skeleton" style={{ height: 400 }} />
+            <div className="skeleton" style={{ height: 120 }} />
+            <div className="skeleton" style={{ height: 120 }} />
             <span className="sr-only">Загружаем рекомендации…</span>
           </div>
         )}
@@ -129,11 +127,12 @@ export default function Result() {
             <article className="hero-card fade-in">
               <div className="row-between">
                 <span className="tag tag-match">Лучшее совпадение</span>
-                <span className="num" style={{ fontSize: 15, fontWeight: 700 }}>
+                <span className="num" style={{ fontSize: 15 }} aria-hidden>
                   {topScore}% совпадение
                 </span>
+                <span className="sr-only">{top.score}% совпадение</span>
               </div>
-              <h2 style={{ marginTop: 16, fontSize: 'clamp(26px,4vw,40px)', color: '#fff' }}>
+              <h2 style={{ marginTop: 16, fontSize: 'clamp(24px,3.4vw,34px)', fontWeight: 600, color: '#fff' }}>
                 {top.title}
               </h2>
               <ul style={{ marginTop: 16, display: 'grid', gap: 6, listStyle: 'none', padding: 0 }}>
@@ -189,7 +188,6 @@ export default function Result() {
                   </div>
                 )}
                 <div className="role-card__foot">
-                  <span className="small num" style={{ fontWeight: 600 }}>Совпадение {role.score}%</span>
                   <Link
                     href="/plan"
                     onClick={() => saveRoleId(role.role_id)}

@@ -52,9 +52,7 @@ export default function Consultant() {
 
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80, maxWidth: 760 }}>
         <section className="fade-in">
-          <h1>
-            <span className="grad">Консультант</span>
-          </h1>
+          <h1>Консультант</h1>
           <p className="hero__sub">
             Задай вопрос по выбранному направлению — отвечу только по рубрике, без выдумок.
           </p>
@@ -120,10 +118,12 @@ export default function Consultant() {
           </div>
         )}
 
-        <div className="cta-bar" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <Link href="/plan" className="btn btn-ghost">← К плану</Link>
-          <Link href="/result" className="btn btn-ghost">Сменить направление</Link>
-        </div>
+        {(chat || loading) && (
+          <div className="cta-bar" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <Link href="/plan" className="btn btn-ghost">← К плану</Link>
+            <Link href="/result" className="btn btn-ghost">Сменить направление</Link>
+          </div>
+        )}
       </main>
     </>
   )
