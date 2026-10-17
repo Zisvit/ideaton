@@ -8,6 +8,7 @@ LLM у нас только перефраз, факты из рубрики он
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Protocol
 
@@ -15,6 +16,9 @@ import httpx
 
 TIMEOUT_SECONDS = 12.0
 RETRIES = 2
+
+log = logging.getLogger("career.llm")
+_WARNED_MISSING_URL = False
 
 
 class LLMProvider(Protocol):
@@ -106,13 +110,27 @@ class ExternalProvider:
 
 
 def get_provider() -> LLMProvider:
-    """External только при LLM_ENABLED=true И задан LLM_URL, иначе stub."""
-    enabled = os.getenv("LLM_ENABLED", "").strip().lower() == "true"
+    """External при LLM_ENABLED=true И заданном LLM_URL, иначе stub.
+
+    Fail-soft (совет red-team): включённый, но не настроенный LLM не должен
+    ронять сервис молча ИЛИ фейлить весь API перед демо. Логируем ОДНО
+    предупреждение и работаем stub'ом — UI показывает честный бейдж режима.
+    """
+    global _WARNED_MISSING_URL
+    enabled_raw = os.getenv("LLM_ENABLED", "").strip().lower()
+    enabled = enabled_raw in {"true", "1", "yes", "on"}
     url = os.getenv("LLM_URL", "").strip()
     if enabled and url:
         return ExternalProvider(
             url=url,
             api_key=os.getenv("LLM_API_KEY", "").strip(),
             model=os.getenv("LLM_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini",
+        )
+    if enabled and not url and not _WARNED_MISSING_URL:
+        _WARNED_MISSING_URL = True
+        log.warning(
+            "LLM_ENABLED=%s, но LLM_URL не задан — консультант работает в "
+            "демо-режиме (stub); для живого LLM задай LLM_URL/LLM_API_KEY/LLM_MODEL",
+            enabled_raw,
         )
     return StubProvider()

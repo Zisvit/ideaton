@@ -3,13 +3,16 @@
 Выравнивание по контракту packages/contracts/openapi.yaml (контракт главнее):
   GET  /health  → {ok: true, status: "ok"}
   POST /recommend → {roles: [5 × {role_id,title,score,why,gaps}], items, profile_hash, cached}
-  POST /plan    → {weeks: [4 × {n,tasks}], checklist, …}
-  POST /chat    → {reply, answer, sources, profile_hash}
+  POST /plan    → {weeks: [4 × {n,tasks}], checklist, …}  — недели 1–2
+                  персонализируются пробелами профиля (scoring.gap_tasks)
+  POST /chat    → {reply, answer, sources, profile_hash, llm_used}
   400/404/422   → {error: "..."}
-Поля ТЗ (items, matched, answer, status, steps, resources, gaps, summary,
-disclaimer, profile_hash, cached, llm_used) добавлены сверх контракта: openapi.yaml
-не запрещает дополнительные поля (нет additionalProperties:false), а контрактные
-поля присутствуют и типизированы строго.
+Поля ТЗ (items, matched, matched_count/needed_count «N из M», answer, status,
+steps, resources, gaps, summary, disclaimer, profile_hash, cached − на
+/recommend и /plan, llm_used на /plan и /chat для честного бейджа режима)
+добавлены сверх контракта: openapi.yaml не запрещает дополнительные поля
+(нет additionalProperties:false), а контрактные поля присутствуют и
+типизированы строго.
 
 Загрузка ролей: env ROLES_DIR → ../../data/roles → встроенный дефолт (5 ролей).
 Дефолт — дословная копия data/roles/*.yaml, плюс гарантия: канонические 5 ролей
@@ -260,10 +263,10 @@ def load_roles() -> list[dict[str, Any]]:
     ]
 
 
-def load_aliases() -> dict[str, str]:
-    """Каскад поиска словаря синонимов: SKILLS_FILE → ROLES_DIR/skills.yaml
-    → ../../data/roles/skills.yaml (ТЗ) → ../../data/skills.yaml (CI-контракт).
-    Первый файл с непустым результатом побеждает."""
+def _skills_candidates() -> list[Path]:
+    """Каскад поиска словаря навыков ( skills.yaml): SKILLS_FILE →
+    ROLES_DIR/skills.yaml → ../../data/roles/skills.yaml (ТЗ) →
+    ../../data/skills.yaml (CI-контракт)."""
     candidates: list[Path] = []
     env_skills = os.getenv("SKILLS_FILE", "").strip()
     if env_skills:
@@ -273,10 +276,24 @@ def load_aliases() -> dict[str, str]:
         candidates.append(Path(env_roles) / "skills.yaml")
     candidates.append(DEFAULT_ROLES_DIR / "skills.yaml")  # data/roles/skills.yaml
     candidates.append(DEFAULT_ROLES_DIR.parent / "skills.yaml")  # data/skills.yaml
-    for path in candidates:
+    return candidates
+
+
+def load_aliases() -> dict[str, str]:
+    """Словарь alias → canonical id: первый файл каскада с непустым результатом."""
+    for path in _skills_candidates():
         aliases = scoring.load_synonyms(path)
         if aliases:
             return aliases
+    return {}
+
+
+def load_skill_names() -> dict[str, str]:
+    """Словарь id → human name из того же каскада (для персональных gap-задач)."""
+    for path in _skills_candidates():
+        names = scoring.load_skill_names(path)
+        if names:
+            return names
     return {}
 
 
@@ -285,6 +302,7 @@ def load_aliases() -> dict[str, str]:
 ROLES: list[dict[str, Any]] = load_roles()
 ROLES_BY_ID: dict[str, dict[str, Any]] = {r["id"]: r for r in ROLES}
 ALIASES: dict[str, str] = load_aliases()
+SKILL_NAMES: dict[str, str] = load_skill_names()
 _CACHE: dict[str, dict[str, Any]] = {}
 
 _WORD_RE = re.compile(r"[a-zа-яё0-9]{2,}")
@@ -358,7 +376,9 @@ app.add_middleware(
     # Локальный демо-фронт может жить на любом порту localhost (3000 занят
     # чужим процессом) — разрешаем localhost/127.0.0.1 с любым портом.
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
-    allow_credentials=True,
+    # cookies/credentials фронт не использует (=True с wildcard-регэкспом —
+    # несёт риск и ничем не нужен: API ходит по голому fetch без cookie).
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -451,6 +471,9 @@ def recommend(req: RecommendRequest) -> RecommendResponse | JSONResponse:
                 why=why,
                 matched=row["matched"],
                 gaps=_gaps_human(row["gaps"]),
+                # «N из M навыков» для UI (UX.md:74): вместо голого процента.
+                matched_count=row["matched_count"],
+                needed_count=row["needed_count"],
             )
         )
     resp = RecommendResponse(
@@ -474,7 +497,9 @@ def plan(req: PlanRequest) -> PlanResponse:
         {"role_id": req.role_id, "profile": profile.model_dump(mode="json")},
     )
     if key in _CACHE:
-        return PlanResponse(**_CACHE[key])
+        cached = dict(_CACHE[key])
+        cached["cached"] = True  # симметрично /recommend (ТЗ-поле cached)
+        return PlanResponse(**cached)
 
     # Факты — только из рубрики роли (development_steps + resources).
     draft_steps = [str(s) for s in role.get("development_steps") or []]
@@ -494,9 +519,20 @@ def plan(req: PlanRequest) -> PlanResponse:
 
     # 4 недели (контракт: n 1–4, tasks minItems 1): круговой разбор шагов,
     # при нехватке шагов — детерминированный цикл по рубрике.
+    #
+    # Персонализация (совет: план из профиля, а не только из роли): недели
+    # 1–2 открываются задачами закрытия верхних пробелов ПРОФИЛЯ этой роли
+    # (детерминированно: -weight, id; максимум 3). Недели 3–4 — рубрика роли
+    # без изменений. Пустой профиль → персональных задач нет (базовый план).
+    personal = scoring.gap_tasks(profile.model_dump(), role, ALIASES, SKILL_NAMES)
+    personal_slots: dict[int, list[str]] = {1: personal[:2], 2: personal[2:3]}
+
     weeks: list[Week] = []
     for n in range(1, 5):
         tasks = [steps[i] for i in range(n - 1, len(steps), 4)]
+        for extra in personal_slots.get(n, []):
+            if extra not in tasks:
+                tasks.insert(0, extra)
         if not tasks:
             tasks = [steps[(n - 1) % len(steps)]]
         weeks.append(Week(n=n, tasks=tasks))
@@ -522,6 +558,11 @@ def plan(req: PlanRequest) -> PlanResponse:
         f"{len(steps)} шагов из рубрики роли, {len(gaps)} пробелов в профиле. "
         "Все шаги взяты из закрытой базы ролей."
     )
+    if personal:
+        summary += (
+            f" Недели 1–2 начинаются с {len(personal)} персональных задач "
+            "закрытия твоих пробелов."
+        )
 
     resp = PlanResponse(
         weeks=weeks,  # контракт: ровно 4 недели
@@ -535,6 +576,7 @@ def plan(req: PlanRequest) -> PlanResponse:
         disclaimer=DISCLAIMER,
         profile_hash=phash,
         llm_used=llm_used,  # type: ignore[arg-type]
+        cached=False,
     )
     _CACHE[key] = resp.model_dump()
     return resp
@@ -642,9 +684,17 @@ def chat(req: ChatRequest) -> ChatResponse:
 
     draft, sources = _chat_draft(role, req.message)
     provider = llm.get_provider()
-    reply, _ = _rephrase_or_draft(
+    reply, external_used = _rephrase_or_draft(
         provider, draft, f"роль: {role.get('title', role['id'])}"
     )
 
-    # Контракт: reply + sources; ТЗ: answer (алиас reply) + profile_hash.
-    return ChatResponse(reply=reply, answer=reply, sources=sources, profile_hash=phash)
+    # Контракт: reply + sources; ТЗ: answer (алиас reply) + profile_hash +
+    # llm_used (режим консультанта для честного бейджа в UI: live/демо).
+    llm_used = "external" if external_used else "stub"
+    return ChatResponse(
+        reply=reply,
+        answer=reply,
+        sources=sources,
+        profile_hash=phash,
+        llm_used=llm_used,  # type: ignore[arg-type]
+    )
