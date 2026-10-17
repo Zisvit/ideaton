@@ -19,6 +19,7 @@ export default function Consultant() {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
+  // Контракт: POST /chat { message, profile, role_id } → { reply, sources[] }
   const ask = async (question: string) => {
     if (!question.trim()) return
     setLoading(true)
@@ -46,11 +47,14 @@ export default function Consultant() {
           <Link href="/" className="brand">Карьерный трекер</Link>
           <span className="step-pill">Консультант</span>
         </div>
+        <div className="step-line" style={{ '--p': '100%' } as React.CSSProperties} />
       </header>
 
-      <main className="container" style={{ paddingTop: 40, paddingBottom: 80, maxWidth: 760 }}>
+      <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80, maxWidth: 760 }}>
         <section className="fade-in">
-          <h1>Консультант</h1>
+          <h1>
+            <span className="grad">Консультант</span>
+          </h1>
           <p className="hero__sub">
             Задай вопрос по выбранному направлению — отвечу только по рубрике, без выдумок.
           </p>
@@ -63,6 +67,7 @@ export default function Consultant() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             className="input"
+            aria-label="Вопрос консультанту"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault()
@@ -70,8 +75,8 @@ export default function Consultant() {
               }
             }}
           />
-          <div className="row-between" style={{ marginTop: 12 }}>
-            <div className="suggest">
+          <div className="row-between" style={{ marginTop: 12, alignItems: 'center' }}>
+            <div className="suggest" style={{ marginTop: 0 }}>
               {SUGGESTIONS.map((s) => (
                 <button key={s} type="button" onClick={() => { setInput(s); ask(s) }}>
                   {s}
@@ -96,15 +101,19 @@ export default function Consultant() {
         )}
 
         {loading && !chat && (
-          <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted)' }}>
-            <span className="loader"><span /><span /><span /></span>
-            Формируется ответ...
+          <div
+            role="status"
+            aria-live="polite"
+            style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted)' }}
+          >
+            <span className="loader" aria-hidden><span /><span /><span /></span>
+            Формируется ответ…
           </div>
         )}
 
         {chat && (
-          <div className="chat-bubble fade-in" style={{ marginTop: 24 }}>
-            <p style={{ margin: 0, lineHeight: 1.6 }}>{chat.reply}</p>
+          <div className="chat-bubble fade-in" style={{ marginTop: 24 }} aria-live="polite">
+            <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{chat.reply}</p>
             {chat.sources.length > 0 && (
               <p className="sources">Источники: {chat.sources.join('; ')}</p>
             )}

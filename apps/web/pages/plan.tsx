@@ -13,6 +13,7 @@ export default function Plan() {
   const [error, setError] = React.useState<string | null>(null)
   const [done, setDone] = React.useState<Record<string, boolean>>({})
 
+  // Контракт: POST /plan { role_id, profile } → { weeks[], checklist[], title, disclaimer }
   const fetchPlan = async () => {
     setLoading(true)
     setError(null)
@@ -36,6 +37,7 @@ export default function Plan() {
   const toggle = (key: string) => setDone((d) => ({ ...d, [key]: !d[key] }))
   const totalTasks = plan ? plan.weeks.reduce((a, w) => a + w.tasks.length, 0) : 0
   const doneCount = Object.values(done).filter(Boolean).length
+  const isComplete = totalTasks > 0 && doneCount >= totalTasks
 
   return (
     <>
@@ -44,21 +46,26 @@ export default function Plan() {
           <Link href="/" className="brand">Карьерный трекер</Link>
           <span className="step-pill">Шаг 3 из 3</span>
         </div>
+        <div className="step-line" style={{ '--p': '100%' } as React.CSSProperties} />
       </header>
 
-      <main className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+      <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
         <section className="fade-in">
-          <h1>План на 30 дней{plan ? `: ${plan.title}` : ''}</h1>
+          <h1>
+            План на <span className="grad">30 дней</span>
+            {plan ? `: ${plan.title}` : ''}
+          </h1>
           <p className="hero__sub">
             Конкретные шаги по неделям. Отмечай выполненные — прогресс сохраняется в браузере.
           </p>
         </section>
 
         {loading && (
-          <div style={{ marginTop: 32, display: 'grid', gap: 14 }}>
+          <div style={{ marginTop: 32, display: 'grid', gap: 14 }} role="status" aria-live="polite">
             <div className="skeleton" style={{ height: 120 }} />
             <div className="skeleton" style={{ height: 120 }} />
             <div className="skeleton" style={{ height: 120 }} />
+            <span className="sr-only">Загружаем план…</span>
           </div>
         )}
 
@@ -73,15 +80,20 @@ export default function Plan() {
 
         {plan && (
           <>
-            <div className="card" style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div
+              className="card"
+              style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}
+            >
               <div style={{ flex: 1, minWidth: 200 }}>
                 <div className="small" style={{ marginBottom: 6 }}>Прогресс</div>
                 <div className="progress">
                   <span style={{ width: `${totalTasks ? (doneCount / totalTasks) * 100 : 0}%` }} />
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 22, fontWeight: 800, fontFamily: 'var(--font-display)' }}>{doneCount}/{totalTasks}</div>
+              <div style={{ textAlign: 'right' }} aria-live="polite">
+                <div className="num" style={{ fontSize: 22 }}>
+                  {doneCount}/{totalTasks}
+                </div>
                 <div className="small">задач выполнено</div>
               </div>
             </div>
@@ -97,15 +109,15 @@ export default function Plan() {
                     {week.tasks.map((task, i) => {
                       const key = `${week.n}-${i}`
                       return (
-                        <li key={key}>
+                        <li key={key} className={done[key] ? 'done' : ''}>
                           <button
                             type="button"
                             className="check"
                             onClick={() => toggle(key)}
                             aria-pressed={!!done[key]}
-                            style={done[key] ? { background: 'var(--match)', borderColor: 'var(--match)' } : {}}
+                            aria-label={`Неделя ${week.n}, шаг ${i + 1}: ${task}`}
                           />
-                          <span style={done[key] ? { textDecoration: 'line-through', color: 'var(--muted)' } : {}}>{task}</span>
+                          <span>{task}</span>
                         </li>
                       )
                     })}
@@ -120,7 +132,7 @@ export default function Plan() {
                 <ul>
                   {plan.checklist.map((item, i) => (
                     <li key={i}>
-                      <span className="check" />
+                      <span className="check" aria-hidden />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -136,6 +148,14 @@ export default function Plan() {
               <Link href="/consultant" className="btn btn-primary">Задать вопрос консультанту →</Link>
               <Link href="/result" className="btn btn-ghost">Сменить направление</Link>
             </div>
+
+            {isComplete && (
+              <div className="confetti" aria-hidden>
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <i key={i} />
+                ))}
+              </div>
+            )}
           </>
         )}
       </main>
