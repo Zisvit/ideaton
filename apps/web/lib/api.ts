@@ -18,6 +18,9 @@ type RoleScore = {
   why: string[]
   matched?: string[]
   gaps: string[]
+  // «N из M навыков» вместо голого процента (UX.md:74) — бэкенд отдаёт всегда
+  matched_count?: number
+  needed_count?: number
 }
 
 type RecommendResponse = {
@@ -33,15 +36,19 @@ type PlanResponse = {
   title: string
   summary?: string
   disclaimer?: string
+  cached?: boolean
 }
 
 type ChatResponse = {
   reply: string
   sources: string[]
+  // режим консультанта: stub (демо) | external (живой LLM) — для честного бейджа
+  llm_used?: 'stub' | 'external'
 }
 
 const PROFILE_KEY = 'career-tracker-profile'
 const ROLE_KEY = 'career-tracker-role'
+const doneKey = (roleId: string) => `career-tracker-done:${roleId}`
 
 const EXAMPLE_PROFILE: Profile = {
   skills: ['python', 'git', 'html'],
@@ -51,11 +58,55 @@ const EXAMPLE_PROFILE: Profile = {
   specialty: 'Информационные системы и технологии',
 }
 
+// ---- Хранилище: localStorage, иначе in-memory (гостевой/приватный режим) ----
+// Гостевой браузер выбрасывает на любом обращении к localStorage — берём в
+// Map в памяти (живёт до перезагрузки), а isGuestMode() даёт UI сказать правду.
+const memoryStore = new Map<string, string>()
+let storageProbe: boolean | null = null
+
+function storageAvailable(): boolean {
+  if (typeof window === 'undefined') return false
+  if (storageProbe !== null) return storageProbe
+  try {
+    const probe = '__tracker_probe__'
+    window.localStorage.setItem(probe, '1')
+    window.localStorage.removeItem(probe)
+    storageProbe = true
+  } catch {
+    storageProbe = false
+  }
+  return storageProbe
+}
+
+export function isGuestMode(): boolean {
+  return typeof window !== 'undefined' && !storageAvailable()
+}
+
+function readStore(key: string): string | null {
+  if (typeof window === 'undefined') return null
+  if (storageAvailable()) return window.localStorage.getItem(key)
+  return memoryStore.get(key) ?? null
+}
+
+function writeStore(key: string, value: string): void {
+  if (typeof window === 'undefined') return
+  if (storageAvailable()) {
+    try {
+      window.localStorage.setItem(key, value)
+    } catch {
+      /* квота переполнена — без падения уходит в память */
+      memoryStore.set(key, value)
+    }
+  } else {
+    memoryStore.set(key, value)
+  }
+}
+
 function getStoredProfile(): Profile {
   if (typeof window === 'undefined') return { ...EXAMPLE_PROFILE }
-  try {
-    const raw = window.localStorage.getItem(PROFILE_KEY)
-    if (raw) {
+  const raw = readStore(PROFILE_KEY)
+  if (raw) {
+    try {
       const parsed = JSON.parse(raw) as Partial<Profile>
       return {
         skills: Array.isArray(parsed.skills) ? parsed.skills : [],
@@ -64,26 +115,42 @@ function getStoredProfile(): Profile {
         course: typeof parsed.course === 'number' ? parsed.course : undefined,
         specialty: typeof parsed.specialty === 'string' ? parsed.specialty : undefined,
       }
+    } catch {
+      /* битый JSON — откат к примеру */
     }
-  } catch {
-    /* битый localStorage — откат к примеру */
   }
   return { ...EXAMPLE_PROFILE }
 }
 
 function saveProfile(profile: Profile) {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile))
+  writeStore(PROFILE_KEY, JSON.stringify(profile))
 }
 
 function getStoredRoleId(): string {
   if (typeof window === 'undefined') return 'web'
-  return window.localStorage.getItem(ROLE_KEY) || 'web'
+  return readStore(ROLE_KEY) || 'web'
 }
 
 function saveRoleId(roleId: string) {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(ROLE_KEY, roleId)
+  writeStore(ROLE_KEY, roleId)
+}
+
+// ---- Прогресс плана: done-отметки живут по роли (раньше терялись при F5) ----
+function getDone(roleId: string): Record<string, boolean> {
+  const raw = readStore(doneKey(roleId))
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    const clean: Record<string, boolean> = {}
+    for (const [k, v] of Object.entries(parsed)) clean[k] = v === true
+    return clean
+  } catch {
+    return {}
+  }
+}
+
+function saveDone(roleId: string, done: Record<string, boolean>): void {
+  writeStore(doneKey(roleId), JSON.stringify(done))
 }
 
 type ApiResponse<T> = { success: boolean; data?: T; error?: string }
@@ -133,5 +200,7 @@ export {
   saveProfile,
   getStoredRoleId,
   saveRoleId,
+  getDone,
+  saveDone,
 }
 export type { Profile, RoleScore, RecommendResponse, Week, PlanResponse, ChatResponse }

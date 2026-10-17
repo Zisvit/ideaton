@@ -2,9 +2,11 @@ import React from 'react'
 import Link from 'next/link'
 import {
   apiFetch,
+  getDone,
   getStoredProfile,
   getStoredRoleId,
   PlanResponse,
+  saveDone,
 } from '../lib/api'
 
 export default function Plan() {
@@ -12,6 +14,7 @@ export default function Plan() {
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [done, setDone] = React.useState<Record<string, boolean>>({})
+  const roleId = React.useRef<string>('')
 
   // Контракт: POST /plan { role_id, profile } → { weeks[], checklist[], title, disclaimer }
   const fetchPlan = async () => {
@@ -31,10 +34,21 @@ export default function Plan() {
   }
 
   React.useEffect(() => {
+    roleId.current = getStoredRoleId()
+    // «Прогресс сохраняется в браузере» теперь говорит правду: done-набор
+    // хранится по роли (localStorage или память в гостевом режиме)
+    setDone(getDone(roleId.current))
     fetchPlan()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const toggle = (key: string) => setDone((d) => ({ ...d, [key]: !d[key] }))
+  // Переключение чекбокса сразу пишет в хранилище — F5 ничего не теряет.
+  const toggle = (key: string) =>
+    setDone((d) => {
+      const next = { ...d, [key]: !d[key] }
+      saveDone(roleId.current, next)
+      return next
+    })
   const totalTasks = plan ? plan.weeks.reduce((a, w) => a + w.tasks.length, 0) : 0
   const doneCount = Object.values(done).filter(Boolean).length
   const isComplete = totalTasks > 0 && doneCount >= totalTasks
@@ -99,9 +113,19 @@ export default function Plan() {
             </div>
 
             {isComplete && (
-              <p className="milestone">
-                <b aria-hidden>✓</b> Маршрут пройден — прогресс сохранён
-              </p>
+              <div>
+                <p className="milestone">
+                  <b aria-hidden>✓</b> Маршрут пройден — прогресс сохранён
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  style={{ marginTop: 8, padding: '8px 14px', fontSize: 14 }}
+                  onClick={() => window.print()}
+                >
+                  Забрать карту (PDF) →
+                </button>
+              </div>
             )}
 
             <div className="stagger" style={{ marginTop: 24, display: 'grid', gap: 14 }}>
@@ -149,6 +173,14 @@ export default function Plan() {
             {plan.disclaimer && (
               <p className="disclaimer" style={{ marginTop: 20 }}>{plan.disclaimer}</p>
             )}
+
+            {/* подвал печатной карты: виден только на бумаге (@media print) */}
+            <div className="page-foot">
+              Карьерный трекер · план на 30 дней{plan ? ` · ${plan.title}` : ''} ·
+              распечатано {new Date().toLocaleDateString('ru-RU')}
+              <br />
+              План построен по закрытой базе ролей, не обещает трудоустройство.
+            </div>
 
             <div className="cta-bar" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <Link href="/consultant" className="btn btn-primary">Задать вопрос консультанту →</Link>

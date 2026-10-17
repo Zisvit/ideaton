@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import { EXAMPLE_PROFILE, Profile, saveProfile } from '../lib/api'
+import { EXAMPLE_PROFILE, isGuestMode, Profile, saveProfile } from '../lib/api'
 
 const SKILLS = [
   'Python', 'JavaScript', 'TypeScript', 'React',
@@ -13,6 +13,12 @@ export default function Home() {
   const [course, setCourse] = React.useState<number | null>(null)
   const [text, setText] = React.useState('')
   const [error, setError] = React.useState<string | null>(null)
+  // Баннер только когда localStorage реально недоступен (гостевой режим) —
+  // в обычном режиме не пугаем «профиль в браузере» пояснениями.
+  const [guest, setGuest] = React.useState(false)
+  React.useEffect(() => {
+    setGuest(isGuestMode())
+  }, [])
 
   const toggleChip = (chip: string) => {
     setSelected((prev) =>
@@ -72,6 +78,12 @@ export default function Home() {
             Без резюме и тестов: просто карта маршрута.
           </p>
         </section>
+
+        {guest && (
+          <p className="small" role="status" style={{ marginTop: 12 }}>
+            Гостевой режим: профиль сохранится только до перезагрузки страницы.
+          </p>
+        )}
 
         <section className="card" style={{ marginTop: 28 }}>
           <label className="label" htmlFor="skills-text">Твои навыки</label>

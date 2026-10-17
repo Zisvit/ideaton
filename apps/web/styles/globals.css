@@ -256,11 +256,21 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
 .milestone { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin: 10px 0 0; }
 .milestone b { color: #087C56; font-weight: 700; font-size: 14px; }
 
+/* честный бейдж режима консультанта: демо (stub) / живой ИИ (external) */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+}
+.badge-demo { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+.badge-live { background: var(--match-soft); color: #087C56; }
+
 .disclaimer { font-size: 13px; color: var(--muted); padding: 14px 16px; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px dashed var(--line); }
 
-/* конфетти: 8 частиц, 2 цвета, ниже шапки (z30), одна вспышка */
+/* конфетти: 8 частиц (тихое большинство v3), НО заметные: 10×16px, 2.4s —
+   «кульминацию должно быть видно» (space-bunny), без возврата к громоздкости */
 .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 30; overflow: hidden; }
-.confetti i { position: absolute; top: -12px; width: 6px; height: 10px; border-radius: 2px; opacity: 0; animation: confetti-fall 1.8s var(--ease) forwards; }
+.confetti i { position: absolute; top: -18px; width: 10px; height: 16px; border-radius: 3px; opacity: 0; animation: confetti-fall 2.4s var(--ease) forwards; }
 .confetti i:nth-child(2n) { background: var(--accent); }
 .confetti i:nth-child(3n) { background: var(--match); }
 .confetti i:nth-child(1) { left: 8%; }
@@ -298,4 +308,39 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   h1 { font-size: 28px; }
   .row-between { flex-direction: column; align-items: stretch; }
   .role-card__top { flex-direction: column; }
+}
+
+/* ---- печатная «карта маршрута» (кнопка «Забрать карту» на плане) ----
+   Чистый CSS: A4-поток из существующего DOM, ноль зависимостей. Печать —
+   белая бумага, обычный шрифт, чекбоксы превращаются в □/✓ маркеры. */
+/* строка-подвал видна только на бумаге */
+.page-foot { display: none; }
+@media print {
+  .site-header, .cta-bar, .cta-sticky, .confetti, .skeleton, .alert,
+  .skip-link, .badge, .progress, .check, .milestone, .plan-print-hide,
+  .btn { display: none !important; }
+  body { background: #fff; color: #000; font-family: var(--font-sans); }
+  .container { max-width: none; padding: 0; }
+  main { padding: 0 !important; }
+  h1 { font-size: 16pt; font-family: var(--font-sans); font-weight: 700; }
+  h2, h3 { font-size: 12.5pt; }
+  a { color: #000; text-decoration: none; }
+  .card, .week, .checklist, .hero-card {
+    background: none; color: #000; box-shadow: none;
+    border: 1px solid #999; break-inside: avoid;
+  }
+  .hero-card .tag-match, .hero-card .tag-gap {
+    background: none; color: #000; border: 1px solid #999;
+  }
+  .hero-card .small, .hero-card li { color: #000; }
+  .small, .disclaimer { color: #333; }
+  .week ul { display: block; }
+  .week li { background: none; padding: 5px 0; font-size: 11pt; }
+  /* чекбокс→маркер: □ на экране был кнопкой, на бумаге — символ статуса */
+  .week li::before { content: '□'; margin-right: 8px; font-size: 11pt; }
+  .week li.done::before { content: '✓'; font-weight: 700; }
+  .week li.done span { text-decoration: line-through; color: #000; }
+  .week__num { background: none; color: #000; border: 1px solid #999; }
+  .checklist li::before { content: '□'; margin-right: 8px; }
+  .page-foot { margin-top: 14pt; font-size: 9pt; color: #666; border-top: 1px solid #999; padding-top: 6pt; }
 }
