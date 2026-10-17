@@ -62,7 +62,7 @@ export default function Home() {
         <div className="step-line" style={{ '--p': '33%' } as React.CSSProperties} />
       </header>
 
-      <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 24 }}>
+      <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 88 }}>
         <section className="band fade-in" style={{ paddingTop: 16, paddingBottom: 8 }}>
           <h1 style={{ maxWidth: 660 }}>
             Куда тебе <span className="grad">расти?</span>
@@ -77,7 +77,7 @@ export default function Home() {
           <label className="label" htmlFor="skills-text">Твои навыки</label>
           <textarea
             id="skills-text"
-            rows={3}
+            rows={2}
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="например: html, css, python, 1с"
@@ -93,7 +93,6 @@ export default function Home() {
                 className={`chip ${selected.includes(chip) ? 'on' : ''}`}
                 aria-pressed={selected.includes(chip)}
               >
-                {selected.includes(chip) && <span aria-hidden>✓</span>}
                 {chip}
               </button>
             ))}
@@ -107,10 +106,11 @@ export default function Home() {
                   key={c}
                   type="button"
                   onClick={() => setCourse(course === c ? null : c)}
-                  className={`chip ${course === c ? 'on' : ''}`}
+                  className={`chip chip-sm ${course === c ? 'on' : ''}`}
                   aria-pressed={course === c}
+                  aria-label={`${c} курс`}
                 >
-                  {c} курс
+                  {c}
                 </button>
               ))}
             </div>
@@ -139,13 +139,10 @@ export default function Home() {
             href="/result"
             onClick={goResult}
             className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center' }}
+            style={{ width: '100%', justifyContent: 'center', boxShadow: 'none' }}
           >
             Показать мои 5 направлений →
           </Link>
-          <p className="small" style={{ textAlign: 'center', margin: '10px 0 0' }}>
-            Без регистрации. Профиль хранится в браузере.
-          </p>
         </div>
       </main>
     </>

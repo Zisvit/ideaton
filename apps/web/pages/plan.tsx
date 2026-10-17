@@ -52,7 +52,7 @@ export default function Plan() {
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
         <section className="fade-in">
           <h1>
-            План на <span className="grad">30 дней</span>
+            План на 30 дней
             {plan ? `: ${plan.title}` : ''}
           </h1>
           <p className="hero__sub">
@@ -97,6 +97,12 @@ export default function Plan() {
                 <div className="small">задач выполнено</div>
               </div>
             </div>
+
+            {isComplete && (
+              <p className="milestone">
+                <b aria-hidden>✓</b> Маршрут пройден — прогресс сохранён
+              </p>
+            )}
 
             <div className="stagger" style={{ marginTop: 24, display: 'grid', gap: 14 }}>
               {plan.weeks.map((week) => (
@@ -151,7 +157,7 @@ export default function Plan() {
 
             {isComplete && (
               <div className="confetti" aria-hidden>
-                {Array.from({ length: 12 }).map((_, i) => (
+                {Array.from({ length: 8 }).map((_, i) => (
                   <i key={i} />
                 ))}
               </div>
