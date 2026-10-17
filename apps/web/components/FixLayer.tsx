@@ -6,6 +6,9 @@ export default function FixLayer() {
   return (
     <div className="fix-bg" aria-hidden="true">
       <div className="fix-bg__aurora" />
+      {/* dot-grid: бесшовный дрейф 18s (тайл 24px == сдвиг 24px) — «медленно,
+          но заметно»; заменил снятую статичную .band::before (совет v5, 2:1) */}
+      <div className="fix-bg__dots" />
       {/* микро-фигуры: круг · линия · капсула — «различные элементы» фона,
           тихие (opacity .12), в спокойных цветах проекта */}
       <div className="fix-bg__shape fix-bg__shape--ring" />
