@@ -1,48 +1,121 @@
 import React from 'react'
 import Link from 'next/link'
 import {
-  apiFetch,
-  ChatResponse,
-  getStoredProfile,
-  getStoredRoleId,
-} from '../lib/api'
+  USE_LIVE_CHAT,
+  GREETING,
+  buildMissMessage,
+  matchTopic,
+  topicById,
+  topicToMessage,
+  ScriptMessage,
+  Topic,
+} from '../lib/consultantScripts'
 
-const SUGGESTIONS = [
-  'С чего начать учить React?',
-  'Где взять первую практику?',
-  'Что показать в портфолио?',
+// Быстрые чипы-подсказки под полем ввода (реюз .suggest, v1)
+const QUICK = [
+  'С чего начать?',
+  'Не знаю, что умею',
+  'План большой?',
 ]
+
+type ChatItem =
+  | { role: 'user'; text: string }
+  | (ScriptMessage & { role: 'bot' })
+
+// ---- Лис-мини: талисман ПРОЕКТА (не бренд вуза). 44×36, отдельный SVG
+// вне intro-сцены (fill-box). 3 idle-реюза: breath (корневая группа),
+// foxMiniBlink (глаз — единственный НОВЫЙ keyframe v6: 29→30/30, договорный
+// свободный слот бюджета), tailIdle (хвост, --tw inline). Декор-акцент,
+// статуса не несёт (§9-регламент). ----
+function FoxMini() {
+  return (
+    <svg
+      className="foxMini"
+      viewBox="200 30 108 88"
+      role="img"
+      aria-label="Лис Идея — талисман проекта"
+    >
+      <g className="foxMini__body">
+        {/* голова (кроп силуэта v5), стрелки ушей, глаз, нос */}
+        <path
+          fill="var(--fox-deep, #C25A1B)"
+          d="M212 62 L232 44 L246 60 L262 60 L276 44 L296 62 C304 76 296 96 254 96 C212 96 204 76 212 62 Z"
+        />
+        <path
+          fill="var(--fox-dark, #8A3D10)"
+          d="M228 50 L236 44 L242 54 L232 58 Z M278 50 L270 44 L264 54 L274 58 Z"
+        />
+        <path fill="var(--fox-eye, #1C232B)" className="foxMini__eye" d="M238 70 L252 72 L240 80 Z" />
+        <path fill="var(--fox-nose, #3A2A22)" d="M288 70 L298 66 L294 78 Z" />
+      </g>
+      {/* хвост — отдельная группа (tailIdle реюз, --tw inline, §9-регламент) */}
+      <g className="foxMini__tail">
+        <path fill="var(--fox-deep, #C25A1B)" d="M282 88 L306 82 L298 100 Z" />
+      </g>
+    </svg>
+  )
+}
+
+function BotHead() {
+  return (
+    <div className="chatBot__head">
+      <FoxMini />
+      <div className="chatBot__head-text">
+        <span className="badge badge-demo badge--script">Скриптовый режим</span>
+        <span className="chatBot__hint">ответы заготовлены заранее · текст не уходит в сеть</span>
+      </div>
+    </div>
+  )
+}
 
 export default function Consultant() {
   const [input, setInput] = React.useState('')
-  const [chat, setChat] = React.useState<ChatResponse | null>(null)
-  const [loading, setLoading] = React.useState(false)
+  // Диалог целиком локальный (USE_LIVE_CHAT=false): сетевой вызов не делается
+  // ни при каком пути скриптового режима — структурный гейт «0 fetch».
+  const [items, setItems] = React.useState<ChatItem[]>([
+    { ...GREETING, role: 'bot' },
+  ])
   const [error, setError] = React.useState<string | null>(null)
-  // № ответа: key на chat-block — вход (fade-in) переигрывается и на втором
-  // ответе, иначе React переиспользует DOM и анимация не видна (mimo, раунд 2)
-  const [askN, setAskN] = React.useState(0)
+  const logRef = React.useRef<HTMLDivElement | null>(null)
 
-  // Контракт: POST /chat { message, profile, role_id } → { reply, sources[] }
-  const ask = async (question: string) => {
-    if (!question.trim()) return
-    setLoading(true)
+  const pushBot = (topic: Topic): ChatItem => ({
+    ...topicToMessage(topic),
+    role: 'bot',
+  })
+
+  const respond = (raw: string) => {
+    const question = raw.trim()
+    if (!question) return
     setError(null)
-    const res = await apiFetch<ChatResponse>('/chat', {
-      method: 'POST',
-      body: {
-        message: question,
-        profile: getStoredProfile(),
-        role_id: getStoredRoleId(),
-      },
-    })
-    if (res.success && res.data) {
-      setChat(res.data)
-      setAskN((n) => n + 1)
-    } else {
-      setError(res.error || 'Неизвестная ошибка')
+    setInput('')
+
+    if (USE_LIVE_CHAT) {
+      // Будущий путь: прежний POST к чат-эндпоинту. Пока флаг false — код
+      // ниже не живёт; структурный тест опирается на ранний возврат до fetch.
+      setError('Живой режим ещё не включён: ожидаем API.')
+      return
     }
-    setLoading(false)
+
+    // Guard-зёрна перехватываются раньше любых keyword'ов (space-bunny).
+    const match = matchTopic(question)
+    const bot: ChatItem =
+      match.kind === 'topic'
+        ? pushBot(match.topic)
+        : { ...buildMissMessage(), role: 'bot' }
+    setItems((cur) => [...cur, { role: 'user', text: question }, bot])
   }
+
+  const pickTopic = (topicId: string, label: string) => {
+    const topic = topicById(topicId)
+    if (!topic) return
+    setItems((cur) => [...cur, { role: 'user', text: label }, pushBot(topic)])
+  }
+
+  // Авто-скролл лога вниз (порт фиксированной высоты ⇒ CLS 0).
+  React.useEffect(() => {
+    const node = logRef.current
+    if (node) node.scrollTop = node.scrollHeight
+  }, [items])
 
   return (
     <>
@@ -56,43 +129,88 @@ export default function Consultant() {
 
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80, maxWidth: 760 }}>
         <section className="fade-in">
-          <h1>Консультант</h1>
+          <h1><span className="grad">Консультант</span></h1>
           <p className="hero__sub">
-            Задай вопрос по выбранному направлению — отвечу только по рубрике, без выдумок.
+            Отвечаю по заготовленным памяткам проекта: выбирай чип или спроси словами.
+            Честный режим — без подключённого ИИ и без обещаний.
           </p>
         </section>
 
-        <section className="card" style={{ marginTop: 28 }}>
-          <textarea
-            placeholder="Например: с чего начать учить React?"
-            rows={3}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="input"
-            aria-label="Вопрос консультанту"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault()
-                ask(input)
-              }
-            }}
-          />
-          <div className="row-between" style={{ marginTop: 12, alignItems: 'center' }}>
-            <div className="suggest" style={{ marginTop: 0 }}>
-              {SUGGESTIONS.map((s) => (
-                <button key={s} type="button" onClick={() => { setInput(s); ask(s) }}>
-                  {s}
-                </button>
-              ))}
+        <section className="card chatBot plan-print-hide" style={{ marginTop: 28 }}>
+          <BotHead />
+          <div className="chatBot__log" ref={logRef} aria-live="polite" aria-label="Диалог с консультантом">
+            {items.map((item, mi) => (
+              <div
+                key={mi}
+                className={`chatLine ${item.role === 'user' ? 'chatLine--user' : ''}`}
+                style={{ '--j': mi } as React.CSSProperties}
+              >
+                {item.role === 'user' ? (
+                  <div className="chatLine__bubble chatLine__bubble--user">{item.text}</div>
+                ) : (
+                  <div className="chatLine__bubble chatLine__bubble--bot">
+                    {item.title && <div className="chatLine__title">{item.title}</div>}
+                    {item.lines.map((line, li) => (
+                      <p key={li} className="chatLine__row" style={{ '--j': li } as React.CSSProperties}>
+                        {line}
+                      </p>
+                    ))}
+                    {item.cta && (
+                      <div className="chatLine__cta-wrap">
+                        <Link href={item.cta.href} className="btn btn-primary chatLine__cta">
+                          {item.cta.label}
+                        </Link>
+                      </div>
+                    )}
+                    {item.chips && item.chips.length > 0 && (
+                      <div className="suggest" style={{ marginTop: 10 }}>
+                        {item.chips.map((chip) => (
+                          <button
+                            key={chip.topicId}
+                            type="button"
+                            onClick={() => pickTopic(chip.topicId, chip.label)}
+                          >
+                            {chip.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {item.honest && (
+                      <div className="chatLine__meta">памятка проекта · не ИИ-генерация</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="chatBot__form">
+            <textarea
+              placeholder="Например: с чего начать?"
+              rows={2}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="input"
+              aria-label="Вопрос консультанту"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  respond(input)
+                }
+              }}
+            />
+            <div className="row-between" style={{ marginTop: 10, alignItems: 'center' }}>
+              <div className="suggest" style={{ marginTop: 0 }}>
+                {QUICK.map((label) => (
+                  <button key={label} type="button" onClick={() => respond(label)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={() => respond(input)} className="btn btn-primary">
+                Спросить
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => ask(input)}
-              className="btn btn-primary"
-              disabled={loading || !input.trim()}
-            >
-              {loading ? 'Думаю…' : 'Отправить'}
-            </button>
           </div>
         </section>
 
@@ -102,41 +220,10 @@ export default function Consultant() {
           </div>
         )}
 
-        {loading && !chat && (
-          <div
-            role="status"
-            aria-live="polite"
-            style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted)' }}
-          >
-            <span className="loader" aria-hidden><span /><span /><span /></span>
-            Формируется ответ…
-          </div>
-        )}
-
-        {chat && (
-          <div className="chat-block fade-in" key={askN} style={{ marginTop: 24 }}>
-            {/* честный бейдж режима: llm_used отдаёт бэкенд (stub/external) */}
-            <span
-              className={chat.llm_used === 'external' ? 'badge badge-live' : 'badge badge-demo'}
-              style={{ marginBottom: 10 }}
-            >
-              {chat.llm_used === 'external' ? 'ИИ-консультант' : 'Демо-режим'}
-            </span>
-            <div className="chat-bubble" aria-live="polite">
-              <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{chat.reply}</p>
-              {chat.sources.length > 0 && (
-                <p className="sources">Источники: {chat.sources.join('; ')}</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {(chat || loading) && (
-          <div className="cta-bar" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Link href="/plan" className="btn btn-ghost">← К плану</Link>
-            <Link href="/result" className="btn btn-ghost">Сменить направление</Link>
-          </div>
-        )}
+        <div className="cta-bar" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <Link href="/plan" className="btn btn-ghost">← К плану</Link>
+          <Link href="/result" className="btn btn-ghost">Сменить направление</Link>
+        </div>
       </main>
     </>
   )
