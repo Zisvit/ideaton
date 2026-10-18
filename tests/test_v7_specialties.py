@@ -227,3 +227,164 @@ def test_empty_profile_fallback_respects_limit() -> None:
     assert len(r.json()["fallback"]) == 4
     for item in r.json()["fallback"]:
         assert item["kind"] in ("role", "specialty")
+
+
+# ------------------------------------------------- зеркало генератора planChecks
+# Точный порт apps/web/lib/planChecks.ts: те же регулярки, тот же резолв
+# (длиннейший алиас, lowercase, ё→е). Гейт ловит расхождение контента и кода
+# без запуска JS: у каждой специальности 5/5 тем с проверкой, тема из
+# skills_required, CHOICE — 3 различных варианта, верный не всегда первый.
+import json as _json  # noqa: E402
+import re as _re  # noqa: E402
+
+GLOSSARY = _json.loads((ROOT / "apps" / "web" / "lib" / "glossary.json").read_text())
+_GAP = _re.compile(r"Закрыть\s+пробел\s+«([^»]+)»")
+_MEET = _re.compile(r"Познакомиться\s+с\s+", _re.I)
+_COLLECT = _re.compile(
+    r"Собрать\s+проект|Собрать\s+(?:подборку|портфолио|памятку|чек-лист|конспект)",
+    _re.I,
+)
+_HTML = _re.compile(r"Изучить\s+основы\s+HTML|сверстать", _re.I)
+_JS = _re.compile(r"Освоить\s+JavaScript", _re.I)
+_API = _re.compile(r"API|fetch", _re.I)
+_STUDY = _re.compile(r"^(Изучить|Освоить|Научиться|Отработать|Настроить)\s+", _re.I)
+
+
+def _norm(text: str) -> str:
+    return text.strip().lower().replace("ё", "е")
+
+
+def _resolve(text: str) -> str | None:
+    t = _norm(text)
+    best: tuple[str, int] | None = None
+    for tid in sorted(GLOSSARY):
+        entry = GLOSSARY[tid]
+        for form in [entry["name"], *entry.get("aliases", [])]:
+            alias = _norm(form)
+            if alias and alias in t and (best is None or len(alias) > best[1]):
+                best = (tid, len(alias))
+    return best[0] if best else None
+
+
+def _hash(text: str) -> int:
+    h = 0
+    for ch in text:
+        h = (h * 31 + ord(ch)) & 0xFFFFFFFF
+        if h >= 2**31:
+            h -= 2**32
+    return abs(h)
+
+
+def _check_for(step: str) -> dict | None:
+    """Порт buildMiniCheck: вернуть {kind, prompt, skill?, label?} или None."""
+    gap = _GAP.search(step)
+    if gap:
+        tid = _resolve(gap.group(1))
+        return (
+            None
+            if not tid
+            else {
+                "kind": "choice",
+                "skill": tid,
+                "label": GLOSSARY[tid]["name"],
+                "field": "why",
+            }
+        )
+    if _MEET.search(step):
+        tid = _resolve(step)
+        return (
+            None
+            if not tid
+            else {
+                "kind": "choice",
+                "skill": tid,
+                "label": GLOSSARY[tid]["name"],
+                "field": "what",
+            }
+        )
+    if _COLLECT.search(step):
+        return {"kind": "do", "label": GLOSSARY["учебный проект"]["name"]}
+    if _HTML.search(step):
+        return {"kind": "do", "skill": "html", "label": "HTML"}
+    if _JS.search(step):
+        return {"kind": "self", "skill": "javascript", "label": "JavaScript"}
+    if _API.search(step):
+        return {"kind": "self", "skill": "api", "label": "API"}
+    if _STUDY.search(step):
+        tid = _resolve(step)
+        return (
+            None
+            if not tid
+            else {"kind": "self", "skill": tid, "label": GLOSSARY[tid]["name"]}
+        )
+    return None
+
+
+def test_generator_mirror_every_specialty_step_has_check() -> None:
+    for rid in SPECIALTY_IDS:
+        role = main.ROLES_BY_ID[rid]
+        skills = {s["id"] for s in role["skills_required"]}
+        for step in role["development_steps"]:
+            check = _check_for(step)
+            assert check is not None, f"{rid}: шаг без проверки — «{step}»"
+            assert check["label"], f"{rid}: у проверки нет label"
+            tid = check.get("skill")
+            if tid and check["kind"] != "do":
+                assert tid in skills, (
+                    f"{rid}: тема {tid} вне skills_required — «{step}»"
+                )
+
+
+def test_generator_mirror_glossary_covers_all_skills() -> None:
+    catalog = yaml.safe_load((ROLES_DIR / "skills.yaml").read_text())["skills"]
+    for sid in catalog:
+        assert sid in GLOSSARY, f"навык {sid} без темы в glossary.json"
+    clusters: dict[str, int] = {}
+    for entry in GLOSSARY.values():
+        clusters[entry["cluster"]] = clusters.get(entry["cluster"], 0) + 1
+    for sid, entry in GLOSSARY.items():
+        has_explicit = len(entry.get("distractors") or []) >= 2
+        assert has_explicit or clusters[entry["cluster"]] >= 3, (
+            f"{sid}: дистракторов нет (cluster {entry['cluster']} мал)"
+        )
+
+
+def test_generator_mirror_choice_is_valid_and_rotated() -> None:
+    """3 различных варианта, верный в пределах, позиция верного варьируется."""
+    correct_positions: set[int] = set()
+    for rid in SPECIALTY_IDS:
+        role = main.ROLES_BY_ID[rid]
+        for step in role["development_steps"]:
+            check = _check_for(step)
+            if not check or check["kind"] != "choice":
+                continue
+            entry = GLOSSARY[check["skill"]]
+            right = entry[check["field"]]
+            explicit = entry.get("distractors") or []
+            if len(explicit) >= 2:
+                pool = list(explicit[:2])
+            else:
+                pool = [
+                    e[check["field"]]
+                    for k, e in sorted(GLOSSARY.items())
+                    if k != check["skill"] and e["cluster"] == entry["cluster"]
+                ]
+            h = _hash(check["skill"] + check["field"])
+            i1 = h % len(pool)
+            i2 = (h * 7 + 3) % len(pool)
+            if i2 == i1:
+                i2 = (i1 + 1) % len(pool)
+            distractors = [pool[i1], pool[i2]]
+            assert right not in distractors, f"{check['skill']}: дубль верного"
+            assert len(set(distractors)) == 2, f"{check['skill']}: дистракторы совпали"
+            # позиция верного — hash(prompt) % 3; prompt содержит name
+            pos = _hash(_prompt_head(check)) % 3
+            correct_positions.add(pos)
+    assert len(correct_positions) >= 2, "верный ответ всегда на одной позиции"
+
+
+def _prompt_head(check: dict) -> str:
+    name = check["label"]
+    if check["field"] == "why":
+        return f"Зачем в этой роли {name}?"
+    return f"Что значит «{name}» на практике?"

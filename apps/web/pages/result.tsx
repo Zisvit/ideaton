@@ -6,15 +6,26 @@ import {
   RecommendResponse,
   RoleScore,
   saveRoleId,
+  saveRoles,
 } from '../lib/api'
 
-// Цвет-маркер каждой роли (fallback — акцент)
+// Цвет-маркер каждой роли (fallback — детерминированный акцент v7)
 const ROLE_COLORS: Record<string, string> = {
   web: 'var(--role-web)',
   '1c': 'var(--role-1c)',
   qa: 'var(--role-qa)',
   support: 'var(--role-support)',
   startup: 'var(--role-startup)',
+}
+
+// v7: у 21 специальности нет персональных CSS-переменных — берём акцент
+// по хэшу id: карточки различимы, но палитра остаётся спокойной.
+const ROLE_ACCENTS = ['#5B4CFF', '#0EA5E9', '#18B981', '#F59E0B', '#EF7A6D', '#8B5CF6']
+function roleColor(roleId: string): string {
+  if (ROLE_COLORS[roleId]) return ROLE_COLORS[roleId]
+  let h = 0
+  for (let i = 0; i < roleId.length; i++) h = (h * 31 + roleId.charCodeAt(i)) | 0
+  return ROLE_ACCENTS[Math.abs(h) % ROLE_ACCENTS.length]
 }
 
 // Счётчик, плавно бегущий от 0 до target (уважает prefers-reduced-motion)
@@ -42,8 +53,10 @@ export default function Result() {
   const [roles, setRoles] = React.useState<RoleScore[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  // v7: 5 — первый экран, «показать все» раскрывает остальные (до 12)
+  const [showAll, setShowAll] = React.useState(false)
 
-  // Контракт: POST /recommend { profile } → { roles: [5 × RoleScore] }
+  // Контракт: POST /recommend { profile } → { roles: [1–12 × RoleScore] }
   const fetchResults = async () => {
     setLoading(true)
     setError(null)
@@ -53,6 +66,8 @@ export default function Result() {
     })
     if (res.success && res.data) {
       setRoles(res.data.roles)
+      // «Визитки» направлений — для бейджа kind на /plan (переживает F5)
+      saveRoles(res.data.roles)
     } else {
       setRoles([])
       setError(res.error || 'Неизвестная ошибка')
@@ -65,7 +80,9 @@ export default function Result() {
   }, [])
 
   const top = roles[0]
-  const rest = roles.slice(1)
+  const visible = showAll ? roles : roles.slice(0, 5)
+  const rest = visible.slice(1)
+  const hiddenCount = roles.length - visible.length
   const topScore = useCountUp(top ? top.score : 0)
   // «N из M навыков» — главный счётчик (UX.md:74), % — вторичная строка.
   const hasCounts =
@@ -87,9 +104,10 @@ export default function Result() {
 
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
         <section className="fade-in">
-          <h1><span className="grad">Твои 5 направлений</span></h1>
+          <h1><span className="grad">Твои направления</span></h1>
           <p className="hero__sub">
-            Отсортированы по совпадению с твоим профилем. Выбери одно — получишь план на 30 дней.
+            Отсортированы по совпадению с профилем: карьерные роли и специальности колледжа.
+            Выбери одно — получишь план на 30 дней.
           </p>
         </section>
 
@@ -134,6 +152,14 @@ export default function Result() {
             <article className="hero-card fade-in">
               <div className="row-between">
                 <span className="tag tag-match">Лучшее совпадение</span>
+                {top!.kind === 'specialty' && (
+                  <span
+                    className="tag tag-neutral"
+                    style={{ background: 'rgba(255,255,255,.16)', color: '#fff' }}
+                  >
+                    специальность
+                  </span>
+                )}
                 {hasCounts ? (
                   <span
                     className="num"
@@ -201,12 +227,15 @@ export default function Result() {
               <article
                 key={role.role_id}
                 className="role-card fade-in"
-                style={{ '--role': ROLE_COLORS[role.role_id] ?? 'var(--accent)' } as React.CSSProperties}
+                style={{ '--role': roleColor(role.role_id) } as React.CSSProperties}
               >
                 <div className="role-card__top">
                   <div>
                     <div className="num-order">#{String(idx + 2).padStart(2, '0')}</div>
                     <h3 className="role-card__title">{role.title}</h3>
+                    <span className="tag tag-neutral">
+                      {role.kind === 'specialty' ? 'специальность' : 'роль'}
+                    </span>
                   </div>
                   <span
                     className="score-ring num"
@@ -245,6 +274,24 @@ export default function Result() {
                 </div>
               </article>
             ))}
+
+            {roles.length > 5 && (
+              <div className="row-between" style={{ marginTop: 2 }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setShowAll((value) => !value)}
+                  aria-expanded={showAll}
+                >
+                  {showAll
+                    ? 'Свернуть до 5'
+                    : `Показать все ${roles.length} направлений`}
+                </button>
+                {!showAll && hiddenCount > 0 && (
+                  <span className="small">и ещё {hiddenCount} в запасе</span>
+                )}
+              </div>
+            )}
           </div>
         )}
 
