@@ -4,6 +4,9 @@
 // Важно: закрытие сцены — ТОЛЬКО по JS-таймеру/клику/Esc (animationend гасится
 // глобальным prefers-reduced-motion {animation:none} в globals.css).
 export const INTRO_MS = 4200
+// (glm, раунд 2) окно после монта сцены, когда wheel/touchmove не закрывают:
+// инерция прокрутки из прошлого скролла и момент fonts-гейта должны пройти
+export const SWIPE_GRACE_MS = 400
 
 const INTRO_KEY = 'career-tracker-intro:v2'
 
