@@ -163,15 +163,17 @@ def build_why(
     matched: list[str],
     overlap_interests: list[str],
     alias_to_id: dict[str, str],
+    skill_names: dict[str, str] | None = None,
 ) -> list[str]:
     """Human-причины «почему роль подходит» (контракт: why, minItems 1)."""
     why: list[str] = []
+    names = skill_names or {}
     if matched:
         shown: list[str] = []
         for req in role.get("skills_required") or []:
             rid = str(req.get("id", "")).strip().lower()
             if rid in matched:
-                shown.append(rid)
+                shown.append(names.get(rid, rid))
         why.append("Совпадают навыки: " + ", ".join(shown or matched))
     if overlap_interests:
         why.append(

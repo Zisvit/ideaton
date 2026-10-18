@@ -42,6 +42,12 @@ const WEEK_R = 25
 const TOPIC_R = 45
 const RAD = Math.PI / 180
 
+/** Держим центр узла внутри поля: пилюля шириной до 170 px не должна
+ *  вылезать за скруглённую рамку карты (крайние лучи горизонтали). */
+function clampPct(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
 /** Короткая подпись узла: без «…» внутри слова, хвост обрезается по границе. */
 export function shortLabel(text: string, max = 24): string {
   const t = String(text || '').trim()
@@ -59,7 +65,7 @@ export function buildTopicGraph(title: string, items: TopicInput[]): TopicGraph 
     {
       key: 'center',
       kind: 'center',
-      label: shortLabel(title || 'Направление', 30),
+      label: shortLabel(title || 'Направление', 26),
       x: CENTER.x,
       y: CENTER.y,
       testable: false,
@@ -71,8 +77,8 @@ export function buildTopicGraph(title: string, items: TopicInput[]): TopicGraph 
   for (const week of [1, 2, 3, 4]) {
     const angle = weekAngle(week)
     const pos = {
-      x: CENTER.x + WEEK_R * Math.cos(angle),
-      y: CENTER.y + WEEK_R * Math.sin(angle),
+      x: clampPct(CENTER.x + WEEK_R * Math.cos(angle), 16, 84),
+      y: clampPct(CENTER.y + WEEK_R * Math.sin(angle), 10, 90),
     }
     weekPos.set(week, pos)
     nodes.push({
@@ -103,8 +109,8 @@ export function buildTopicGraph(title: string, items: TopicInput[]): TopicGraph 
       const offset = n <= 1 ? 0 : (idx - (n - 1) / 2) * step
       const angle = base + offset * RAD
       const pos = {
-        x: CENTER.x + TOPIC_R * Math.cos(angle),
-        y: CENTER.y + TOPIC_R * Math.sin(angle),
+        x: clampPct(CENTER.x + TOPIC_R * Math.cos(angle), 16, 84),
+        y: clampPct(CENTER.y + TOPIC_R * Math.sin(angle), 10, 90),
       }
       nodes.push({
         key: item.key,

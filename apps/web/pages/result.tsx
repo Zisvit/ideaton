@@ -175,7 +175,7 @@ export default function Result() {
                 )}
                 <span className="sr-only">
                   {hasCounts
-                    ? `${top!.matched_count} из ${top!.needed_count} ключевых навыков роли`
+                    ? `${top!.matched_count} из ${top!.needed_count} ключевых навыков`
                     : `${top!.score}% совпадение`}
                 </span>
               </div>
@@ -184,7 +184,7 @@ export default function Result() {
               </h2>
               <p className="small" style={{ margin: '10px 0 0', color: 'rgba(255,255,255,.72)' }}>
                 {hasCounts
-                  ? `${top!.matched_count} из ${top!.needed_count} ключевых навыков роли — в твоём профиле`
+                  ? `${top!.matched_count} из ${top!.needed_count} ключевых навыков — в твоём профиле`
                   : ''}
                 {hasCounts
                   ? topGapCount > 0

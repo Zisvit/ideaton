@@ -973,11 +973,13 @@ main, .site-header { position: relative; z-index: 1; }
 .topic-map-card { overflow: hidden; }
 .topic-map-head h2 { font-size: 18px; margin-bottom: 4px; }
 .topic-map-head p { margin: 0 0 12px; }
+.topic-map-scroll { border-radius: 16px; }
 .topic-map {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  min-height: 300px;
+  aspect-ratio: 2.3 / 1;
+  min-height: 320px;
+  max-height: 520px;
   border: 1px solid var(--line);
   border-radius: 16px;
   background:
@@ -1089,9 +1091,24 @@ main, .site-header { position: relative; z-index: 1; }
 .topic-panel__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .topic-panel__title { font-weight: 700; font-size: 15px; flex: 1; min-width: 160px; }
 .topic-panel__open { padding: 6px 12px; font-size: 13px; }
+.topic-map-hint { display: none; margin: 8px 0 0; }
 @media (max-width: 720px) {
-  .topic-map { aspect-ratio: auto; height: 380px; }
-  .topic-node--topic { max-width: 128px; font-size: 10px; padding: 5px 8px; }
-  .topic-node--center { font-size: 11px; padding: 8px 10px; }
+  /* карта не сжимается до нечитаемого: фиксированная ширина + скролл */
+  .topic-map-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .topic-map {
+    min-width: 760px;
+    height: 380px;
+    aspect-ratio: auto;
+    border: 0;
+    border-radius: 0;
+  }
+  .topic-node--topic { max-width: 104px; font-size: 10px; padding: 5px 8px; }
+  .topic-node--center { font-size: 11px; padding: 8px 10px; max-width: 28%; }
   .topic-map__legend { display: none; }
+  .topic-map-hint { display: block; }
 }

@@ -347,7 +347,8 @@ def _validate_role_id(role_id: str) -> dict[str, Any]:
 
 
 def _gaps_human(gaps: list[str]) -> list[str]:
-    return [f"Не хватает навыка: {g}" for g in gaps]
+    """gaps — id навыков; в UI отдаём человеческие названия (v7)."""
+    return [f"Не хватает навыка: {SKILL_NAMES.get(g, g)}" for g in gaps]
 
 
 def _rephrase_or_draft(
@@ -476,6 +477,7 @@ def recommend(req: RecommendRequest) -> RecommendResponse | JSONResponse:
             row["matched"],
             row["overlap_interests"],
             ALIASES,
+            SKILL_NAMES,
         )
         role_scores.append(
             RoleScore(

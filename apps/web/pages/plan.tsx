@@ -210,6 +210,9 @@ export default function Plan() {
                   selected={topicSel}
                   onSelect={(key) => setTopicSel((cur) => (cur === key ? null : key))}
                 />
+                <p className="small topic-map-hint">
+                  Проведи пальцем по карте — видны все недели и темы.
+                </p>
                 {selectedTopic && selectedTopic.mini && (
                   <div className="topic-panel">
                     <div className="topic-panel__head">
