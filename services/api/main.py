@@ -354,7 +354,7 @@ def _gaps_human(gaps: list[str]) -> list[str]:
 def _rephrase_or_draft(
     provider: llm.LLMProvider, draft: str, context: str
 ) -> tuple[str, bool]:
-    """Перефраз через провайдер с защитой смысла; (текст, использован_external)."""
+    """Перефраз через провайдер с защитой смысла; (текст, признак external)."""
     candidate = provider.rephrase(draft, context=context)
     if provider.name != "stub" and _accept_rephrase(draft, candidate):
         return candidate.strip(), True
