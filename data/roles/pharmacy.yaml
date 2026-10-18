@@ -1,0 +1,20 @@
+id: pharmacy
+kind: specialty
+title: Фармация
+description: "Работает с лекарственными средствами: классификация, хранение, аптечный учёт."
+skills_required:
+  - {id: med_products, weight: 0.9}
+  - {id: pharmacy_storage, weight: 0.8}
+  - {id: pharmacy_docs, weight: 0.7}
+  - {id: dosage_forms, weight: 0.6}
+related_specialties: [медицина, фармация, аптека]
+development_steps:
+  - "Познакомиться с классификацией лекарственных средств"
+  - "Освоить правила хранения лекарственных средств"
+  - "Познакомиться с аптечным учётом и документооборотом"
+  - "Научиться различать лекарственные формы"
+  - "Собрать подборку: виды лекарственных форм с примерами"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Минздрав России — официальный портал", url: "https://minzdrav.gov.ru"}

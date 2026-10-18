@@ -1,0 +1,20 @@
+id: nursing
+kind: specialty
+title: Сестринское дело
+description: Выполняет сестринские процедуры и уход, ведёт медицинскую документацию.
+skills_required:
+  - {id: nursing_care, weight: 0.9}
+  - {id: patient_care, weight: 0.9}
+  - {id: sterility, weight: 0.7}
+  - {id: med_docs, weight: 0.6}
+related_specialties: [медицина, сестринское дело, уход]
+development_steps:
+  - "Познакомиться с сестринскими процедурами и наблюдением за пациентом"
+  - "Освоить уход за пациентами в учебной практике"
+  - "Научиться соблюдать стерильность при процедурах"
+  - "Познакомиться с основами медицинской документации"
+  - "Собрать чек-лист подготовки к процедуре"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Минздрав России — официальный портал", url: "https://minzdrav.gov.ru"}

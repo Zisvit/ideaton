@@ -1,4 +1,5 @@
 id: qa
+kind: role
 title: Тестировщик
 description: 'Проверяет качество ПО: тест-кейсы, автотесты, дефекты до релиза.'
 skills_required:

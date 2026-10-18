@@ -1,0 +1,20 @@
+id: graphic_design
+kind: specialty
+title: Графический дизайнер
+description: "Создаёт графические макеты: композиция, типографика, подготовка к печати."
+skills_required:
+  - {id: graphic_editors, weight: 0.9}
+  - {id: composition, weight: 0.8}
+  - {id: typography, weight: 0.7}
+  - {id: prepress, weight: 0.6}
+related_specialties: [дизайн, графика, креатив]
+development_steps:
+  - "Познакомиться с основами композиции и цвета"
+  - "Освоить графические редакторы"
+  - "Познакомиться с типографикой"
+  - "Освоить подготовку макетов к печати"
+  - "Собрать проект: серия макетов для учебного бренда"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Stepik — курсы по дизайну", url: "https://stepik.org", type: course, minutes: 90}

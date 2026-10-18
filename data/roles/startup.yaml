@@ -1,4 +1,5 @@
 id: startup
+kind: role
 title: Стартап / Продакт
 description: Запускает технологические стартапы, ищет продуктово-рыночное соответствие.
 skills_required:

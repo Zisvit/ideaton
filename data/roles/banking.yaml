@@ -1,0 +1,20 @@
+id: banking
+kind: specialty
+title: Банковское дело
+description: "Работает с банковскими продуктами и клиентами: операции, документы."
+skills_required:
+  - {id: bank_products, weight: 0.8}
+  - {id: cash_ops, weight: 0.8}
+  - {id: bank_docs, weight: 0.6}
+  - {id: client_service, weight: 0.6}
+related_specialties: [банк, финансы, клиенты]
+development_steps:
+  - "Познакомиться с банковскими продуктами и услугами"
+  - "Освоить кассовые операции"
+  - "Познакомиться с видами банковских документов"
+  - "Научиться работе с клиентами в отделении"
+  - "Собрать памятку: последовательность типовых операций консультанта"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Банк России — официальный сайт", url: "https://www.cbr.ru"}

@@ -1,0 +1,20 @@
+id: design
+kind: specialty
+title: Дизайн (по отраслям)
+description: "Ведёт дизайн-проекты: композиция, материалы, подготовка макетов."
+skills_required:
+  - {id: design_project, weight: 0.9}
+  - {id: composition, weight: 0.7}
+  - {id: materials_design, weight: 0.7}
+  - {id: prepress, weight: 0.6}
+related_specialties: [дизайн, проекты, креатив]
+development_steps:
+  - "Познакомиться с основами композиции и цвета"
+  - "Освоить ведение дизайн-проекта"
+  - "Познакомиться с материалами и технологиями"
+  - "Освоить подготовку макетов к печати"
+  - "Собрать проект: концепция оформления пространства"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Stepik — курсы по дизайну", url: "https://stepik.org", type: course, minutes: 90}

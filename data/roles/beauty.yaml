@@ -1,0 +1,20 @@
+id: beauty
+kind: specialty
+title: Технологии индустрии красоты
+description: "Работает в сфере услуг красоты: процедуры, санитарные правила, материалы."
+skills_required:
+  - {id: beauty_services, weight: 0.9}
+  - {id: beauty_hygiene, weight: 0.8}
+  - {id: beauty_materials, weight: 0.7}
+  - {id: communication, weight: 0.6}
+related_specialties: [красота, сервис, клиенты]
+development_steps:
+  - "Познакомиться с основными услугами красоты"
+  - "Освоить санитарные правила сферы красоты"
+  - "Познакомиться с материалами и инструментами мастера"
+  - "Научиться общению с клиентами"
+  - "Собрать подборку: уходовые процедуры и их этапы"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Stepik — курсы для сферы услуг", url: "https://stepik.org", type: course, minutes: 60}

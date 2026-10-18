@@ -1,0 +1,20 @@
+id: pedagogy_extra
+kind: specialty
+title: Педагогика дополнительного образования
+description: "Ведёт занятия в кружках и секциях: программы, игры, поддержка детей."
+skills_required:
+  - {id: pedagogy_basics, weight: 0.8}
+  - {id: activity_design, weight: 0.8}
+  - {id: play_activities, weight: 0.6}
+  - {id: psychology_basics, weight: 0.6}
+related_specialties: [педагогика, кружки, дети]
+development_steps:
+  - "Познакомиться с основами педагогики"
+  - "Освоить планирование занятий"
+  - "Познакомиться с игровыми занятиями"
+  - "Познакомиться с основами психологии"
+  - "Собрать подборку: программа кружка на месяц"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Минпросвещения России — официальный портал", url: "https://edu.gov.ru"}

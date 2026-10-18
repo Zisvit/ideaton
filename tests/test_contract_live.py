@@ -67,7 +67,7 @@ def test_recommend_response_contract_fields_typed_in_app() -> None:
     roles = app["components"]["schemas"]["RecommendResponse"]
     prop = roles["properties"]["roles"]
     assert "items" in prop
-    assert prop.get("minItems") == 5 and prop.get("maxItems") == 5
+    assert prop.get("minItems") == 1 and prop.get("maxItems") == 12  # v7: 1–12
 
 
 def test_openapi_yaml_documents_new_additive_fields() -> None:

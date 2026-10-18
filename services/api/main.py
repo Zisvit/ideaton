@@ -2,7 +2,8 @@
 
 Выравнивание по контракту packages/contracts/openapi.yaml (контракт главнее):
   GET  /health  → {ok: true, status: "ok"}
-  POST /recommend → {roles: [5 × {role_id,title,score,why,gaps}], items, profile_hash, cached}
+  POST /recommend → {roles: [1–12 × {role_id,kind,title,score,why,gaps}], items, profile_hash, cached}
+                  размер списка задаётся limit (1–12, по умолчанию 12)
   POST /plan    → {weeks: [4 × {n,tasks}], checklist, …}  — недели 1–2
                   персонализируются пробелами профиля (scoring.gap_tasks)
   POST /chat    → {reply, answer, sources, profile_hash, llm_used}
@@ -14,10 +15,11 @@ steps, resources, gaps, summary, disclaimer, profile_hash, cached − на
 (нет additionalProperties:false), а контрактные поля присутствуют и
 типизированы строго.
 
-Загрузка ролей: env ROLES_DIR → ../../data/roles → встроенный дефолт (5 ролей).
-Дефолт — дословная копия data/roles/*.yaml, плюс гарантия: канонические 5 ролей
-всегда присутствуют (union с дефолтом, данные приоритетнее), чтобы /recommend
-выполнял контракт minItems/maxItems = 5 при любом ROLES_DIR.
+Загрузка ролей: env ROLES_DIR → ../../data/roles → встроенный дефолт (5 карьерных
+ролей). Данные (26 записей: 5 ролей + 21 специальность СИУЭиП) приоритетнее;
+дефолт добирает канонические id, чтобы /recommend честно отвечал и без
+data/roles (деградация до базового набора). Контракт: roles minItems 1,
+maxItems 12 — лимит запроса режет список.
 
 Кэш — dict по sha256(canonical json) запроса (/recommend, /plan). LLM — только
 перефраз готового черновика; факты исключительно из рубрики роли.
@@ -64,6 +66,9 @@ DISCLAIMER = (
 
 API_DIR = Path(__file__).resolve().parent
 DEFAULT_ROLES_DIR = API_DIR.parent.parent / "data" / "roles"
+
+# v7: контракт roles minItems 1 / maxItems 12; дефолт — «вся база».
+DEFAULT_LIMIT = 12
 
 # ---------------------------------------------------------------- roleId data
 
@@ -424,20 +429,26 @@ def health() -> HealthResponse:
 def recommend(req: RecommendRequest) -> RecommendResponse | JSONResponse:
     profile = req.profile
     phash = _profile_hash(profile)
+    # v7: лимит 1–12 (валидирован схемой), None → вся база (12).
+    limit = req.limit or DEFAULT_LIMIT
 
     if profile.is_empty():
         # ТЗ: пустой профиль → 400 + fallback (контракт документирует 400).
+        # v7: fallback тоже режется лимитом (иначе 26 записей рвут UI).
         fallback_items = [
             {
                 "role_id": r["id"],
+                "kind": str(r.get("kind") or "role"),
                 "title": r.get("title", r["id"]),
                 "score": 0,
-                "why": ["Заполните профиль — роль включена как базовое направление"],
+                "why": [
+                    "Заполните профиль — направление включено как базовый ориентир"
+                ],
                 "matched": [],
                 "gaps": [],
             }
             for r in sorted(ROLES, key=lambda x: x["id"])
-        ]
+        ][:limit]
         return JSONResponse(  # type: ignore[return-value]
             status_code=400,
             content={
@@ -447,7 +458,9 @@ def recommend(req: RecommendRequest) -> RecommendResponse | JSONResponse:
             },
         )
 
-    key = _cache_key("recommend", {"profile": profile.model_dump(mode="json")})
+    key = _cache_key(
+        "recommend", {"profile": profile.model_dump(mode="json"), "limit": limit}
+    )
     if key in _CACHE:
         cached = dict(_CACHE[key])
         cached["cached"] = True
@@ -455,7 +468,7 @@ def recommend(req: RecommendRequest) -> RecommendResponse | JSONResponse:
 
     rows = scoring.rank_roles(profile.model_dump(), ROLES, ALIASES)
     role_scores: list[RoleScore] = []
-    for row in rows[:5]:
+    for row in rows[:limit]:
         role = ROLES_BY_ID.get(row["role_id"], {})
         why = scoring.build_why(
             profile.model_dump(),
@@ -467,6 +480,7 @@ def recommend(req: RecommendRequest) -> RecommendResponse | JSONResponse:
         role_scores.append(
             RoleScore(
                 role_id=row["role_id"],
+                kind=str(role.get("kind") or "role"),
                 title=row["title"],
                 score=row["score"],
                 why=why,
@@ -478,7 +492,7 @@ def recommend(req: RecommendRequest) -> RecommendResponse | JSONResponse:
             )
         )
     resp = RecommendResponse(
-        roles=role_scores,  # контракт: ровно 5, по убыванию score
+        roles=role_scores,  # контракт: 1–12, по убыванию score
         items=role_scores,  # ТЗ: алиас roles
         profile_hash=phash,
         cached=False,
@@ -521,6 +535,12 @@ def _build_checks(role: dict[str, Any], all_roles: list[dict[str, Any]]) -> list
             w in str(r.get("description", "")).lower() for w in _FORBIDDEN_CHECK_WORDS
         )
     ]
+    # v7: дистракторы «из той же лиги» — сначала записи того же kind (специальность
+    # против специальности, роль против роли), затем по id. Детерминированно.
+    own_kind = str(role.get("kind") or "role")
+    others.sort(
+        key=lambda r: (str(r.get("kind") or "role") != own_kind, str(r.get("id")))
+    )
     if len(others) >= 2:
         pos = len(rid) % 3  # web→1, 1c→2, qa→0, support→1, startup→2
         options = [str(others[0]["description"]), str(others[1]["description"])]

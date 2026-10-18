@@ -1,0 +1,20 @@
+id: physical_culture
+kind: specialty
+title: Физическая культура
+description: "Проводит занятия физической культурой: тренировки, безопасность, мероприятия."
+skills_required:
+  - {id: sports_training, weight: 0.9}
+  - {id: sport_safety, weight: 0.7}
+  - {id: first_aid, weight: 0.7}
+  - {id: sport_events, weight: 0.6}
+related_specialties: [спорт, физкультура, дети]
+development_steps:
+  - "Познакомиться с построением тренировочного процесса"
+  - "Освоить правила безопасности занятий спортом"
+  - "Познакомиться с организацией спортивных мероприятий"
+  - "Освоить приёмы первой помощи на занятиях"
+  - "Собрать подборку: комплексы упражнений для группы"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Минспорт России — официальный портал", url: "https://minsport.gov.ru"}

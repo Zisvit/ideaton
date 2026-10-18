@@ -5,7 +5,8 @@ info:
   description: >
     API карьерного трекера для студентов. Студент описывает профиль
     (навыки, интересы, предметы, курс, специальность), сервис возвращает
-    топ-5 карьерных траекторий с обоснованием, 30-дневный план по неделям
+    до 12 направлений — карьерных ролей и специальностей СИУЭиП — с
+    обоснованием, 30-дневный план по неделям
     и чат-консультант для уточнений. Скоринг — rule-based, детерминированный.
   version: 1.0.0
 
@@ -28,11 +29,13 @@ paths:
     post:
       tags: [recommend]
       operationId: recommend
-      summary: Подобрать топ-5 карьерных траекторий
+      summary: Подобрать направления (1–12) с оценкой совпадения
       description: >
         Принимает профиль студента и возвращает отсортированный список
-        из 5 наиболее подходящих ролей с оценкой совпадения (score 0–100),
-        обоснованием (why) и списком пробелов (gaps).
+        подходящих направлений — карьерных ролей и специальностей СИУЭиП —
+        с оценкой совпадения (score 0–100), обоснованием (why) и списком
+        пробелов (gaps). Размер списка задаётся полем limit (1–12, по
+        умолчанию 12).
       requestBody:
         required: true
         content:
@@ -46,9 +49,10 @@ paths:
                 subjects: ["базы данных", "алгоритмы"]
                 course: 4
                 specialty: "Информационные системы и технологии"
+              limit: 5
       responses:
         '200':
-          description: Топ-5 траекторий, отсортированных по убыванию score
+          description: Направления (1–12), отсортированные по убыванию score
           content:
             application/json:
               schema:
@@ -232,8 +236,12 @@ components:
   schemas:
     RoleId:
       type: string
-      description: Идентификатор роли из закрытого словаря
-      enum: [web, 1c, qa, support, startup]
+      description: Идентификатор роли или специальности из закрытого словаря
+      enum: [web, 1c, qa, support, startup, infocom, net_admin, software_dev,
+             electrician, medicine, pharmacy, nursing, economics, banking,
+             trade, social_work, law_enforcement, law_social, law_court,
+             beauty, preschool, pedagogy_extra, correction_ped,
+             physical_culture, graphic_design, design]
       example: web
 
     Profile:
@@ -279,14 +287,28 @@ components:
       properties:
         profile:
           $ref: '#/components/schemas/Profile'
+        limit:
+          type: integer
+          description: >
+            Сколько направлений вернуть: 1–12. По умолчанию 12 (вся база
+            отсортирована по score). Поле аддитивное: старые клиенты без
+            limit получают больше направлений.
+          minimum: 1
+          maximum: 12
+          example: 5
 
     RoleScore:
       type: object
-      description: Одна карьерная траектория из топ-5
+      description: Одно направление (карьерная роль или специальность) из списка
       required: [role_id, title, score, why, gaps]
       properties:
         role_id:
           $ref: '#/components/schemas/RoleId'
+        kind:
+          type: string
+          description: "Тип направления: карьерная роль или специальность колледжа"
+          enum: [role, specialty]
+          example: specialty
         title:
           type: string
           description: Человекочитаемое название роли
@@ -327,9 +349,9 @@ components:
       properties:
         roles:
           type: array
-          description: Ровно 5 траекторий, отсортированных по убыванию score
-          minItems: 5
-          maxItems: 5
+          description: Направления (1–12), отсортированные по убыванию score
+          minItems: 1
+          maxItems: 12
           items:
             $ref: '#/components/schemas/RoleScore'
 

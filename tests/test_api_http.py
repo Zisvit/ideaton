@@ -45,7 +45,9 @@ def test_recommend_shape_and_counters() -> None:
     r = _post("/recommend", {"profile": PROFILE})
     assert r.status_code == 200, r.text
     roles = r.json()["roles"]
-    assert len(roles) == 5
+    assert (
+        len(roles) == 12
+    )  # v7: дефолтный лимит — вся база (5 ролей + 21 специальность)
     scores = [x["score"] for x in roles]
     assert scores == sorted(scores, reverse=True)  # убывание
     for role in roles:  # аддитивные счётчики «N из M»
@@ -69,7 +71,7 @@ def test_recommend_empty_profile_returns_400_with_fallback() -> None:
     assert r.status_code == 400
     body = r.json()
     assert "error" in body
-    assert len(body["fallback"]) == 5
+    assert len(body["fallback"]) == 12  # v7: fallback тоже режется лимитом (дефолт 12)
 
 
 def test_recommend_broken_json_is_400_error_response() -> None:
@@ -97,7 +99,7 @@ def test_recommend_empty_object_falls_to_empty_profile_400() -> None:
     r = _post("/recommend", {})
     assert r.status_code == 400
     assert "error" in r.json()
-    assert len(r.json()["fallback"]) == 5
+    assert len(r.json()["fallback"]) == 12  # v7: дефолтный лимит
 
 
 # ------------------------------------------------------------------------ plan

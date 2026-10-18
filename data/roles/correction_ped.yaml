@@ -1,0 +1,20 @@
+id: correction_ped
+kind: specialty
+title: Коррекционная педагогика в начальном образовании
+description: "Работает с детьми с особыми образовательными потребностями: методы, поддержка."
+skills_required:
+  - {id: correction_pedagogy, weight: 0.9}
+  - {id: psychology_basics, weight: 0.8}
+  - {id: inclusive_edu, weight: 0.7}
+  - {id: pedagogy_basics, weight: 0.6}
+related_specialties: [педагогика, особые потребности, дети]
+development_steps:
+  - "Познакомиться с основами коррекционной педагогики"
+  - "Освоить основы инклюзивного обучения"
+  - "Познакомиться с основами психологии"
+  - "Научиться основам педагогики в работе с детьми"
+  - "Собрать подборку: задания для коррекционных занятий"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Минпросвещения России — официальный портал", url: "https://edu.gov.ru"}

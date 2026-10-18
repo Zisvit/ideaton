@@ -1,4 +1,5 @@
 id: web
+kind: role
 title: Веб-разработчик
 description: Создаёт сайты и веб-приложения на HTML, CSS и JavaScript.
 skills_required:
