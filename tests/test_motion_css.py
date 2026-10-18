@@ -138,3 +138,29 @@ def test_print_is_static():
     assert "display: none !important; }" in "\n".join(
         CSS.split("@media (prefers-reduced-motion: reduce)")[1:]
     )
+
+
+def test_dust_stagger_is_css_side_and_origin_is_fill_box():
+    """Пыль приземления: стаггер d2/d3 живёт в CSS, не в inline-style (space-bunny).
+
+    Механика бага: inline `animationDelay` в JSX перебивает только longhand
+    delay шортката `animation: ... 1740ms 1 ...` — кружки срабатывают на
+    40/70мс вместо 1740+40/1810. Правильная схема: классы .d2/.d3 в CSS с
+    абсолютными delay 1780/1810мс; fill-mode forwards (не both: backwards-fill
+    виден в 1740мс бега); transform-box fill-box (иначе origin = центр
+    viewBox и пыль растёт из брюха, ниже земли).
+    """
+    assert ".is-run .fx-dust.d2" in CSS and ".is-run .fx-dust.d3" in CSS
+    assert "1780ms" in CSS and "1810ms" in CSS
+    # inline-диспетчеризация в TSX не вернулась (слово в комментарии ок)
+    assert "style={{ animationDelay" not in FOX, (
+        "inline animationDelay перебивает delay 1740ms из CSS-шортката"
+    )
+    # forwards, не both: backwards-fill держит 0%-кадр (opacity .45) в беге
+    assert re.search(r"\.is-run \.fx-dust \{[^}]*forwards", CSS), (
+        "анимация dust должна быть forwards (both показывает 0%-кадр до задержки)"
+    )
+    # fill-box у пыли: origin круга, не центр viewBox
+    assert re.search(r"\.intro-fox \.fx-dust \{[^}]*transform-box:\s*fill-box", CSS), (
+        "у .fx-dust обязан быть transform-box: fill-box (origin = центр круга)"
+    )

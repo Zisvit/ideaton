@@ -3,18 +3,27 @@ name: CI
 # Гейт для Карьерного трекера. Все проверки толерантны к отсутствию файлов:
 # на origin/main пока нет ни services/api, ни tests, ни data/roles, ни apps/web.
 #
-# ВАЖНО (известная дыра, не закрывается этим файлом):
-#   automerge-*.yml пушат в main через GITHUB_TOKEN, а push с GITHUB_TOKEN
-#   НЕ порождает новых workflow-запусков. Значит этот CI на main для
-#   авто-мержей бота — пост-фактум, а не блокирующий гейт.
-#   Настоящее закрытие: branch protection на main (required status checks)
-#   и/или вызов этих проверок ИЗНУТРИ automerge ДО git push (repo settings).
+# ГЕЙТ (v8): push с GITHUB_TOKEN НЕ порождает workflow-запусков, поэтому
+#   automerge-*.yml перед merge ждут ЗАВЕРШЁННЫЙ УСПЕШНЫЙ run этого CI на
+#   вершине feat-ветки (run создан обычным пушем автора). Без зелёного CI
+#   мержа нет. После пуша main бот дополнительно запускает этот workflow
+#   через workflow_dispatch (исключение из правила GITHUB_TOKEN) с точным
+#   sha merge-коммита (inputs.sha → checkout ровно того снимка, что запушен;
+#   без inputs.sha / на обычном push проверяется github.sha), чтобы проверка
+#   main была видимой и свежей. Branch protection на main всё ещё
+#   полезна как второй контур (required status checks), но не обязательна:
+#   блокирующий гейт уже стоит до пуша.
 on:
   push:
     branches:
       - main
       - 'feat/**'
   workflow_dispatch:
+    inputs:
+      sha:
+        description: 'sha merge-коммита (передаёт automerge-бот); пусто = github.sha'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -28,6 +37,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # workflow_dispatch от бота несёт sha merge-коммита: проверяем ровно
+          # запушенный снимок, а не голову main, уехавшую за время диспетчинга
+          ref: ${{ inputs.sha || github.sha }}
 
       - uses: actions/setup-python@v5
         with:

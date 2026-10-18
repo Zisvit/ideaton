@@ -7,6 +7,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write # gh run list (read) + workflow_dispatch CI на main после пуша
 concurrency:
   group: automerge-main
   cancel-in-progress: false
@@ -16,6 +17,7 @@ jobs:
     # мерж в main — только руками и осознанно, иначе удаления улетят в main
     if: github.ref_name != 'main' && github.ref_name != 'feat/zisvit-part'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,9 +44,90 @@ jobs:
             echo "nothing new in $BRANCH, skip"
             exit 0
           fi
+
+          # --- ГЕЙТ: без зелёного CI на вершине ветки в main не мержим ---
+          # push бота идёт через GITHUB_TOKEN и НЕ запускает workflow, поэтому
+          # проверяем не main пост-фактум, а ждём CI, запущенный пушем автора.
+          # SHA фиксируем из уже сделанного fetch: мержим ровно проверенный снимок.
+          SHA="$(git rev-parse "origin/$BRANCH")"
+          CI_OK=0
+          for i in $(seq 1 120); do
+            # перепроверка вершины (ls-remote — дёшево, без лишнего fetch):
+            # если автор запушил новый коммит, пока мы ждём CI, наш снимок
+            # устарел — мержим свежее на новом push-событии (это НЕ ошибка)
+            CUR="$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)"
+            if [ "$CUR" != "$SHA" ]; then
+              echo "::notice::вершина $BRANCH сместилась ${SHA:0:8} → ${CUR:0:8} во время ожидания — заберём на свежем push-событии"
+              exit 0
+            fi
+            INFO="$(gh run list --workflow ci.yml --branch "$BRANCH" --commit "$SHA" \
+              --limit 1 --json databaseId,status,conclusion \
+              --jq '.[0] // empty' 2>/dev/null || true)"
+            if [ -z "$INFO" ]; then
+              echo "CI для $SHA ещё не виден ($i/120), ждём 10s"
+              sleep 10
+              continue
+            fi
+            STATUS="$(printf '%s' "$INFO" | jq -r .status)"
+            CONCLUSION="$(printf '%s' "$INFO" | jq -r '.conclusion // ""')"
+            RUN_ID="$(printf '%s' "$INFO" | jq -r .databaseId)"
+            if [ "$STATUS" = "completed" ]; then
+              if [ "$CONCLUSION" = "success" ]; then
+                echo "CI зелёный: run $RUN_ID, $SHA"
+                CI_OK=1
+              elif [ "$CONCLUSION" = "cancelled" ]; then
+                # отменённый run (cancel-in-progress ci.yml по новому пушу или
+                # руками): мерж невозможен и run сам не возродится — мягкий
+                # выход, гейт перезапустится новым пушем
+                echo "::notice::run $RUN_ID отменён ('$CONCLUSION') при вершине $SHA — мерж не производим"
+                exit 0
+              else
+                echo "::error::CI для $BRANCH ($SHA) завершился '$CONCLUSION' (run $RUN_ID) — мерж запрещён"
+              fi
+              break
+            fi
+            echo "CI в процессе: $STATUS (run $RUN_ID, $i/120), ждём 10s"
+            sleep 10
+          done
+          if [ "$CI_OK" != "1" ]; then
+            echo "::error::нет зелёного CI для вершины $BRANCH — в main не мержим"
+            exit 1
+          fi
+
+          # последняя перепроверка перед merge: между зелёным CI и этим моментом
+          # вершина обязана остаться тем же проверенным снимком
+          CUR="$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)"
+          if [ "$CUR" != "$SHA" ]; then
+            echo "::notice::вершина уехала ${SHA:0:8} → ${CUR:0:8} между CI и merge — снимок устарел, ждём нового пуша"
+            exit 0
+          fi
+
           git checkout -B main origin/main
           if git merge --no-ff "origin/$BRANCH" -m "auto-merge $BRANCH"; then
-            git push origin main
+            if ! git push origin main; then
+              echo "::error::push main failed"
+              exit 1
+            fi
+            # push от GITHUB_TOKEN не порождает workflow-запуск: запускаем CI
+            # на main явно (workflow_dispatch — единственное исключение из правила).
+            # Диспатч передаёт SHA merge-коммита: ci.yml проверяет ровно этот
+            # снимок main, а не головную точку, уехавшую за время диспетчинга.
+            # Провал диспетча НЕ глотаем: main остался бы непроверенным.
+            DISPATCH_OK=0
+            MERGE_SHA="$(git rev-parse HEAD)"
+            for i in 1 2 3; do
+              if gh workflow run ci.yml --ref main -f sha="$MERGE_SHA"; then
+                echo "CI на main запущен (sha ${MERGE_SHA:0:8})"
+                DISPATCH_OK=1
+                break
+              fi
+              echo "::warning::dispatch CI на main: попытка $i не удалась"
+              sleep 5
+            done
+            if [ "$DISPATCH_OK" != "1" ]; then
+              echo "::error::merge прошёл, но CI на main не запущен — вручную: gh workflow run ci.yml --ref main"
+              exit 1
+            fi
           else
             echo "::warning::auto-merge conflict, opening PR instead"
             git merge --abort || true

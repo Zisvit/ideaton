@@ -8,12 +8,14 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write # gh run list (read) + workflow_dispatch CI на main после пуша
 concurrency:
   group: automerge-main
   cancel-in-progress: false
 jobs:
   sweep:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,6 +36,31 @@ jobs:
           done
           if [ "$FETCH_OK" != "1" ]; then echo "::error::fetch failed 3x, abort"; exit 1; fi
           git checkout -B main origin/main
+          # Гейт: мержим только вершину с завершённым зелёным CI. Если CI ещё
+          # идёт/упал/не найден — пропускаем ветку до следующего свипа.
+          ci_ok() {
+            local br="$1" sha="$2" info status conclusion run_id
+            info="$(gh run list --workflow ci.yml --branch "$br" --commit "$sha" \
+              --limit 1 --json databaseId,status,conclusion \
+              --jq '.[0] // empty' 2>/dev/null || true)"
+            if [ -z "$info" ]; then
+              echo "skip $br: CI для $sha не найден"
+              return 1
+            fi
+            status="$(printf '%s' "$info" | jq -r .status)"
+            conclusion="$(printf '%s' "$info" | jq -r '.conclusion // ""')"
+            run_id="$(printf '%s' "$info" | jq -r .databaseId)"
+            if [ "$status" != "completed" ]; then
+              echo "skip $br: CI $status (run $run_id), повторим позже"
+              return 1
+            fi
+            if [ "$conclusion" != "success" ]; then
+              echo "::warning::skip $br: CI $conclusion (run $run_id, $sha)"
+              return 1
+            fi
+            echo "CI зелёный: $br ($sha, run $run_id)"
+            return 0
+          }
           FAILED=0
           for ref in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/feat/); do
             br="${ref#origin/}"
@@ -44,6 +71,18 @@ jobs:
             fi
             if [ -z "$(git diff "origin/main...$ref")" ]; then
               echo "skip $br: nothing new"
+              continue
+            fi
+            SHA="$(git rev-parse "$ref")"
+            if ! ci_ok "$br" "$SHA"; then
+              continue
+            fi
+            # вершина не должна уехать между проверкой CI и мержем: сверяем
+            # свежую голову (ls-remote) с проверенным снимком; съехало — ждать
+            # следующий свип (крон 5 мин вернётся)
+            CUR="$(git ls-remote origin "refs/heads/$br" | cut -f1)"
+            if [ "$CUR" != "$SHA" ]; then
+              echo "::notice::skip $br: вершина сместилась ${SHA:0:8} → ${CUR:0:8} — заберём на следующем свипе"
               continue
             fi
             if git merge --no-ff "$ref" -m "auto-merge $br (scheduled)"; then
@@ -62,5 +101,29 @@ jobs:
               FAILED=1
             fi
           done
-          git push origin main || echo "nothing to push"
+          if git diff --quiet origin/main..main; then
+            echo "main без изменений"
+          elif git push origin main; then
+            # push от GITHUB_TOKEN не запускает workflow: CI на main — явно,
+            # с точным sha merge-коммита (ci.yml проверит ровно этот снимок).
+            # Провал диспетча НЕ глотаем: FAILED=1 → job завершится ошибкой.
+            DISPATCH_OK=0
+            MERGE_SHA="$(git rev-parse HEAD)"
+            for i in 1 2 3; do
+              if gh workflow run ci.yml --ref main -f sha="$MERGE_SHA"; then
+                echo "CI на main запущен (sha ${MERGE_SHA:0:8})"
+                DISPATCH_OK=1
+                break
+              fi
+              echo "::warning::dispatch CI на main: попытка $i не удалась"
+              sleep 5
+            done
+            if [ "$DISPATCH_OK" != "1" ]; then
+              echo "::error::пуш прошёл, но CI на main не запущен — вручную: gh workflow run ci.yml --ref main"
+              FAILED=1
+            fi
+          else
+            echo "::error::push main failed"
+            exit 1
+          fi
           exit $FAILED
