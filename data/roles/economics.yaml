@@ -1,0 +1,20 @@
+id: economics
+kind: specialty
+title: Экономика и бухгалтерский учёт (по отраслям)
+description: Ведёт учёт операций и отчётность, работает с налогами организации.
+skills_required:
+  - {id: accounting, weight: 0.9}
+  - {id: financial_statements, weight: 0.8}
+  - {id: taxes, weight: 0.7}
+  - {id: ledger, weight: 0.6}
+related_specialties: [экономика, бухгалтерия, учёт]
+development_steps:
+  - "Познакомиться с основами бухгалтерского учёта"
+  - "Освоить составление бухгалтерской отчётности"
+  - "Познакомиться с налогами и сборами организации"
+  - "Научиться вести учёт операций и проводки"
+  - "Собрать подборку: типовые хозяйственные операции с проводками"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "ФНС России — официальный сайт", url: "https://www.nalog.gov.ru"}

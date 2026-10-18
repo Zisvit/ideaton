@@ -1,0 +1,20 @@
+id: law_enforcement
+kind: specialty
+title: Правоохранительная деятельность
+description: Обеспечивает порядок и безопасность, работает со служебными документами.
+skills_required:
+  - {id: public_order, weight: 0.9}
+  - {id: legal_basics, weight: 0.8}
+  - {id: official_docs, weight: 0.6}
+  - {id: first_aid, weight: 0.5}
+related_specialties: [право, безопасность, служба]
+development_steps:
+  - "Познакомиться с основами права для служебной деятельности"
+  - "Освоить правила охраны общественного порядка"
+  - "Познакомиться с ведением служебных документов"
+  - "Освоить приёмы первой помощи"
+  - "Собрать подборку: типовые ситуации и порядок действий"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Официальный интернет-портал правовой информации", url: "https://pravo.gov.ru"}

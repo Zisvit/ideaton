@@ -1,0 +1,20 @@
+id: net_admin
+kind: specialty
+title: Сетевое и системное администрирование
+description: Настраивает компьютерные сети и серверы, следит за их стабильной работой.
+skills_required:
+  - {id: networks, weight: 0.9}
+  - {id: server_admin, weight: 0.9}
+  - {id: net_security, weight: 0.7}
+  - {id: os_admin, weight: 0.6}
+related_specialties: [сети, администрирование, ит-инфраструктура]
+development_steps:
+  - "Познакомиться с компьютерными сетями и их топологией"
+  - "Освоить серверное администрирование"
+  - "Познакомиться с основами информационной безопасности"
+  - "Научиться настраивать операционные системы"
+  - "Собрать чек-лист диагностики локальной сети"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Stepik — курсы по сетям и администрированию", url: "https://stepik.org", type: course, minutes: 120}

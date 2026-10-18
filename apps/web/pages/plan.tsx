@@ -5,6 +5,7 @@ import {
   getChecks,
   getDone,
   getMini,
+  getRoles,
   getStoredProfile,
   getStoredRoleId,
   saveMini,
@@ -13,6 +14,8 @@ import {
   saveDone,
 } from '../lib/api'
 import { buildMiniCheck, MiniCheck, MiniKind } from '../lib/planChecks'
+import { buildTopicGraph, TopicInput } from '../lib/topicGraph'
+import TopicMap from '../components/TopicMap'
 
 export default function Plan() {
   const [plan, setPlan] = React.useState<PlanResponse | null>(null)
@@ -22,6 +25,8 @@ export default function Plan() {
   // Результат самопроверки — отдельное хранилище (не подмешивается в done,
   // иначе doneCount считает чужие ключи → ложное «Маршрут пройден»)
   const [checked, setChecked] = React.useState<Record<string, boolean>>({})
+  // v7: kind выбранного направления — подпись «специальность» под заголовком
+  const [roleKind, setRoleKind] = React.useState<'role' | 'specialty' | null>(null)
   const roleId = React.useRef<string>('')
 
   // Контракт: POST /plan { role_id, profile } → { weeks[], checklist[], title, disclaimer }
@@ -48,6 +53,8 @@ export default function Plan() {
     setDone(getDone(roleId.current))
     setChecked(getChecks(roleId.current))
     setMini(getMini(roleId.current))
+    const roleRef = getRoles().find((item) => item.role_id === roleId.current)
+    setRoleKind(roleRef?.kind ?? null)
     fetchPlan()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -72,6 +79,8 @@ export default function Plan() {
   const [mini, setMini] = React.useState<Record<string, boolean>>({})
   // Аккордеон: раскрыта ровно одна карточка (совет раунд 2: минимум reflow-потоков).
   const [openMini, setOpenMini] = React.useState<string | null>(null)
+  // v7: выбранная тема на «Карте тем» (ключ = taskKey пункта плана).
+  const [topicSel, setTopicSel] = React.useState<string | null>(null)
 
   const settleMini = (key: string) =>
     setMini((m) => {
@@ -100,6 +109,25 @@ export default function Plan() {
   // Слепой каст apiFetch -> T не валидирует форму, поэтому рантайм-гвард тут.
   const checks = Array.isArray(plan && plan.checks) ? (plan as PlanResponse).checks ?? [] : []
 
+  // v7: темы «Карты тем» — тот же taskKey, что у чекбоксов; мини-проверка
+  // считается один раз на задачу и переиспользуется в неделях и в графе.
+  const miniByKey: Record<string, MiniCheck | null> = {}
+  const graphItems: TopicInput[] = []
+  if (plan) {
+    for (const week of plan.weeks) {
+      week.tasks.forEach((task, i) => {
+        const key = taskKey(week.n, i, task)
+        const miniCheck = buildMiniCheck(task)
+        miniByKey[key] = miniCheck
+        graphItems.push({ key, week: week.n, task, mini: miniCheck })
+      })
+    }
+  }
+  const topicGraph = plan ? buildTopicGraph(plan.title, graphItems) : null
+  const selectedTopic = topicSel
+    ? graphItems.find((item) => item.key === topicSel && item.mini) || null
+    : null
+
   return (
     <>
       <header className="site-header">
@@ -119,6 +147,11 @@ export default function Plan() {
           <p className="hero__sub">
             Конкретные шаги по неделям. Отмечай выполненные — прогресс сохраняется в браузере.
           </p>
+          {roleKind === 'specialty' && (
+            <p className="small" style={{ marginTop: 8 }}>
+              Направление из базы специальностей колледжа — план собран под него.
+            </p>
+          )}
         </section>
 
         {loading && (
@@ -159,6 +192,64 @@ export default function Plan() {
               </div>
             </div>
 
+            {topicGraph && topicGraph.nodes.length > 5 && (
+              <section
+                className="card topic-map-card plan-print-hide"
+                style={{ marginTop: 20 }}
+                aria-label="Карта тем тестирований"
+              >
+                <div className="topic-map-head">
+                  <h2>Карта тем</h2>
+                  <p className="small">
+                    Клик по теме — мини-проверка. Центр — направление, лучи — недели,
+                    пунктир — темы с общим навыком.
+                  </p>
+                </div>
+                <TopicMap
+                  graph={topicGraph}
+                  selected={topicSel}
+                  onSelect={(key) => setTopicSel((cur) => (cur === key ? null : key))}
+                />
+                <p className="small topic-map-hint">
+                  Проведи пальцем по карте — видны все недели и темы.
+                </p>
+                {selectedTopic && selectedTopic.mini && (
+                  <div className="topic-panel">
+                    <div className="topic-panel__head">
+                      <span className="small">Неделя {selectedTopic.week}</span>
+                      <span className="topic-panel__title">
+                        {selectedTopic.mini.label || selectedTopic.task}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-ghost topic-panel__open"
+                        onClick={() => {
+                          setOpenMini(selectedTopic.key)
+                          const el = document.getElementById(
+                            `task-${selectedTopic.key}`
+                          )
+                          const reduced =
+                            typeof window !== 'undefined' &&
+                            window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                          el?.scrollIntoView({
+                            behavior: reduced ? 'auto' : 'smooth',
+                            block: 'center',
+                          })
+                        }}
+                      >
+                        Открыть в плане →
+                      </button>
+                    </div>
+                    <MiniCheckBody
+                      mini={selectedTopic.mini}
+                      solved={!!mini[selectedTopic.key]}
+                      onSolve={() => settleMini(selectedTopic.key)}
+                    />
+                  </div>
+                )}
+              </section>
+            )}
+
             {isComplete && (
               <div>
                 <p className="milestone">
@@ -185,12 +276,12 @@ export default function Plan() {
                   <ul>
                     {week.tasks.map((task, i) => {
                       const key = taskKey(week.n, i, task)
-                      // v6: мини-проверка генерится на фронте (web-only);
+                      // v7: мини-проверка уже посчитана для графа (тот же taskKey);
                       // нет контента в глоссарии → нет теста и нет кнопки.
-                      const miniCheck = buildMiniCheck(task)
+                      const miniCheck = miniByKey[key]
                       return (
                         <React.Fragment key={key}>
-                          <li className={done[key] ? 'done is-done' : ''}>
+                          <li id={`task-${key}`} className={done[key] ? 'done is-done' : ''}>
                             <button
                               type="button"
                               className="check"
@@ -423,11 +514,6 @@ type MiniRowProps = {
 // Внутри тела — зарезервированные слоты (hint/ок/по 22–24px) ⇒ CLS = 0.
 // no-score: неверный выбор — не красный, а подсказка; повтор безлимитный.
 function MiniRow({ taskKey, mini, solved, open, onToggle, onSolve }: MiniRowProps) {
-  const [picked, setPicked] = React.useState<number | null>(null)
-  const [hintShown, setHintShown] = React.useState(false)
-  const options = Array.isArray(mini.options) ? mini.options : []
-  const correct = typeof mini.correct === 'number' ? mini.correct : -1
-
   const label = solved
     ? '✓ Разобрался'
     : open
@@ -455,69 +541,90 @@ function MiniRow({ taskKey, mini, solved, open, onToggle, onSolve }: MiniRowProp
       </button>
       <div className="mini__body" id={`mini-body-${taskKey}`}>
         <div className="mini__inner">
-          <div className="mini__task">{mini.prompt}</div>
-          {mini.kind === 'choice' && !solved && (
-            <div className="mini__opts">
-              {options.map((option, i) => {
-                const revealed = picked !== null && i === correct
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`mini__v${picked === i ? ' is-picked' : ''}${
-                      revealed ? ' is-reveal' : ''
-                    }`}
-                    onClick={() => {
-                      setPicked(i)
-                      if (i === correct) onSolve()
-                    }}
-                  >
-                    {option}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-          {mini.kind === 'self' && !solved && (
-            <div className="mini__actions">
-              <button type="button" className="mini__v" onClick={() => setHintShown(true)}>
-                Показать ориентир
-              </button>
-              <button type="button" className="mini__v is-go" onClick={onSolve}>
-                Объяснил — Разобрался
-              </button>
-            </div>
-          )}
-          {mini.kind === 'do' && !solved && (
-            <div className="mini__actions">
-              <button type="button" className="mini__v is-go" onClick={onSolve}>
-                Готово, могу показать
-              </button>
-              <button
-                type="button"
-                className="mini__v"
-                onClick={() => setHintShown(true)}
-              >
-                Ещё собираю
-              </button>
-            </div>
-          )}
-          {/* зарезервированный слот подсказки: min-height в CSS ⇒ нет сдвига;
-              сообщения взаимоисключающие (один span) ⇒ высота слота не растёт */}
-          <div className="mini__hint" role="note">
-            {hintShown && mini.hint ? (
-              <span>Ориентир: {mini.hint}</span>
-            ) : (!solved && picked !== null && picked !== correct && correct >= 0) ? (
-              <span>Смотри, как это записано в базе: {options[correct]}</span>
-            ) : null}
-          </div>
-          {/* зарезервированный слот статуса: visibility, не display ⇒ CLS 0 */}
-          <div className="mini__gotcha">
-            {solved && '✓ Разобрался — теперь можно отметить галочку слева'}
-          </div>
+          <MiniCheckBody mini={mini} solved={solved} onSolve={onSolve} />
         </div>
       </div>
     </li>
+  )
+}
+
+type MiniCheckBodyProps = {
+  mini: MiniCheck
+  solved: boolean
+  onSolve: () => void
+}
+
+// v7: тело мини-проверки вынесено из MiniRow, чтобы тот же интерактив жил в
+// панели «Карты тем». Классы и слоты v6 сохранены (CLS = 0, no-score).
+function MiniCheckBody({ mini, solved, onSolve }: MiniCheckBodyProps) {
+  const [picked, setPicked] = React.useState<number | null>(null)
+  const [hintShown, setHintShown] = React.useState(false)
+  const options = Array.isArray(mini.options) ? mini.options : []
+  const correct = typeof mini.correct === 'number' ? mini.correct : -1
+
+  return (
+    <>
+      <div className="mini__task">{mini.prompt}</div>
+      {mini.kind === 'choice' && !solved && (
+        <div className="mini__opts">
+          {options.map((option, i) => {
+            const revealed = picked !== null && i === correct
+            return (
+              <button
+                key={i}
+                type="button"
+                className={`mini__v${picked === i ? ' is-picked' : ''}${
+                  revealed ? ' is-reveal' : ''
+                }`}
+                onClick={() => {
+                  setPicked(i)
+                  if (i === correct) onSolve()
+                }}
+              >
+                {option}
+              </button>
+            )
+          })}
+        </div>
+      )}
+      {mini.kind === 'self' && !solved && (
+        <div className="mini__actions">
+          <button type="button" className="mini__v" onClick={() => setHintShown(true)}>
+            Показать ориентир
+          </button>
+          <button type="button" className="mini__v is-go" onClick={onSolve}>
+            Объяснил — Разобрался
+          </button>
+        </div>
+      )}
+      {mini.kind === 'do' && !solved && (
+        <div className="mini__actions">
+          <button type="button" className="mini__v is-go" onClick={onSolve}>
+            Готово, могу показать
+          </button>
+          <button
+            type="button"
+            className="mini__v"
+            onClick={() => setHintShown(true)}
+          >
+            Ещё собираю
+          </button>
+        </div>
+      )}
+      {/* зарезервированный слот подсказки: min-height в CSS ⇒ нет сдвига;
+          сообщения взаимоисключающие (один span) ⇒ высота слота не растёт */}
+      <div className="mini__hint" role="note">
+        {hintShown && mini.hint ? (
+          <span>Ориентир: {mini.hint}</span>
+        ) : (!solved && picked !== null && picked !== correct && correct >= 0) ? (
+          <span>Смотри, как это записано в базе: {options[correct]}</span>
+        ) : null}
+      </div>
+      {/* зарезервированный слот статуса: visibility, не display ⇒ CLS 0 */}
+      <div className="mini__gotcha">
+        {solved && '✓ Разобрался — теперь можно отметить галочку слева'}
+      </div>
+    </>
   )
 }
 

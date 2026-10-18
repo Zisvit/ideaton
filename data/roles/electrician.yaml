@@ -1,0 +1,20 @@
+id: electrician
+kind: specialty
+title: Электромонтёр по ремонту и обслуживанию электрооборудования (по отраслям)
+description: Обслуживает и ремонтирует электрооборудование по схемам и правилам безопасности.
+skills_required:
+  - {id: electrical_safety, weight: 1.0}
+  - {id: electrical_work, weight: 0.9}
+  - {id: electrical_schemes, weight: 0.7}
+  - {id: measuring_tools, weight: 0.6}
+related_specialties: [электротехника, монтаж, оборудование]
+development_steps:
+  - "Познакомиться с видами электромонтажных работ"
+  - "Освоить правила электробезопасности при работе с оборудованием"
+  - "Научиться читать электрические схемы"
+  - "Познакомиться с измерительными приборами и мультиметром"
+  - "Собрать подборку: типовые неисправности электрооборудования и их причины"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Stepik — курсы по электротехнике", url: "https://stepik.org", type: course, minutes: 90}

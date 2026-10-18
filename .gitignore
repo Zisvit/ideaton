@@ -30,3 +30,6 @@ Thumbs.db
 /mine/
 /friend/
 /merge/
+
+# TS incremental build artifact
+*.tsbuildinfo

@@ -1,4 +1,5 @@
 id: support
+kind: role
 title: Специалист техподдержки
 description: Помогает пользователям решать проблемы, диагностирует сбои.
 skills_required:

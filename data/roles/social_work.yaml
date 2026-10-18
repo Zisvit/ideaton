@@ -1,0 +1,20 @@
+id: social_work
+kind: specialty
+title: Социальная работа
+description: "Помогает людям в трудной ситуации: меры поддержки, документы, сопровождение."
+skills_required:
+  - {id: social_aid, weight: 0.9}
+  - {id: social_law, weight: 0.8}
+  - {id: communication, weight: 0.7}
+  - {id: social_docs, weight: 0.6}
+related_specialties: [социальная работа, поддержка, люди]
+development_steps:
+  - "Познакомиться с направлениями социальной помощи"
+  - "Освоить основы права социального обеспечения"
+  - "Познакомиться с документами социального сопровождения"
+  - "Научиться общаться с получателями услуг"
+  - "Собрать подборку: типовые обращения и порядок работы"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Минтруд России — официальный портал", url: "https://mintrud.gov.ru"}

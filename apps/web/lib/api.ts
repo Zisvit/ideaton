@@ -13,6 +13,8 @@ type Profile = {
 
 type RoleScore = {
   role_id: string
+  // v7: role — карьерная роль, specialty — специальность колледжа
+  kind?: 'role' | 'specialty'
   title: string
   score: number
   why: string[]
@@ -149,6 +151,37 @@ function saveRoleId(roleId: string) {
   writeStore(ROLE_KEY, roleId)
 }
 
+// ---- v7: последние рекомендации (id/title/kind) — подпись на /plan ----
+// Храним только «визитки» направлений: план не тянет /recommend повторно,
+// а бейдж «специальность/роль» переживает F5. Полные карточки — на /result.
+type RoleRef = { role_id: string; title: string; kind?: 'role' | 'specialty' }
+const ROLES_KEY = 'career-tracker-roles:v1'
+
+function getRoles(): RoleRef[] {
+  const raw = readStore(ROLES_KEY)
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((item) => item && typeof item === 'object')
+      .map((item) => item as RoleRef)
+      .filter((item) => typeof item.role_id === 'string')
+  } catch {
+    return []
+  }
+}
+
+function saveRoles(roles: RoleRef[]): void {
+  if (!Array.isArray(roles)) return
+  const slim = roles.map((role) => ({
+    role_id: role.role_id,
+    title: role.title,
+    kind: role.kind,
+  }))
+  writeStore(ROLES_KEY, JSON.stringify(slim))
+}
+
 // ---- Прогресс плана: done-отметки живут по роли (раньше терялись при F5) ----
 function getDone(roleId: string): Record<string, boolean> {
   const raw = readStore(doneKey(roleId))
@@ -257,6 +290,8 @@ export {
   saveProfile,
   getStoredRoleId,
   saveRoleId,
+  getRoles,
+  saveRoles,
   getDone,
   saveDone,
   getChecks,
@@ -264,4 +299,4 @@ export {
   getMini,
   saveMini,
 }
-export type { Profile, RoleScore, RecommendResponse, Week, PlanResponse, ChatResponse, Check }
+export type { Profile, RoleScore, RecommendResponse, Week, PlanResponse, ChatResponse, Check, RoleRef }

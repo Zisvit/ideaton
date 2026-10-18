@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://ideaton.local/schemas/role.schema.json",
-  "title": "Карьерная роль",
-  "description": "Описание одной карьерной роли для rule-based скоринга карьерного трекера. Роль используется при подборе топ-5 траекторий, построении 30-дневного плана и в чате-консультанте.",
+  "title": "Карьерная роль или специальность",
+  "description": "Описание одной карьерной роли (kind=role) или специальности колледжа (kind=specialty) для rule-based скоринга карьерного трекера. Запись используется при подборе направлений (1–12), построении 30-дневного плана и в чате-консультанте.",
   "type": "object",
   "required": [
     "id",
@@ -18,9 +18,23 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "Стабильный идентификатор роли из закрытого словаря",
-      "enum": ["web", "1c", "qa", "support", "startup"],
-      "examples": ["web"]
+      "description": "Стабильный идентификатор роли/специальности из закрытого словаря",
+      "enum": [
+        "web", "1c", "qa", "support", "startup",
+        "infocom", "net_admin", "software_dev", "electrician",
+        "medicine", "pharmacy", "nursing",
+        "economics", "banking", "trade",
+        "social_work", "law_enforcement", "law_social", "law_court",
+        "beauty", "preschool", "pedagogy_extra", "correction_ped",
+        "physical_culture", "graphic_design", "design"
+      ],
+      "examples": ["web", "nursing"]
+    },
+    "kind": {
+      "type": "string",
+      "description": "Тип записи: карьерная роль (по умолчанию) или специальность СИУЭиП",
+      "enum": ["role", "specialty"],
+      "examples": ["role", "specialty"]
     },
     "title": {
       "type": "string",

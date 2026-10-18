@@ -1,0 +1,20 @@
+id: medicine
+kind: specialty
+title: Лечебное дело
+description: "Работает с пациентами в учреждениях здравоохранения: уход, первая помощь, документы."
+skills_required:
+  - {id: first_aid, weight: 1.0}
+  - {id: patient_care, weight: 0.9}
+  - {id: sterility, weight: 0.8}
+  - {id: med_docs, weight: 0.7}
+related_specialties: [медицина, здравоохранение, лечебное дело]
+development_steps:
+  - "Познакомиться с основами ухода за пациентами"
+  - "Освоить приёмы первой помощи"
+  - "Познакомиться с ведением медицинской документации"
+  - "Научиться соблюдать стерильность и санитарные правила"
+  - "Собрать памятку по уходу для учебной практики"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Минздрав России — официальный портал", url: "https://minzdrav.gov.ru"}

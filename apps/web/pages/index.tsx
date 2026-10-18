@@ -7,6 +7,12 @@ const SKILLS = [
   'Python', 'JavaScript', 'TypeScript', 'React',
   'Node.js', 'FastAPI', 'Docker', 'Kubernetes',
 ]
+// v7: второй ряд — не-IT сферы 21 специальности СИУЭиП. Значения — синонимы
+// из data/roles/skills.yaml (точное совпадение после lowercase в scoring).
+const SKILLS_LIFE = [
+  'Уход', 'Бухучёт', 'Право', 'Педагогика',
+  'Дизайн', 'Электромонтаж', 'Сети', 'Торговля',
+]
 const COURSES = [1, 2, 3, 4]
 
 export default function Home() {
@@ -90,8 +96,9 @@ export default function Home() {
             Куда тебе <span className="grad">расти?</span>
           </h1>
           <p className="hero__sub">
-            Отметь навыки, которые уже есть — покажу 5 траекторий и план на 30 дней.
-            Без резюме и тестов: просто карта маршрута.
+            Отметь навыки, которые уже есть — покажу до 12 направлений: карьерные
+            роли и специальности колледжа — и план на 30 дней. Без резюме и
+            тестов: просто карта маршрута.
           </p>
         </section>
 
@@ -125,6 +132,23 @@ export default function Home() {
               </button>
             ))}
           </div>
+
+          <div className="chips" style={{ marginTop: 8 }}>
+            {SKILLS_LIFE.map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => toggleChip(chip)}
+                className={`chip chip-sm ${selected.includes(chip) ? 'on' : ''}`}
+                aria-pressed={selected.includes(chip)}
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+          <p className="small" style={{ margin: '8px 0 0' }}>
+            Не только IT: специальности колледжа — в той же базе направлений.
+          </p>
 
           <div style={{ marginTop: 20 }}>
             <span className="label">Курс</span>
@@ -169,7 +193,7 @@ export default function Home() {
             className="btn btn-primary"
             style={{ width: '100%', justifyContent: 'center', boxShadow: 'none' }}
           >
-            Показать мои 5 направлений →
+            Показать мои направления →
           </Link>
         </div>
       </main>

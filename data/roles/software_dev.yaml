@@ -1,0 +1,21 @@
+id: software_dev
+kind: specialty
+title: Разработка и управление программным обеспечением
+description: "Участвует в разработке программ: от идеи и кода до сопровождения."
+skills_required:
+  - {id: programming_basics, weight: 0.9}
+  - {id: software_lifecycle, weight: 0.8}
+  - {id: git, weight: 0.6}
+  - {id: python, weight: 0.5}
+related_specialties: [разработка, программирование, ит]
+development_steps:
+  - "Освоить основы программирования и алгоритмы"
+  - "Познакомиться с жизненным циклом программного обеспечения"
+  - "Освоить систему контроля версий Git"
+  - "Научиться писать код на Python"
+  - "Собрать проект: консольная утилита с документацией"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Git — книга Pro Git (на русском)", url: "https://git-scm.com/book/ru/v2", type: book, minutes: 120}
+  - {title: "Stepik — курсы по программированию", url: "https://stepik.org", type: course, minutes: 120}

@@ -1,0 +1,20 @@
+id: preschool
+kind: specialty
+title: Дошкольное образование
+description: "Работает с детьми дошкольного возраста: занятия, игры, безопасность."
+skills_required:
+  - {id: pedagogy_basics, weight: 0.8}
+  - {id: child_development, weight: 0.8}
+  - {id: play_activities, weight: 0.7}
+  - {id: child_safety, weight: 0.6}
+related_specialties: [педагогика, дети, дошкольное образование]
+development_steps:
+  - "Познакомиться с основами педагогики"
+  - "Освоить возрастные особенности детей"
+  - "Познакомиться с игровыми занятиями"
+  - "Освоить правила безопасности детей"
+  - "Собрать подборку: занятия для младшей группы"
+partner_companies: []
+resources:
+  - {title: "СИУЭиП — специальности колледжа", url: "https://sielom.ru"}
+  - {title: "Минпросвещения России — официальный портал", url: "https://edu.gov.ru"}

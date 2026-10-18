@@ -1,0 +1,12 @@
+# Контекст API = корень репозитория (нужен data/roles). Отсекаем тяжёлое.
+.git
+.env
+.env.*
+node_modules
+**/node_modules
+**/.next
+**/__pycache__
+**/.pytest_cache
+.playwright-mcp
+**/.playwright-mcp
+*.tsbuildinfo

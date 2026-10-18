@@ -95,7 +95,8 @@ def test_v6_print_and_rm():
 
 def test_grad_titles_family():
     # статичный бренд-градиент на заголовках result/plan/consultant
-    assert 'className="grad">Твои 5 направлений' in (
+    # v7: «5» ушло из заголовка — список направлений 1–12, показываем 5 + «все»
+    assert 'className="grad">Твои направления' in (
         ROOT / "apps/web/pages/result.tsx"
     ).read_text(encoding="utf-8")
     assert 'className="grad">План на 30 дней' in (

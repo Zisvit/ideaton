@@ -19,10 +19,65 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-# Канонический закрытый словарь ролей (контракт: components.schemas.RoleId).
-RoleId = Literal["web", "1c", "qa", "support", "startup"]
+# Канонический закрытый словарь ролей/специальностей (контракт: RoleId).
+# lockstep: roles.schema.json ↔ schemas.py ↔ openapi.yaml (гейт test_v7).
+RoleId = Literal[
+    "web",
+    "1c",
+    "qa",
+    "support",
+    "startup",
+    "infocom",
+    "net_admin",
+    "software_dev",
+    "electrician",
+    "medicine",
+    "pharmacy",
+    "nursing",
+    "economics",
+    "banking",
+    "trade",
+    "social_work",
+    "law_enforcement",
+    "law_social",
+    "law_court",
+    "beauty",
+    "preschool",
+    "pedagogy_extra",
+    "correction_ped",
+    "physical_culture",
+    "graphic_design",
+    "design",
+]
 
-ROLE_IDS: tuple[str, ...] = ("web", "1c", "qa", "support", "startup")
+ROLE_IDS: tuple[str, ...] = (
+    "web",
+    "1c",
+    "qa",
+    "support",
+    "startup",
+    "infocom",
+    "net_admin",
+    "software_dev",
+    "electrician",
+    "medicine",
+    "pharmacy",
+    "nursing",
+    "economics",
+    "banking",
+    "trade",
+    "social_work",
+    "law_enforcement",
+    "law_social",
+    "law_court",
+    "beauty",
+    "preschool",
+    "pedagogy_extra",
+    "correction_ped",
+    "physical_culture",
+    "graphic_design",
+    "design",
+)
 
 
 class Profile(BaseModel):
@@ -51,16 +106,24 @@ class Profile(BaseModel):
 
 class RecommendRequest(BaseModel):
     profile: Profile = Field(default_factory=Profile)
+    # v7: опциональный размер списка (1–12, по умолчанию 12). Аддитивно:
+    # старые клиенты без limit получают больше направлений.
+    limit: int | None = Field(
+        default=None, ge=1, le=12, description="Сколько направлений вернуть (1–12)"
+    )
 
 
 class RoleScore(BaseModel):
-    """Одна траектория из топ-5.
+    """Одно направление из списка.
 
     Контракт обязывает role_id/title/score/why/gaps (why — human-причины,
     minItems 1). matched — расширение ТЗ (канонические id совпавших навыков).
     """
 
     role_id: str
+    kind: Literal["role", "specialty"] = Field(
+        default="role", description="role — карьерная роль; specialty — специальность"
+    )
     title: str
     score: int = Field(ge=0, le=100)
     why: list[str] = Field(min_length=1, description="Причины, почему роль подходит")
@@ -80,9 +143,9 @@ class RoleScore(BaseModel):
 
 
 class RecommendResponse(BaseModel):
-    """Контракт требует roles (ровно 5); items/profile_hash/cached — расширения ТЗ."""
+    """Контракт требует roles (1–12); items/profile_hash/cached — расширения ТЗ."""
 
-    roles: list[RoleScore] = Field(min_length=5, max_length=5)
+    roles: list[RoleScore] = Field(min_length=1, max_length=12)
     items: list[RoleScore] = Field(
         default_factory=list, description="Алиас roles (ТЗ); main.py заполняет тем же"
     )
