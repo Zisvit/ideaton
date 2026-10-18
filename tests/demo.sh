@@ -98,7 +98,8 @@ else
   [ -d "$WEB_DIR/node_modules" ] || { log "npm ci (первый прогон)…"; (cd "$WEB_DIR" && npm ci --no-audit --no-fund >/dev/null 2>&1) || no "npm ci упал"; }
 
   # Ловушка сборки: NEXT_PUBLIC_API_URL прошивается в бандл при build.
-  # Порт 8000 = дефолт клиента — существующая сборка пригодна; иначе проверяем
+  # Дефолт клиента — 127.0.0.1:8000 (v9; не localhost: на Linux localhost
+  # уходит в ::1) — существующая сборка пригодна; иначе проверяем
   # (и при рассогласовании пересобираем) с нужным API_URL.
   need_build=0
   [ -f "$WEB_DIR/.next/BUILD_ID" ] || need_build=1

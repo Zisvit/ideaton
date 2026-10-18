@@ -252,34 +252,79 @@ type FetchOptions = {
   timeout?: number
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// v9: 127.0.0.1, а не localhost — на Linux ::1 идёт первым (reads IPv6),
+// API слушает только IPv4 → флапающий «Failed to fetch» (space-bunny, раунд 2).
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+
+// Safari < 16.4 не знает AbortSignal.timeout: прямой вызов бросал TypeError
+// ДО try и /result висел вечным скелетоном без кнопки «Повторить»
+// (space-bunny, раунд 2). Фолбэк ручной и живёт внутри try.
+function makeTimeoutSignal(ms: number): AbortSignal {
+  if (typeof AbortSignal.timeout === 'function') return AbortSignal.timeout(ms)
+  const controller = new AbortController()
+  setTimeout(() => controller.abort(), ms)
+  return controller.signal
+}
+
+// Тело читаем как текст: не-JSON (500 text/plain, HTML) ронял
+// response.json() в SyntaxError, и сырой английский текст уходил в UI.
+async function readJsonBody(
+  response: Response
+): Promise<{ error?: string; detail?: string } | null> {
+  try {
+    const text = await response.text()
+    if (!text) return null
+    const parsed: unknown = JSON.parse(text)
+    return parsed && typeof parsed === 'object'
+      ? (parsed as { error?: string; detail?: string })
+      : null
+  } catch {
+    return null
+  }
+}
+
+// Сеть/таймаут — человеческий текст вместо сырого «Failed to fetch»;
+// диагностика уходит в console.warn (таблица совета, раунд 2).
+function humanNetworkError(error: unknown): string {
+  const name = (error as { name?: string } | null)?.name
+  if (name === 'AbortError' || name === 'TimeoutError') {
+    return 'Превышено время ожидания ответа сервера'
+  }
+  return 'Не удалось связаться с сервером. Проверь, запущен ли API, и попробуй ещё раз.'
+}
 
 export async function apiFetch<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
   const { method = 'GET', body, headers = {}, timeout = 15000 } = options
-  const signal = AbortSignal.timeout(timeout)
-  const config: RequestInit = {
-    method,
-    headers: { 'Content-Type': 'application/json', ...headers },
-    cache: 'no-store',
-    signal,
-  }
-  if (body !== undefined) config.body = JSON.stringify(body)
-
   try {
+    const config: RequestInit = {
+      method,
+      headers: { 'Content-Type': 'application/json', ...headers },
+      cache: 'no-store',
+      signal: makeTimeoutSignal(timeout),
+    }
+    if (body !== undefined) config.body = JSON.stringify(body)
+
     const response = await fetch(`${BASE_URL}${endpoint}`, config)
-    const data = (await response.json()) as { error?: string; detail?: string }
+    const data = await readJsonBody(response)
     if (!response.ok) {
-      return { success: false, error: data.error || data.detail || `HTTP ${response.status}` }
+      if (data?.error || data?.detail) {
+        return { success: false, error: data.error || data.detail }
+      }
+      if (response.status >= 500) {
+        return { success: false, error: 'Сервер временно недоступен. Попробуй чуть позже.' }
+      }
+      return { success: false, error: `HTTP ${response.status}` }
+    }
+    if (!data) {
+      return { success: false, error: 'Сервер вернул неожиданный ответ. Попробуй ещё раз.' }
     }
     return { success: true, data: data as T }
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
-      return { success: false, error: 'Превышено время ожидания ответа сервера' }
-    }
-    return { success: false, error: error.message || 'Произошла ошибка при подключении к серверу' }
+  } catch (error) {
+    console.warn('apiFetch', error)
+    return { success: false, error: humanNetworkError(error) }
   }
 }
 

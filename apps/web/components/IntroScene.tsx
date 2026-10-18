@@ -6,9 +6,11 @@ import { INTRO_MS, SWIPE_GRACE_MS } from '../lib/intro'
 // ViewBox 0 0 360 260, земля y=232, нос вправо. Все амплитуды в user units
 // (внутри SVG CSS-px == user unit); origin каждой суставной точки задаётся
 // inline --ox/--oy, CSS делает transform-box: view-box для всех узлов.
-// Рисунок v8: объёмный мех (градиенты+штрихи), анатомичные лапы с суставами,
-// белая манишка/щёки/кончик хвоста, чёрные «носки», янтарный глаз. Хореография
-// прежняя (30/30 keyframes, без новых): бег → прыжок → посадка → idle.
+// Рисунок v9 (совет mix): голова ниже и клиновиднее, уши-треугольники с
+// тёмным кончиком, тоньше лапы со скакательным суставом и длиннее «чулки»,
+// шерсть — крупными прядями (микро-штрихи убраны: <1px на 220px, mimo),
+// единый свет rim/AO/контактные тени (beam). Хореография прежняя:
+// 30/30 keyframes, без новых: бег → прыжок → посадка → idle.
 export function Fox() {
   return (
     <svg
@@ -20,19 +22,26 @@ export function Fox() {
     >
       <defs>
         <linearGradient id="foxCoat" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#F8A55E" />
-          <stop offset=".34" stopColor="#F08A40" />
-          <stop offset=".68" stopColor="#E3702A" />
+          <stop offset="0" stopColor="#F49A62" />
+          <stop offset=".34" stopColor="#EA7F3C" />
+          <stop offset=".68" stopColor="#D66424" />
           <stop offset="1" stopColor="#C95615" />
         </linearGradient>
         <linearGradient id="foxCoatDark" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#D9641F" />
+          <stop offset="0" stopColor="#D05C1B" />
           <stop offset="1" stopColor="#A8460F" />
         </linearGradient>
+        {/* v9: ухо-треугольник с тёмным кончиком — «визитка» вида (glm/super-vl) */}
+        <linearGradient id="foxEar" gradientUnits="userSpaceOnUse" x1="0" y1="54" x2="0" y2="106">
+          <stop offset="0" stopColor="#241610" />
+          <stop offset=".2" stopColor="#2B1B11" />
+          <stop offset=".46" stopColor="#8F3A0C" />
+          <stop offset="1" stopColor="#C25A1B" />
+        </linearGradient>
         <linearGradient id="foxTail" gradientUnits="userSpaceOnUse" x1="140" y1="146" x2="18" y2="208">
-          <stop offset="0" stopColor="#E9772D" />
-          <stop offset=".45" stopColor="#F0904A" />
-          <stop offset=".78" stopColor="#E9772D" />
+          <stop offset="0" stopColor="#E3702A" />
+          <stop offset=".45" stopColor="#E98A46" />
+          <stop offset=".78" stopColor="#E3702A" />
           <stop offset="1" stopColor="#D9621F" />
         </linearGradient>
         <linearGradient id="foxTip" gradientUnits="userSpaceOnUse" x1="72" y1="188" x2="16" y2="204">
@@ -42,9 +51,9 @@ export function Fox() {
           <stop offset="1" stopColor="#FFFDF8" />
         </linearGradient>
         <linearGradient id="foxSoft" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFF8EE" />
-          <stop offset=".55" stopColor="#FFEAD4" />
-          <stop offset="1" stopColor="#F7D2B1" />
+          <stop offset="0" stopColor="#FFF6EE" />
+          <stop offset=".55" stopColor="#FFE6CE" />
+          <stop offset="1" stopColor="#F5CBA8" />
         </linearGradient>
         <radialGradient id="foxHaunch">
           <stop offset="0" stopColor="rgba(126,49,10,.26)" />
@@ -66,6 +75,11 @@ export function Fox() {
       {/* тень: вне bob-группы — не прыгает вместе с телом; шире и мягче —
           «земля» читается гуще (longcat, раунд 2) */}
       <ellipse className="fox-shadow" cx="186" cy="232" rx="110" ry="10" fill="url(#foxShadow)" />
+      {/* v9: контактные тени под лапами (beam) — «стоит на земле», не парит */}
+      <ellipse cx="113" cy="230" rx="6" ry="2.3" fill="#12141A" opacity=".3" />
+      <ellipse cx="136" cy="230" rx="6" ry="2.3" fill="#12141A" opacity=".25" />
+      <ellipse cx="236" cy="230" rx="6" ry="2.3" fill="#12141A" opacity=".25" />
+      <ellipse cx="253" cy="229" rx="6.5" ry="2.4" fill="#12141A" opacity=".3" />
 
       <g className="fox-bob" style={{ '--ox': '190px', '--oy': '232px' } as React.CSSProperties}>
         {/* ХВОСТ: густой «brush», белый кончик на внешней группе (волна бега) */}
@@ -84,11 +98,7 @@ export function Fox() {
               d="M22 175 C40 155 64 141 88 139" stroke="#FFC58D" strokeWidth="1.5"
               strokeLinecap="round" fill="none" opacity=".5"
             />
-            <g stroke="#8F3A0C" strokeWidth="1" strokeLinecap="round" fill="none" opacity=".28">
-              <path d="M60 158 C72 154 84 152 96 154" />
-              <path d="M48 182 C56 190 64 196 72 199" />
-              <path d="M84 148 C96 146 108 148 118 154" />
-            </g>
+            {/* v9: микро-штрихи меха убраны — на 220px <1px и не видно (mimo) */}
           </g>
           <g className="fox-tail-b" style={{ '--ox': '58px', '--oy': '186px', '--tw': '8deg' } as React.CSSProperties}>
             <g className="fx-tail-idle-b" style={{ '--ox': '58px', '--oy': '186px', '--tw': '7deg' } as React.CSSProperties}>
@@ -107,17 +117,18 @@ export function Fox() {
         {/* ДАЛЬНИЕ НОГИ: за телом, приглушённые, диагональ задержек = галоп */}
         <g className="fox-far-legs">
           <g className="fx-leg-fh" style={{ '--ox': '126px', '--oy': '170px' } as React.CSSProperties}>
-            <path d="M126 170 C130 186 134 203 136 220" stroke="#B24E14" strokeWidth="12" strokeLinecap="round" fill="none" opacity=".9" />
-            <path d="M136 218 C138 222 138 226 136 229" stroke="#2B1B11" strokeWidth="9" strokeLinecap="round" fill="none" />
+            <path d="M126 170 C130 186 134 203 136 216" stroke="#B24E14" strokeWidth="9" strokeLinecap="round" fill="none" opacity=".9" />
+            <path d="M136 209 C138 216 137 223 136 229" stroke="#2B1B11" strokeWidth="8" strokeLinecap="round" fill="none" />
           </g>
           <g className="fx-leg-ff" style={{ '--ox': '244px', '--oy': '158px' } as React.CSSProperties}>
-            <path d="M244 158 C241 176 239 196 238 216" stroke="#B24E14" strokeWidth="11" strokeLinecap="round" fill="none" opacity=".9" />
-            <path d="M238 214 C238 220 237 225 236 229" stroke="#2B1B11" strokeWidth="8" strokeLinecap="round" fill="none" />
+            <path d="M244 158 C241 176 239 194 238 212" stroke="#B24E14" strokeWidth="9" strokeLinecap="round" fill="none" opacity=".9" />
+            <path d="M238 205 C238 213 237 220 236 229" stroke="#2B1B11" strokeWidth="8" strokeLinecap="round" fill="none" />
           </g>
         </g>
 
         {/* КОРПУС+ШЕЯ: спина-градиент, живот-крем, бедро, воротник, блики меха */}
         <g className="fox-chest" style={{ '--ox': '232px', '--oy': '168px' } as React.CSSProperties}>
+          {/* v9-iter2: пряди по хребту убраны — читались «рожками»; мех держат rim и градиент */}
           <path
             d="M124 154 C130 140 154 132 182 131 C210 130 236 134 250 143 C258 128 274 116 292 112 L308 132 C294 140 280 154 273 170 C270 182 260 190 244 193 C218 197 184 196 158 192 C138 189 124 182 119 173 C115 165 118 159 124 154 Z"
             fill="url(#foxCoat)"
@@ -146,93 +157,93 @@ export function Fox() {
             fill="url(#foxSoft)" opacity=".9"
           />
           {/* мех: направление шерсти */}
-          <g stroke="#8F3A0C" strokeWidth="1" strokeLinecap="round" fill="none" opacity=".3">
-            <path d="M150 158 C160 154 172 152 184 152" />
-            <path d="M168 172 C180 175 192 175 204 173" />
-            <path d="M226 162 C236 165 245 165 253 162" />
-            <path d="M134 178 C142 181 150 183 158 183" />
-          </g>
-          <g stroke="#FFD3A6" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity=".5">
+          {/* v9: штрихи меха убраны (mimo: невидимы на 220px); объём держат градиент, rim и пряди */}
+          <g stroke="#FFF6EA" strokeWidth="1.3" strokeLinecap="round" fill="none" opacity=".45">
             <path d="M132 150 C148 140 168 135 190 135 C212 135 232 139 244 146" />
             <path d="M156 128 C168 124 182 123 194 124" />
           </g>
         </g>
 
+        {/* v9 AO (beam/glm): стык голова-шея и корень хвоста — мягкая тень без «водяного знака» */}
+        <ellipse cx="322" cy="147" rx="19" ry="6.5" fill="#7A3208" opacity=".15" />
+        <ellipse cx="120" cy="181" rx="22" ry="9" fill="#7A3208" opacity=".11" />
+
         {/* БЛИЖНИЕ НОГИ: бедро → голень → чёрная лапа, у каждого свой сустав */}
         <g className="fox-leg-near-hind">
           <g className="fx-thigh-nh" style={{ '--ox': '132px', '--oy': '168px' } as React.CSSProperties}>
-            <path d="M132 180 C128 189 124 199 121 207" stroke="#E27127" strokeWidth="19" strokeLinecap="round" fill="none" />
-            <path d="M125 186 C120 193 118 200 118 206 C121 200 125 195 130 191 Z" fill="#C95615" opacity=".6" />
-            {/* суставная выпуклость колена (beam, раунд 2) */}
-            <ellipse cx="126" cy="194" rx="4" ry="3" fill="#D9641F" opacity=".7" />
+            <path d="M132 180 C128 189 124 199 121 207" stroke="#E27127" strokeWidth="16" strokeLinecap="round" fill="none" />
+            {/* суставная выпуклость колена (beam, раунд 2; v9 — под тоньше ногу) */}
+            <ellipse cx="126" cy="194" rx="3.4" ry="2.6" fill="#D05C1B" opacity=".7" />
           </g>
           <g className="fx-shin-nh" style={{ '--ox': '121px', '--oy': '205px' } as React.CSSProperties}>
-            <path d="M121 205 C118 213 115 221 113 229" stroke="url(#foxCoatDark)" strokeWidth="11" strokeLinecap="round" fill="none" />
+            {/* v9: скакательный сустав — голень уходит назад-вниз к плюсне (glm) */}
+            <path d="M121 205 C124 211 122 217 119 221" stroke="url(#foxCoatDark)" strokeWidth="8.5" strokeLinecap="round" fill="none" />
+            <path d="M119 221 C117 225 115 227 113 229" stroke="#2B1B11" strokeWidth="8.5" strokeLinecap="round" fill="none" />
           </g>
           <g className="fx-paw-nh" style={{ '--ox': '113px', '--oy': '229px' } as React.CSSProperties}>
             <path
               d="M106 227 C106 224 110 222 115 222 C120 222 124 225 123 228 C122 231 117 232 112 232 C108 232 106 230 106 227 Z"
               fill="#2B1B11"
             />
-            <path d="M112 224 C112 227 112 230 112 232" stroke="#4A2E1E" strokeWidth=".8" opacity=".6" />
           </g>
         </g>
         <g className="fox-leg-near-fore">
           <g className="fx-thigh-nf" style={{ '--ox': '252px', '--oy': '158px' } as React.CSSProperties}>
-            <path d="M252 166 C254 175 256 184 257 192" stroke="#E27127" strokeWidth="16" strokeLinecap="round" fill="none" />
-            <path d="M247 176 C245 183 245 189 246 194 C248 189 250 185 253 181 Z" fill="#C95615" opacity=".55" />
-            <ellipse cx="253" cy="182" rx="3.5" ry="3" fill="#D9641F" opacity=".7" />
+            <path d="M252 166 C254 175 256 184 257 192" stroke="#E27127" strokeWidth="12" strokeLinecap="round" fill="none" />
+            {/* v9: rim-свет по передней кромке (beam) */}
+            <path d="M255 170 C256.5 177 257.5 184 258.5 191" stroke="#FFF6EA" strokeWidth="1" strokeLinecap="round" fill="none" opacity=".28" />
+            <ellipse cx="253" cy="182" rx="3" ry="2.6" fill="#D05C1B" opacity=".7" />
           </g>
           <g className="fx-shin-nf" style={{ '--ox': '257px', '--oy': '192px' } as React.CSSProperties}>
-            <path d="M257 192 C256 202 254 212 252 221" stroke="url(#foxCoatDark)" strokeWidth="9" strokeLinecap="round" fill="none" />
+            <path d="M257 192 C256 201 255 208 254 214" stroke="url(#foxCoatDark)" strokeWidth="7.5" strokeLinecap="round" fill="none" />
+            <path d="M254 214 C253 218 253 220 252 222" stroke="#2B1B11" strokeWidth="7.5" strokeLinecap="round" fill="none" />
           </g>
           <g className="fx-paw-nf" style={{ '--ox': '252px', '--oy': '222px' } as React.CSSProperties}>
             <path
               d="M246 219 C246 216 251 214 257 215 C262 216 265 219 264 222 C263 225 257 227 252 226 C247 225 245 222 246 219 Z"
               fill="#2B1B11"
             />
-            <path d="M258 217 C257 220 256 223 255 226" stroke="#4A2E1E" strokeWidth=".8" opacity=".6" />
           </g>
         </g>
 
         {/* ДАЛЬНЕЕ УХО: за головой; ближнее — внутри head-группы */}
         <g className="fx-ear fx-ear-far" style={{ '--ox': '316px', '--oy': '104px', '--ea': '-9deg', '--eb': '-4deg' } as React.CSSProperties}>
           <g className="fx-ear-inner">
-            <path d="M316 104 C315 85 321 65 329 55 C332 51 335 53 334 59 C330 77 326 94 324 102 Z" fill="#8F3A0C" />
-            <path d="M319 100 C320 84 325 69 330 60 C332 57 333 59 332 63 C328 78 325 91 323 99 Z" fill="#C25A1B" opacity=".5" />
+            <path d="M317 103 C316 90 320 75 325 65 L327 61 L329 66 C328 78 326 92 324 102 Z" fill="url(#foxEar)" />
+            <path d="M320 99 C320 89 322 79 324.5 71 L326 68 L327.5 72 C327.5 80 326 90 324.5 99 Z" fill="#EEC6A0" opacity=".85" />
           </g>
         </g>
 
         <g className="fx-head" style={{ '--ox': '300px', '--oy': '134px' } as React.CSSProperties}>
           {/* череп+морда: клин, купол, кремовые щёки и подбородок */}
           <path
-            d="M298 124 C296 109 305 97 318 95 C330 93 340 99 345 108 L355 117 C359 119 359 123 355 125 L344 127 C340 137 330 143 319 141 C308 139 300 133 298 124 Z"
+            d="M298 124 C296 110 305 98 317 96 C329 94 339 100 344 109 L354 117 C358 119 358 123 354 125 L343 127 C339 134 330 140 319 139 C308 137 300 132 298 124 Z"
             fill="url(#foxCoat)"
           />
           <path
-            d="M309 126 C303 133 300 142 302 151 C306 145 309 142 314 140 C311 135 310 130 309 126 Z"
+            d="M309 126 C304 132 301 139 303 145 C306 141 309 139 314 138 C311 134 310 130 309 126 Z"
             fill="url(#foxSoft)" opacity=".92"
           />
           <path
-            d="M313 132 C320 131 330 133 338 137 C337 143 330 147 322 147 C315 147 311 142 309 137 Z"
+            d="M313 131 C320 130 330 132 338 136 C337 141 330 145 322 145 C315 145 311 140 309 136 Z"
             fill="url(#foxSoft)"
           />
           <path
-            d="M318 141 C326 144 335 141 341 136 C342 141 335 147 325 148 C318 149 314 145 313 142 Z"
+            d="M318 140 C326 142 334 140 340 135 C341 139 334 144 325 145 C318 146 314 143 313 140 Z"
             fill="url(#foxSoft)" opacity=".95"
           />
-          {/* нос: чёрный, с бликом */}
-          <ellipse cx="352" cy="122" rx="6.2" ry="5.2" transform="rotate(-12 352 122)" fill="var(--fox-nose)" />
+          {/* нос: чёрный, с бликом. ВАЖНО: поворот задан CSS-стилем, НЕ атрибутом
+              rotate(a cx cy) — тот складывался с CSS transform-origin из --ox/--oy
+              и применял центр дважды: нос/глаз улетали с морды (баг v8, найден v9) */}
+          <ellipse cx="352" cy="122" rx="6.2" ry="5.2" style={{ transform: 'rotate(-12deg)', transformOrigin: '352px 122px' }} fill="var(--fox-nose)" />
           <path d="M349 119 C351 118 354 119 355 121 C353 122 350 122 348 121 Z" fill="#7A5A48" opacity=".5" />
           {/* рот */}
-          <path d="M348 127 C344 132 338 135 332 136" stroke="var(--fox-nose)" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity=".8" />
-          {/* глаз: янтарь, вертикальный зрачок, блики; blink на группе */}
+          <path d="M348 127 C344 132 338 135 332 136" stroke="var(--fox-nose)" strokeWidth="1.6" strokeLinecap="round" fill="none" opacity=".85" />
+          {/* глаз: янтарь, вертикальный зрачок, ОДИН блик — двойной давал «стекляшку» (mimo) */}
           <g className="fx-eye" style={{ '--ox': '325px', '--oy': '111px' } as React.CSSProperties}>
-            <ellipse cx="325" cy="111" rx="7.6" ry="5.5" transform="rotate(-10 325 111)" fill="url(#foxEye)" />
-            <ellipse cx="325.5" cy="111.2" rx="1.9" ry="4.2" transform="rotate(-10 325.5 111.2)" fill="#1F130D" />
-            <ellipse cx="325.5" cy="111.2" rx="1.9" ry="4.2" transform="rotate(-10 325.5 111.2)" fill="none" stroke="#8A4A10" strokeWidth=".5" opacity=".6" />
-            <circle cx="322.8" cy="108.9" r="1.6" fill="#fff" opacity=".88" />
-            <circle cx="327.7" cy="112.9" r=".8" fill="#fff" opacity=".45" />
+            <ellipse cx="325" cy="111" rx="6.9" ry="5.0" style={{ transform: 'rotate(-10deg)', transformOrigin: '325px 111px' }} fill="url(#foxEye)" />
+            <ellipse cx="325.5" cy="111.2" rx="1.75" ry="3.9" style={{ transform: 'rotate(-10deg)', transformOrigin: '325.5px 111.2px' }} fill="#1F130D" />
+            <circle cx="322.8" cy="108.9" r="1.4" fill="#fff" opacity=".9" />
             <path d="M318 106 C322 103.5 330 103.5 334 106.5" stroke="#8F3A0C" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".75" />
           </g>
           <path d="M332 114 C336 117 338 121 339 125" stroke="#8F3A0C" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity=".45" />
@@ -241,7 +252,7 @@ export function Fox() {
           <g
             className="fx-whiskers"
             style={{ '--ox': '340px', '--oy': '132px' } as React.CSSProperties}
-            stroke="var(--fox-nose)" strokeWidth=".9" strokeLinecap="round" opacity=".36" fill="none"
+            stroke="var(--fox-nose)" strokeWidth="1.2" strokeLinecap="round" opacity=".46" fill="none"
           >
             <path d="M340 132 C332 134 324 137 317 140" />
             <path d="M341 135 C333 139 326 143 320 148" />
@@ -250,15 +261,12 @@ export function Fox() {
           {/* ближнее ухо: тёмная внешняя кромка, кремовая внутренность */}
           <g className="fx-ear fx-ear-near" style={{ '--ox': '306px', '--oy': '104px', '--ea': '-15deg', '--eb': '-7deg' } as React.CSSProperties}>
             <g className="fx-ear-inner">
-              <path d="M303 106 C299 88 302 68 310 56 C313 51 316 53 316 59 C318 76 319 93 320 103 Z" fill="url(#foxCoatDark)" />
-              <path d="M307 102 C304 88 306 72 312 62 C314 58 315 60 315 65 C316 79 317 92 317 100 Z" fill="url(#foxSoft)" opacity=".92" />
+              <path d="M301 107 C298 93 301 79 305 68 L309 62 L312 68 C315 79 318 93 319 102 Z" fill="url(#foxEar)" />
+              <path d="M305.5 101 C304 92 306 82 308.5 74 L310 71 L311.5 75 C314 83 315.5 92 316.5 100 Z" fill="url(#foxSoft)" opacity=".85" />
             </g>
           </g>
           {/* мех на щеке/лбу */}
-          <g stroke="#8F3A0C" strokeWidth="1" strokeLinecap="round" fill="none" opacity=".3">
-            <path d="M305 120 C309 124 311 129 311 134" />
-            <path d="M313 120 C312 124 313 128 315 131" />
-          </g>
+          {/* v9: штрихи на щеке убраны (mimo: невидимы на 220px) */}
         </g>
       </g>
 
