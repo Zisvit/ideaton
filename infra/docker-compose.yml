@@ -10,7 +10,9 @@ name: ideaton
 services:
   api:
     build:
-      context: ../services/api
+      # v7: контекст — корень репозитория, иначе COPY data/roles недоступен
+      context: ..
+      dockerfile: services/api/Dockerfile
     image: ideaton-api:local
     # .env опционален: на чистом клоне его нет, стенд всё равно валиден
     env_file:
