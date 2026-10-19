@@ -9,6 +9,16 @@ import {
   saveRoles,
 } from '../lib/api'
 import ThemeToggle from '../components/ThemeToggle'
+import CollegeWork from '../components/CollegeWork'
+import type { SpecialtyCardData } from '../components/DirectionCard'
+import specialties from '../lib/specialties.json'
+
+// v14 (совет 7/9): связка «специальность → где/кем можно работать» — те же
+// данные сайта колледжа, что на витрине главной (специальности ищутся по
+// role_id строки результата; у карьерных ролей записи нет — блок не выводим).
+const COLLEGE = new Map(
+  (specialties as SpecialtyCardData[]).map((spec) => [spec.id, spec])
+)
 
 // Цвет-маркер каждой роли (fallback — детерминированный акцент v7)
 const ROLE_COLORS: Record<string, string> = {
@@ -273,57 +283,67 @@ export default function Result() {
               </div>
             </article>
 
-            {rest.map((role, idx) => (
-              <article
-                key={role.role_id}
-                className="role-card fade-in"
-                style={{ '--role': roleColor(role.role_id) } as React.CSSProperties}
-              >
-                <div className="role-card__top">
-                  <div>
-                    <div className="num-order">#{String(idx + 2).padStart(2, '0')}</div>
-                    <h3 className="role-card__title">{role.title}</h3>
-                    <span className="tag tag-neutral">
-                      {role.kind === 'specialty' ? 'специальность' : 'роль'}
-                    </span>
-                  </div>
-                  <span
-                    className="score-ring num"
-                    title={
-                      typeof role.matched_count === 'number' &&
+            {rest.map((role, idx) => {
+              const spec = COLLEGE.get(role.role_id)
+              return (
+                <article
+                  key={role.role_id}
+                  className="role-card fade-in"
+                  style={{ '--role': roleColor(role.role_id) } as React.CSSProperties}
+                >
+                  <div className="role-card__top">
+                    <div>
+                      <div className="num-order">#{String(idx + 2).padStart(2, '0')}</div>
+                      <h3 className="role-card__title">{role.title}</h3>
+                      <span className="tag tag-neutral">
+                        {role.kind === 'specialty' ? 'специальность' : 'роль'}
+                      </span>
+                    </div>
+                    <span
+                      className="score-ring num"
+                      title={
+                        typeof role.matched_count === 'number' &&
+                        typeof role.needed_count === 'number' &&
+                        role.needed_count > 0
+                          ? `${role.matched_count} из ${role.needed_count} ключевых навыков`
+                          : undefined
+                      }
+                    >
+                      {typeof role.matched_count === 'number' &&
                       typeof role.needed_count === 'number' &&
                       role.needed_count > 0
-                        ? `${role.matched_count} из ${role.needed_count} ключевых навыков`
-                        : undefined
-                    }
-                  >
-                    {typeof role.matched_count === 'number' &&
-                    typeof role.needed_count === 'number' &&
-                    role.needed_count > 0
-                      ? `${role.matched_count}/${role.needed_count}`
-                      : `${role.score}%`}
-                  </span>
-                </div>
-                <p className="role-card__why">{role.why.join(' · ')}</p>
-                {role.gaps.length > 0 && (
-                  <div className="role-card__gaps">
-                    {role.gaps.map((g, i) => (
-                      <span key={i} className="tag tag-gap">{g}</span>
-                    ))}
+                        ? `${role.matched_count}/${role.needed_count}`
+                        : `${role.score}%`}
+                    </span>
                   </div>
-                )}
-                <div className="role-card__foot">
-                  <Link
-                    href="/plan"
-                    onClick={() => saveRoleId(role.role_id)}
-                    className="btn btn-ghost"
-                    style={{ padding: '8px 14px', fontSize: 14 }}
-                  >
-                    План →
-                  </Link>
-                </div>
-              </article>
-            ))}
+                  <p className="role-card__why">{role.why.join(' · ')}</p>
+                  {spec && (
+                    <CollegeWork
+                      employers={spec.employers}
+                      positions={spec.positions}
+                      source={spec.source}
+                    />
+                  )}
+                  {role.gaps.length > 0 && (
+                    <div className="role-card__gaps">
+                      {role.gaps.map((g, i) => (
+                        <span key={i} className="tag tag-gap">{g}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="role-card__foot">
+                    <Link
+                      href="/plan"
+                      onClick={() => saveRoleId(role.role_id)}
+                      className="btn btn-ghost"
+                      style={{ padding: '8px 14px', fontSize: 14 }}
+                    >
+                      План →
+                    </Link>
+                  </div>
+                </article>
+              )
+            })}
 
             {roles.length > 5 && (
               <div className="row-between" style={{ marginTop: 2 }}>

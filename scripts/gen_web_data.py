@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import yaml
 
@@ -27,6 +29,10 @@ OUT = ROOT / "apps/web/lib/offlineData.json"
 # Один прогон генератора пишет оба выхода → файлы не могут разойтись
 # (гейт test_v13_gates сравнивает перегенерацию байт-в-байт).
 OUT_SPECIALTIES = ROOT / "apps/web/lib/specialties.json"
+# v14: снимок страниц сайта колледжа (verbatim-списки «Где/Кем») — источник
+# полей employers/positions/source в specialties.json. Снимок не генерируется:
+# он фиксирован на дату (поле fetched) и правится только вручную.
+COLLEGE_SNAPSHOT = ROOT / "data" / "college" / "sielom_specialties.json"
 
 sys.path.insert(0, str(ROOT / "services/api"))
 import scoring  # noqa: E402  (нужен sys.path выше)
@@ -136,15 +142,56 @@ def render(payload: dict[str, Any] | None = None) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=1, sort_keys=True) + "\n"
 
 
-def render_specialties(payload: dict[str, Any] | None = None) -> str:
-    """Второй выход (v13): специальности колледжа для витрины / (главной).
+def _load_college() -> dict[str, Any]:
+    """Снимок сайта колледжа (v14): verbatim-страницы + карта правок опечаток."""
+    return json.loads(COLLEGE_SNAPSHOT.read_text(encoding="utf-8"))
 
-    Берём те же очищенные роли, что и offlineData.json, и раскрываем
+
+def clean_college_names(values: Any, corrections: dict[str, str]) -> list[str]:
+    """Ряд списка со страницы сайта → аккуратные подписи карточки (v14).
+
+    Порядок: trim → сжатие пробелов → правка опечатки (точное совпадение
+    строки) → дедуп по порядку источника. Дословный текст остаётся в снимке;
+    сюда попадает только производная для показа.
+    """
+    out: list[str] = []
+    seen: set[str] = set()
+    for raw in values if isinstance(values, list) else []:
+        name = re.sub(r"\s+", " ", str(raw)).strip()
+        name = corrections.get(name, name)
+        if name and name not in seen:
+            seen.add(name)
+            out.append(name)
+    return out
+
+
+def render_specialties(payload: dict[str, Any] | None = None) -> str:
+    """Второй выход (v13, расширен v14): специальности колледжа для витрины.
+
+    Берём те же очищенные роли, что и offlineData.json, раскрываем
     человекочитаемые имена навыков из skill_names — index.tsx не тянет
     ни движок, ни 63 КБ offlineData (гейт чанков v11 остаётся зелёным).
+    v14 (совет 7/9): добавляем связку с сайтом колледжа — employers
+    («Где можно работать»), positions («Кем можно работать») и source
+    (домен и дата снимка). Снимок обязан покрывать все специальности,
+    иначе генерация останавливается — данные не «опустеют» молча.
     """
     payload = build_payload() if payload is None else payload
     names = payload.get("skill_names", {})
+    college = _load_college()
+    corrections = {
+        str(k): str(v) for k, v in (college.get("corrections") or {}).items()
+    }
+    pages = college.get("specialties") or {}
+    host = urlparse(str(college.get("site") or "")).netloc
+    fetched = str(college.get("fetched") or "")
+    source = f"{host} ({fetched})" if host and fetched else host
+    specialties = [
+        role for role in payload.get("roles", []) if role.get("kind") == "specialty"
+    ]
+    missing = [role["id"] for role in specialties if role["id"] not in pages]
+    if missing:
+        raise SystemExit(f"снимок сайта колледжа не покрывает специальности: {missing}")
     items = [
         {
             "id": role["id"],
@@ -154,9 +201,15 @@ def render_specialties(payload: dict[str, Any] | None = None) -> str:
                 {"id": skill["id"], "name": names.get(skill["id"], skill["id"])}
                 for skill in role.get("skills_required", [])
             ],
+            "employers": clean_college_names(
+                pages[role["id"]].get("work_places"), corrections
+            ),
+            "positions": clean_college_names(
+                pages[role["id"]].get("works"), corrections
+            ),
+            "source": source,
         }
-        for role in payload.get("roles", [])
-        if role.get("kind") == "specialty"
+        for role in specialties
     ]
     return json.dumps(items, ensure_ascii=False, indent=1) + "\n"
 

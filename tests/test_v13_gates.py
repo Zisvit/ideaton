@@ -32,6 +32,9 @@ SPEC_RAW = (WEB / "lib" / "specialties.json").read_text(encoding="utf-8")
 SPEC = json.loads(SPEC_RAW)
 DATA = json.loads((WEB / "lib" / "offlineData.json").read_text(encoding="utf-8"))
 INDEX = _strip_comments((WEB / "pages" / "index.tsx").read_text(encoding="utf-8"))
+CARD = _strip_comments(
+    (WEB / "components" / "DirectionCard.tsx").read_text(encoding="utf-8")
+)
 PLAN = _strip_comments((WEB / "pages" / "plan.tsx").read_text(encoding="utf-8"))
 CHECKS = _strip_comments((WEB / "lib" / "planChecks.ts").read_text(encoding="utf-8"))
 GRAPH = _strip_comments((WEB / "lib" / "topicGraph.ts").read_text(encoding="utf-8"))
@@ -65,10 +68,14 @@ def test_specialties_cover_all_college_directions():
 def test_index_showcase_is_static_and_lightweight():
     assert "import specialties from '../lib/specialties.json'" in INDEX
     assert "SPECS.map" in INDEX
-    assert "spec-item" in INDEX and "spec-skill" in INDEX
-    # чанк движка не тронут: на главной нет ни offlineData, ни localEngine
-    assert "offlineData" not in INDEX
-    assert "localEngine" not in INDEX
+    # v14: разметка карточки переехала в общий DirectionCard (её же получает
+    # /employer), поэтому spec-item/spec-skill сканируются в CARD
+    assert "DirectionCard" in INDEX
+    assert "spec-item" in CARD and "spec-skill" in CARD
+    # чанк движка не тронут: ни на главной, ни в карточке нет offlineData/localEngine
+    for src in (INDEX, CARD):
+        assert "offlineData" not in src
+        assert "localEngine" not in src
 
 
 def test_done_requires_passed_check():
