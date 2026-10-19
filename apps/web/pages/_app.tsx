@@ -1,6 +1,5 @@
 import type { AppProps } from 'next/app'
 import React from 'react'
-import NextHead from 'next/head'
 import FixLayer from '../components/FixLayer'
 import IntroScene from '../components/IntroScene'
 import { markIntroShown, shouldShowIntro } from '../lib/intro'
@@ -31,10 +30,6 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <>
-      <NextHead>
-        {/* фон #F6F4EF до загрузки CSS — анти-вспышка при холодном старте */}
-        <meta name="theme-color" content="#F6F4EF" />
-      </NextHead>
       <a href="#main" className="skip-link">К содержанию</a>
       <FixLayer />
       {showIntro ? <IntroScene onDone={closeIntro} /> : null}

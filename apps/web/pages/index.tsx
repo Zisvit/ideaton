@@ -2,6 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import { isGuestMode, pickExample, Profile, saveProfile } from '../lib/api'
 import { INTRO_MS, prefersReducedMotion, shouldShowIntro } from '../lib/intro'
+import ThemeToggle from '../components/ThemeToggle'
 
 const SKILLS = [
   'Python', 'JavaScript', 'TypeScript', 'React',
@@ -95,7 +96,10 @@ export default function Home() {
       <header className="site-header">
         <div className="container site-header__inner">
           <span className="brand">Карьерный трекер</span>
-          <span className="step-pill">Шаг 1 из 3</span>
+          <div className="site-header__side">
+            <ThemeToggle />
+            <span className="step-pill">Шаг 1 из 3</span>
+          </div>
         </div>
         <div className="step-line" style={{ '--p': '33%' } as React.CSSProperties} />
       </header>
