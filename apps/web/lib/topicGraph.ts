@@ -1,11 +1,13 @@
 /**
- * v7 (совет: раунд 2): «Карта тем» — детерминированный полярный layout без
- * библиотек и без новых keyframes. Вход — пункты плана (те же taskKey, что у
- * чекбоксов), выход — узлы/рёбра для components/TopicMap.tsx.
+ * v7 + v13 (совет 7/9): «Карта тем» — детерминированный layout без
+ * библиотек и без новых keyframes. Вход — пункты плана (те же taskKey, что
+ * у чекбоксов), выход — узлы/рёбра для components/TopicMap.tsx.
  *
  * Структура: центр — направление; 4 луча — недели (сверху по часовой);
- * темы — на внешнем кольце вокруг своего луча; рёбра topic↔topic — общий
- * навык (skill из MiniCheck), т.е. «одна тема встречается в разных шагах».
+ * темы — вокруг своего луча с детерминированным джиттером (v13: «облако»,
+ * как в графе Obsidian, но без Math.random — SSR-стабильно). Рёбра
+ * topic↔topic — общий навык (skill из MiniCheck); у рёбер есть ключи концов
+ * (fromKey/toKey), у узлов — degree: размер точки и подсветка соседей.
  * Позиции считаются в процентах (0..100) — компонент раскладывает абсолютно.
  */
 
@@ -27,12 +29,17 @@ export type GraphNode = {
   y: number
   testable: boolean
   skill?: string
+  /** v13: число рёбер узла — размер точки в obsidian-виде TopicMap. */
+  degree?: number
 }
 
 export type GraphEdge = {
   from: { x: number; y: number }
   to: { x: number; y: number }
   kind: 'week' | 'topic'
+  /** v13: ключи концов ребра — подсветка соседей при hover/выборе. */
+  fromKey: string
+  toKey: string
 }
 
 export type TopicGraph = { nodes: GraphNode[]; edges: GraphEdge[] }
@@ -41,6 +48,18 @@ const CENTER = { x: 50, y: 50 }
 const WEEK_R = 25
 const TOPIC_R = 45
 const RAD = Math.PI / 180
+
+/** v13: детерминированный хэш (без Math.random — SSR-стабильность). */
+function hashInt(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0
+  return Math.abs(h)
+}
+
+/** Джиттер −span…+span: темы уходят с идеальной окружности — «созвездие». */
+function jitter(key: string, span: number): number {
+  return ((hashInt(key) % 1001) / 1000 - 0.5) * 2 * span
+}
 
 /** Держим центр узла внутри поля: пилюля шириной до 170 px не должна
  *  вылезать за скруглённую рамку карты (крайние лучи горизонтали). */
@@ -90,7 +109,7 @@ export function buildTopicGraph(title: string, items: TopicInput[]): TopicGraph 
       y: pos.y,
       testable: false,
     })
-    edges.push({ from: CENTER, to: pos, kind: 'week' })
+    edges.push({ from: CENTER, to: pos, kind: 'week', fromKey: 'center', toKey: `week-${week}` })
   }
 
   const byWeek = new Map<number, TopicInput[]>()
@@ -107,10 +126,12 @@ export function buildTopicGraph(title: string, items: TopicInput[]): TopicGraph 
     const step = n <= 1 ? 0 : Math.min(26, 76 / (n - 1))
     list.forEach((item, idx) => {
       const offset = n <= 1 ? 0 : (idx - (n - 1) / 2) * step
-      const angle = base + offset * RAD
+      // v13: детерминированный джиттер — «облако» вместо строгого кольца
+      const angle = base + (offset + jitter(item.key + ':a', 5)) * RAD
+      const radius = TOPIC_R + jitter(item.key + ':r', 5)
       const pos = {
-        x: clampPct(CENTER.x + TOPIC_R * Math.cos(angle), 16, 84),
-        y: clampPct(CENTER.y + TOPIC_R * Math.sin(angle), 10, 90),
+        x: clampPct(CENTER.x + radius * Math.cos(angle), 16, 84),
+        y: clampPct(CENTER.y + radius * Math.sin(angle), 10, 90),
       }
       nodes.push({
         key: item.key,
@@ -123,7 +144,13 @@ export function buildTopicGraph(title: string, items: TopicInput[]): TopicGraph 
         skill: item.mini?.skill,
       })
       const anchor = weekPos.get(week) || CENTER
-      edges.push({ from: anchor, to: pos, kind: 'week' })
+      edges.push({
+        from: anchor,
+        to: pos,
+        kind: 'week',
+        fromKey: weekPos.has(week) ? `week-${week}` : 'center',
+        toKey: item.key,
+      })
     })
   }
 
@@ -143,9 +170,19 @@ export function buildTopicGraph(title: string, items: TopicInput[]): TopicGraph 
         from: { x: first.x, y: first.y },
         to: { x: second.x, y: second.y },
         kind: 'topic',
+        fromKey: first.key,
+        toKey: second.key,
       })
     }
   }
+
+  // v13: степень узла (число рёбер) — размер точки в TopicMap
+  const degree = new Map<string, number>()
+  for (const edge of edges) {
+    degree.set(edge.fromKey, (degree.get(edge.fromKey) || 0) + 1)
+    degree.set(edge.toKey, (degree.get(edge.toKey) || 0) + 1)
+  }
+  for (const node of nodes) node.degree = degree.get(node.key) || 0
 
   return { nodes, edges }
 }

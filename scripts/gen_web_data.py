@@ -23,6 +23,10 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 ROLES_DIR = ROOT / "data" / "roles"
 OUT = ROOT / "apps/web/lib/offlineData.json"
+# v13: витрина главной — только 21 специальность колледжа, лёгкий файл.
+# Один прогон генератора пишет оба выхода → файлы не могут разойтись
+# (гейт test_v13_gates сравнивает перегенерацию байт-в-байт).
+OUT_SPECIALTIES = ROOT / "apps/web/lib/specialties.json"
 
 sys.path.insert(0, str(ROOT / "services/api"))
 import scoring  # noqa: E402  (нужен sys.path выше)
@@ -132,21 +136,58 @@ def render(payload: dict[str, Any] | None = None) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=1, sort_keys=True) + "\n"
 
 
+def render_specialties(payload: dict[str, Any] | None = None) -> str:
+    """Второй выход (v13): специальности колледжа для витрины / (главной).
+
+    Берём те же очищенные роли, что и offlineData.json, и раскрываем
+    человекочитаемые имена навыков из skill_names — index.tsx не тянет
+    ни движок, ни 63 КБ offlineData (гейт чанков v11 остаётся зелёным).
+    """
+    payload = build_payload() if payload is None else payload
+    names = payload.get("skill_names", {})
+    items = [
+        {
+            "id": role["id"],
+            "title": role["title"],
+            "description": role["description"],
+            "skills": [
+                {"id": skill["id"], "name": names.get(skill["id"], skill["id"])}
+                for skill in role.get("skills_required", [])
+            ],
+        }
+        for role in payload.get("roles", [])
+        if role.get("kind") == "specialty"
+    ]
+    return json.dumps(items, ensure_ascii=False, indent=1) + "\n"
+
+
 def main() -> int:
-    blob = render()
+    payload = build_payload()
+    blob = render(payload)
+    spec_blob = render_specialties(payload)
     if "--check" in sys.argv:
-        current = OUT.read_text(encoding="utf-8") if OUT.is_file() else ""
-        if current != blob:
-            print("offlineData.json устарел — перегенерируй", file=sys.stderr)
+        stale = False
+        for out, text, name in (
+            (OUT, blob, "offlineData.json"),
+            (OUT_SPECIALTIES, spec_blob, "specialties.json"),
+        ):
+            current = out.read_text(encoding="utf-8") if out.is_file() else ""
+            if current != text:
+                print(f"{name} устарел — перегенерируй", file=sys.stderr)
+                stale = True
+        if stale:
             return 1
-        print("offlineData.json актуален")
+        print("offlineData.json и specialties.json актуальны")
         return 0
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(blob, encoding="utf-8")
-    payload = json.loads(blob)
+    OUT_SPECIALTIES.write_text(spec_blob, encoding="utf-8")
+    spec_count = len(json.loads(spec_blob))
     print(
         f"записано {OUT.relative_to(ROOT)}: {len(blob.encode('utf-8'))} байт, "
-        f"ролей={len(payload['roles'])}, синонимов={len(payload['aliases'])}"
+        f"ролей={len(payload['roles'])}, синонимов={len(payload['aliases'])}; "
+        f"{OUT_SPECIALTIES.relative_to(ROOT)}: {len(spec_blob.encode('utf-8'))} байт, "
+        f"специальностей={spec_count}"
     )
     return 0
 
