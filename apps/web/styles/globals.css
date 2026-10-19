@@ -1327,3 +1327,38 @@ html[data-theme="dark"] {
 .offline-note .btn {
   margin-left: auto;
 }
+
+/* ---- v14: «Где/Кем можно работать» — данные сайта колледжа ---- */
+.spec-work { display: grid; gap: 6px; }
+.spec-work__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.spec-work__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.spec-work__list li {
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.spec-work__more { font-size: 12px; color: var(--muted); }
+.spec-work__source { font-size: 12px; color: var(--muted); }
+
+/* /employer: 67 навыков-опций не должны растягивать первый экран */
+.employer-filters .chips {
+  max-height: 184px;
+  overflow-y: auto;
+  padding-right: 4px;
+}

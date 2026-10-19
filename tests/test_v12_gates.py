@@ -106,7 +106,8 @@ def test_print_reset_inside_last_mute_block_and_after_dark():
 
 
 def test_toggle_wired_on_all_pages():
-    for name in ("index", "result", "plan", "consultant"):
+    # v14: /employer — пятая страница со своим заголовком и переключателем темы
+    for name in ("index", "result", "plan", "consultant", "employer"):
         src = (WEB / "pages" / f"{name}.tsx").read_text(encoding="utf-8")
         assert "ThemeToggle" in src, f"{name}.tsx без ThemeToggle"
         assert "site-header__side" in src, f"{name}.tsx без обёртки шапки"

@@ -3,11 +3,15 @@ import Link from 'next/link'
 import { isGuestMode, pickExample, Profile, saveProfile } from '../lib/api'
 import { INTRO_MS, prefersReducedMotion, shouldShowIntro } from '../lib/intro'
 import ThemeToggle from '../components/ThemeToggle'
+import DirectionCard, { SpecialtyCardData } from '../components/DirectionCard'
 import specialties from '../lib/specialties.json'
 
+// v14 (совет 7/9): FastAPI/Docker/Kubernetes не резолвились ни в одну роль,
+// ни в специальность (мёртвые чипы — проверено по offlineData) — заменены на
+// Git/HTML/CSS: они есть в базе ролей и подбираются после клика.
 const SKILLS = [
   'Python', 'JavaScript', 'TypeScript', 'React',
-  'Node.js', 'FastAPI', 'Docker', 'Kubernetes',
+  'Node.js', 'Git', 'HTML', 'CSS',
 ]
 // v7: второй ряд — не-IT сферы 21 специальности СИУЭиП. Значения — синонимы
 // из data/roles/skills.yaml (точное совпадение после lowercase в scoring).
@@ -15,18 +19,22 @@ const SKILLS_LIFE = [
   'Уход', 'Бухучёт', 'Право', 'Педагогика',
   'Дизайн', 'Электромонтаж', 'Сети', 'Торговля',
 ]
+// v14: третий ряд — навыки специальностей, которым не хватало своего чипа.
+// Каждый резолвится в skills.yaml и связан минимум с одним направлением
+// колледжа; вместе с первыми двумя рядами покрытие витрины — 21/21.
+const SKILLS_SPEC = [
+  'Банковские продукты', 'Услуги красоты', 'Графические редакторы',
+  'Инфокоммуникационные системы', 'Судебное делопроизводство',
+  'Лекарственные средства', 'Тренировочный процесс', 'Социальная помощь',
+]
 const COURSES = [1, 2, 3, 4]
 
 // v13 (совет 7/9): витрина всех 21 специальности колледжа на главной.
 // Данные — сгенерированный specialties.json (тот же источник, что offlineData);
 // статический импорт: маленький файл, полный SSR, чанк движка не тронут.
-type SpecialtyCard = {
-  id: string
-  title: string
-  description: string
-  skills: { id: string; name: string }[]
-}
-const SPECS = specialties as SpecialtyCard[]
+// v14: разметка карточки — в общем DirectionCard (её же получает /employer),
+// внутри — блок «Где/Кем можно работать» со страниц сайта колледжа.
+const SPECS = specialties as SpecialtyCardData[]
 
 export default function Home() {
   const [selected, setSelected] = React.useState<string[]>([])
@@ -66,7 +74,7 @@ export default function Home() {
   const fillExample = () => {
     const picked = pickExample()
     saveProfile(picked)
-    const allChips = [...SKILLS, ...SKILLS_LIFE]
+    const allChips = [...SKILLS, ...SKILLS_LIFE, ...SKILLS_SPEC]
     const chipFor = (skill: string) =>
       allChips.find((chip) => chip.toLowerCase() === skill.trim().toLowerCase())
     const chips = Array.from(
@@ -110,6 +118,14 @@ export default function Home() {
           <span className="brand">Карьерный трекер</span>
           <div className="site-header__side">
             <ThemeToggle />
+            {/* v14: кросс-ссылка на интерфейс работодателя — маршрут, без JS */}
+            <Link
+              href="/employer"
+              className="btn btn-ghost"
+              style={{ padding: '6px 12px', fontSize: 13 }}
+            >
+              Я работодатель
+            </Link>
             <span className="step-pill">Шаг 1 из 3</span>
           </div>
         </div>
@@ -172,6 +188,20 @@ export default function Home() {
               </button>
             ))}
           </div>
+
+          <div className="chips" style={{ marginTop: 8 }}>
+            {SKILLS_SPEC.map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => toggleChip(chip)}
+                className={`chip chip-sm ${selected.includes(chip) ? 'on' : ''}`}
+                aria-pressed={selected.includes(chip)}
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
           <p className="small" style={{ margin: '8px 0 0' }}>
             Не только IT: специальности колледжа — в той же базе направлений.
           </p>
@@ -212,37 +242,8 @@ export default function Home() {
           )}
         </section>
 
-        {/* v13 (совет 7/9): витрина всех направлений колледжа — 21 карточка
-            с навыками. Данные из specialties.json, клик не мутирует профиль. */}
-        <section
-          className="spec-section"
-          aria-labelledby="spec-heading"
-          style={{ marginTop: 36 }}
-        >
-          <h2 id="spec-heading" style={{ fontSize: 20, marginBottom: 6 }}>
-            Направления колледжа — {SPECS.length}
-          </h2>
-          <p className="small" style={{ margin: '0 0 14px' }}>
-            Навыки, с которых начинается каждое направление. Отметь знакомые
-            наверху — подбор покажет, что подходит именно тебе.
-          </p>
-          <div className="spec-grid">
-            {SPECS.map((spec) => (
-              <article key={spec.id} className="card spec-item">
-                <h3 className="spec-item__title">{spec.title}</h3>
-                <p className="small spec-item__desc">{spec.description}</p>
-                <div className="spec-item__skills">
-                  {spec.skills.map((skill) => (
-                    <span key={skill.id} className="spec-skill">
-                      {skill.name}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
+        {/* v14: кнопка подбора — сразу под формой (к витрине тянуться не надо);
+            сам CTA не менялся, только позиция в DOM. */}
         <div className="cta-sticky">
           <Link
             href="/result"
@@ -253,6 +254,30 @@ export default function Home() {
             Показать мои направления →
           </Link>
         </div>
+
+        {/* v13 (совет 7/9): витрина всех направлений колледжа — 21 карточка
+            с навыками. Данные из specialties.json, клик не мутирует профиль.
+            v14: карточка — общий DirectionCard (showcase), внутри связка
+            «Где/Кем можно работать» со страниц сайта колледжа. */}
+        <section
+          className="spec-section"
+          aria-labelledby="spec-heading"
+          style={{ marginTop: 36 }}
+        >
+          <h2 id="spec-heading" style={{ fontSize: 20, marginBottom: 6 }}>
+            Направления колледжа — {SPECS.length}
+          </h2>
+          <p className="small" style={{ margin: '0 0 14px' }}>
+            Навыки каждого направления и места работы его выпускников — данные
+            сайта колледжа. Отметь знакомые наверху — подбор покажет, что
+            подходит именно тебе.
+          </p>
+          <div className="spec-grid">
+            {SPECS.map((spec) => (
+              <DirectionCard key={spec.id} spec={spec} />
+            ))}
+          </div>
+        </section>
       </main>
     </>
   )
