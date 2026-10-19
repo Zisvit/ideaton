@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { isGuestMode, pickExample, Profile, saveProfile } from '../lib/api'
 import { INTRO_MS, prefersReducedMotion, shouldShowIntro } from '../lib/intro'
 import ThemeToggle from '../components/ThemeToggle'
+import specialties from '../lib/specialties.json'
 
 const SKILLS = [
   'Python', 'JavaScript', 'TypeScript', 'React',
@@ -15,6 +16,17 @@ const SKILLS_LIFE = [
   'Дизайн', 'Электромонтаж', 'Сети', 'Торговля',
 ]
 const COURSES = [1, 2, 3, 4]
+
+// v13 (совет 7/9): витрина всех 21 специальности колледжа на главной.
+// Данные — сгенерированный specialties.json (тот же источник, что offlineData);
+// статический импорт: маленький файл, полный SSR, чанк движка не тронут.
+type SpecialtyCard = {
+  id: string
+  title: string
+  description: string
+  skills: { id: string; name: string }[]
+}
+const SPECS = specialties as SpecialtyCard[]
 
 export default function Home() {
   const [selected, setSelected] = React.useState<string[]>([])
@@ -198,6 +210,37 @@ export default function Home() {
               {error}
             </div>
           )}
+        </section>
+
+        {/* v13 (совет 7/9): витрина всех направлений колледжа — 21 карточка
+            с навыками. Данные из specialties.json, клик не мутирует профиль. */}
+        <section
+          className="spec-section"
+          aria-labelledby="spec-heading"
+          style={{ marginTop: 36 }}
+        >
+          <h2 id="spec-heading" style={{ fontSize: 20, marginBottom: 6 }}>
+            Направления колледжа — {SPECS.length}
+          </h2>
+          <p className="small" style={{ margin: '0 0 14px' }}>
+            Навыки, с которых начинается каждое направление. Отметь знакомые
+            наверху — подбор покажет, что подходит именно тебе.
+          </p>
+          <div className="spec-grid">
+            {SPECS.map((spec) => (
+              <article key={spec.id} className="card spec-item">
+                <h3 className="spec-item__title">{spec.title}</h3>
+                <p className="small spec-item__desc">{spec.description}</p>
+                <div className="spec-item__skills">
+                  {spec.skills.map((skill) => (
+                    <span key={skill.id} className="spec-skill">
+                      {skill.name}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
 
         <div className="cta-sticky">

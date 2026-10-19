@@ -4,9 +4,10 @@
  * 87 навыков skills.yaml + api + «учебный проект»), генерация — здесь.
  *
  * Контракт no-score (UX.md): без счёта, без красного, повтор безлимитный.
- * Мини-тест отвечает на «понял ли» — он НЕ меняет done («сделал ли»).
+ * v13 (совет 7/9): проверка — цепочка 2–3 этапов (поле more, прогресс
+ * эфемерный) и ВОРОТА галочки done: «сделано» отмечается после «понял».
  *
- * Правила генерации (совет, раунд 2 + v7):
+ * Правила генерации (совет, раунд 2 + v7 + v13-цепочки):
  *  - gap «Закрыть пробел «X»» → CHOICE «зачем навык в роли»;
  *  - «Познакомиться с X» → CHOICE «что это на практике»;
  *  - «Собрать проект/подборку/памятку…» → DO;
@@ -22,6 +23,15 @@ import glossaryData from './glossary.json'
 
 export type MiniKind = 'choice' | 'self' | 'do'
 
+/** v13: этап цепочки мини-проверки (продолжение — в поле MiniCheck.more). */
+export type MiniStep = {
+  kind: MiniKind
+  prompt: string
+  options?: string[]
+  correct?: number
+  hint?: string
+}
+
 export type MiniCheck = {
   kind: MiniKind
   prompt: string
@@ -30,6 +40,8 @@ export type MiniCheck = {
   hint?: string
   skill?: string
   label?: string
+  /** v13: этапы 2–3 — «тесты сложнее и многоэтапные» (совет 7/9). */
+  more?: MiniStep[]
 }
 
 type GlossaryEntry = {
@@ -97,17 +109,33 @@ function distractorsFor(
   return [pool[i1], pool[i2]]
 }
 
-/** CHOICE: верный вариант + 2 дистрактора, позиция верного — по хэшу промпта. */
+/** Три варианта CHOICE: верный + 2 дистрактора; позиция — по хэшу промпта. */
+function choiceParts(
+  id: string,
+  entry: GlossaryEntry,
+  prompt: string,
+  field: 'why' | 'what'
+): { options: string[]; correct: number } | null {
+  const right = entry[field]
+  const [d1, d2] = distractorsFor(id, entry, field)
+  if (!d1 || !d2) return null
+  const pos = hashStr(prompt) % 3
+  const rest = [d1, d2]
+  const options: string[] = []
+  let r = 0
+  for (let i = 0; i < 3; i++) options.push(i === pos ? right : rest[r++])
+  return { options, correct: pos }
+}
+
+/** CHOICE: верный вариант + 2 дистрактора; кластер мал — честный SELF. */
 function choice(
   id: string,
   entry: GlossaryEntry,
   prompt: string,
   field: 'why' | 'what'
 ): MiniCheck {
-  const right = entry[field]
-  const [d1, d2] = distractorsFor(id, entry, field)
-  if (!d1 || !d2) {
-    // кластер слишком мал — честный SELF вместо выдуманных вариантов
+  const parts = choiceParts(id, entry, prompt, field)
+  if (!parts) {
     return {
       kind: 'self',
       prompt: `Объясни своими словами: ${prompt}`,
@@ -116,20 +144,43 @@ function choice(
       label: entry.name,
     }
   }
-  const pos = hashStr(prompt) % 3
-  const rest = [d1, d2]
-  const options: string[] = []
-  let r = 0
-  for (let i = 0; i < 3; i++) options.push(i === pos ? right : rest[r++])
   return {
     kind: 'choice',
     prompt,
-    options,
-    correct: pos,
+    options: parts.options,
+    correct: parts.correct,
     hint: entry.hint,
     skill: id,
     label: entry.name,
   }
+}
+
+/** v13: дополнительный CHOICE-этап цепочки (null — кластер беден, шаг пропускаем). */
+function moreChoice(
+  id: string,
+  entry: GlossaryEntry,
+  prompt: string,
+  field: 'why' | 'what'
+): MiniStep | null {
+  const parts = choiceParts(id, entry, prompt, field)
+  if (!parts) return null
+  return {
+    kind: 'choice',
+    prompt,
+    options: parts.options,
+    correct: parts.correct,
+    hint: entry.hint,
+  }
+}
+
+/** v13: дополнительный SELF-этап — «где применишь» (без счёта, повтор свободен). */
+function moreSelf(prompt: string, hint: string): MiniStep {
+  return { kind: 'self', prompt, hint }
+}
+
+/** Оставляем только непустые этапы цепочки (честность важнее длины). */
+function chain(...steps: Array<MiniStep | null>): MiniStep[] {
+  return steps.filter((step): step is MiniStep => Boolean(step))
 }
 
 /** Разбор текста задачи (данные /plan) → мини-проверка или null. */
@@ -142,7 +193,16 @@ export function buildMiniCheck(task: string): MiniCheck | null {
     const id = resolveTopicId(gap[1])
     if (!id) return null
     const entry = GLOSSARY[id]
-    return choice(id, entry, `Зачем в этой роли ${entry.name}?`, 'why')
+    const first = choice(id, entry, `Зачем в этой роли ${entry.name}?`, 'why')
+    // v13: цепочка «зачем → что на практике → где применишь» (2–3 этапа)
+    first.more = chain(
+      moreChoice(id, entry, `Что значит «${entry.name}» на практике?`, 'what'),
+      moreSelf(
+        `Где в роли пригодится ${entry.name}? Одно предложение — этап закрыт.`,
+        entry.hint
+      )
+    )
+    return first
   }
 
   // «Познакомиться с …» — тема ищется в полном тексте задачи
@@ -150,7 +210,9 @@ export function buildMiniCheck(task: string): MiniCheck | null {
     const id = resolveTopicId(task)
     if (!id) return null
     const entry = GLOSSARY[id]
-    return choice(id, entry, `Что значит «${entry.name}» на практике?`, 'what')
+    const first = choice(id, entry, `Что значит «${entry.name}» на практике?`, 'what')
+    first.more = chain(moreChoice(id, entry, `Зачем в этой роли ${entry.name}?`, 'why'))
+    return first
   }
 
   // «Собрать проект/подборку/памятку/чек-лист…» → DO (один результат)
@@ -165,17 +227,26 @@ export function buildMiniCheck(task: string): MiniCheck | null {
       prompt: 'Собрал и можешь показать? Один небольшой результат — уже достаточно.',
       hint: g.hint,
       label: g.name,
+      more: chain(
+        moreSelf('Что войдёт в результат? Назови главное своими словами.', g.hint)
+      ),
     }
   }
 
   // v6: «Изучить основы HTML и CSS, сверстать первую страницу» → DO
   if (/Изучить\s+основы\s+HTML/i.test(task) || /сверстать/i.test(task)) {
+    const htmlId = resolveTopicId('HTML')
     return {
       kind: 'do',
       prompt: 'Сверстал первую страницу и готов показать файл или скрин?',
       hint: 'Достаточно одной страницы: шапка, секция и форма. Главное — довести до конца.',
       skill: 'html',
       label: 'HTML',
+      more: chain(
+        htmlId
+          ? moreChoice(htmlId, GLOSSARY[htmlId], 'Что значит «HTML» на практике?', 'what')
+          : null
+      ),
     }
   }
 
@@ -188,6 +259,9 @@ export function buildMiniCheck(task: string): MiniCheck | null {
       hint: g.hint,
       skill: 'javascript',
       label: 'JavaScript',
+      more: chain(
+        moreChoice('javascript', g, 'Что значит «JavaScript» на практике?', 'what')
+      ),
     }
   }
 
@@ -200,6 +274,7 @@ export function buildMiniCheck(task: string): MiniCheck | null {
       hint: g.hint,
       skill: 'api',
       label: 'API',
+      more: chain(moreChoice('api', g, 'Что значит «API» на практике?', 'what')),
     }
   }
 
@@ -215,6 +290,7 @@ export function buildMiniCheck(task: string): MiniCheck | null {
       hint: entry.hint,
       skill: id,
       label: entry.name,
+      more: chain(moreChoice(id, entry, `Что значит «${entry.name}» на практике?`, 'what')),
     }
   }
 
