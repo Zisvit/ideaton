@@ -8,6 +8,11 @@ import CollegeWork from './CollegeWork'
 export type SpecialtyCardData = {
   id: string
   title: string
+  /** v15: группа витрины — слаг, подпись, хинт и порядок (генерируется) */
+  group_id: string
+  group_title: string
+  group_hint: string
+  group_order: number
   description: string
   skills: { id: string; name: string }[]
   employers: string[]
