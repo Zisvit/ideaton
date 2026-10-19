@@ -65,3 +65,34 @@ def test_budgets_untouched():
     assert CSS.count("@media print") == 3
     names = re.findall(r"@keyframes\s+[A-Za-z0-9_-]+", CSS)
     assert len(names) == 30, names
+
+
+def test_wordmark_print_is_legible():
+    """Риск v16: background-clip:text + прозрачная заливка на бумаге без
+    фоновой графики = пустое место. Печать — сплошной чёрный, второй слой скрыт."""
+    css = _strip_comments(CSS)
+    first_print = css.split("@media print", 1)[1]
+    assert (
+        ".supernova { background: none; color: #000; -webkit-text-fill-color: #000; }"
+        in first_print
+    )
+    assert ".supernova__alt { display: none; }" in first_print
+
+
+def test_wordmark_forced_colors_fallback():
+    """Риск v16: Windows High Contrast гасит фоновые градиенты — без явного
+    системного цвета вордмарк исчезает."""
+    css = _strip_comments(CSS)
+    fc = re.search(r"@media \(forced-colors: active\) \{([\s\S]*?)\n\}", css)
+    assert fc, "нет @media (forced-colors: active)"
+    assert "CanvasText" in fc.group(1)
+    assert ".supernova__alt { display: none; }" in fc.group(1)
+
+
+def test_wordmark_copy_has_no_duplicate():
+    """Риск v16: второй слой — живой текст в DOM; без user-select:none
+    копирование даёт «SUPERNOVASUPERNOVA»."""
+    css = _strip_comments(CSS)
+    alt_start = css.index(".supernova__alt {")
+    alt = css[alt_start : css.index("}", alt_start)]
+    assert "user-select: none" in alt
