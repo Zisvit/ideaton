@@ -74,6 +74,78 @@ const EXAMPLE_PROFILE: Profile = {
   specialty: 'Информационные системы и технологии',
 }
 
+// ---- v11: «Подставить пример» — разные богатые профили ----
+// Навыки — канонические id из data/roles/skills.yaml (их же читает API):
+// каждый профиль поднимает свою семью направлений, демо не залипает на
+// одном python/git/html. EXAMPLE_PROFILE остаётся первым (он же дефолт).
+const EXAMPLES: Profile[] = [
+  EXAMPLE_PROFILE,
+  {
+    skills: ['html', 'css', 'javascript', 'react', 'git'],
+    interests: [],
+    subjects: [],
+    course: 3,
+  },
+  {
+    skills: ['manual_testing', 'test_design', 'sql', 'python'],
+    interests: [],
+    subjects: [],
+    course: 2,
+  },
+  {
+    skills: ['1c', 'sql', 'accounting', 'documents'],
+    interests: [],
+    subjects: [],
+    course: 4,
+  },
+  {
+    skills: ['communication', 'troubleshooting', 'crm', 'networks', 'os_admin'],
+    interests: [],
+    subjects: [],
+    course: 1,
+  },
+  {
+    skills: ['accounting', 'financial_statements', 'taxes', 'ledger', '1c'],
+    interests: [],
+    subjects: [],
+    course: 3,
+  },
+  {
+    skills: ['design_project', 'composition', 'graphic_editors', 'typography'],
+    interests: [],
+    subjects: [],
+    course: 2,
+  },
+  {
+    skills: ['first_aid', 'patient_care', 'sterility', 'med_docs', 'nursing_care'],
+    interests: [],
+    subjects: [],
+    course: 4,
+  },
+  {
+    skills: ['pedagogy_basics', 'child_development', 'play_activities', 'psychology_basics'],
+    interests: [],
+    subjects: [],
+    course: 2,
+  },
+  {
+    skills: ['product_management', 'marketing', 'analytics', 'team_management', 'finance'],
+    interests: [],
+    subjects: [],
+    course: 4,
+  },
+]
+
+// Без повтора подряд: если случайный индекс совпал с прошлым — сдвигаем.
+let lastExample = -1
+export function pickExample(): Profile {
+  const n = EXAMPLES.length
+  let idx = Math.floor(Math.random() * n)
+  if (n > 1 && idx === lastExample) idx = (idx + 1) % n
+  lastExample = idx
+  return { ...EXAMPLES[idx], skills: [...EXAMPLES[idx].skills] }
+}
+
 // ---- Хранилище: localStorage, иначе in-memory (гостевой/приватный режим) ----
 // Гостевой браузер выбрасывает на любом обращении к localStorage — берём в
 // Map в памяти (живёт до перезагрузки), а isGuestMode() даёт UI сказать правду.
@@ -243,7 +315,15 @@ function saveMini(roleId: string, mini: Record<string, boolean>): void {
   writeStore(miniKey(roleId), JSON.stringify(mini))
 }
 
-type ApiResponse<T> = { success: boolean; data?: T; error?: string }
+// v11: reason — машинная причина отказа. По ней страницы решают, можно ли
+// считать локально: network/timeout/server/bad-json — да; http (4xx) — нет,
+// ошибки валидации показываем как есть (контракт v9/v10 не меняется).
+type ApiResponse<T> = {
+  success: boolean
+  data?: T
+  error?: string
+  reason?: 'network' | 'timeout' | 'server' | 'bad-json' | 'http'
+}
 
 type FetchOptions = {
   method?: 'GET' | 'POST'
@@ -310,21 +390,31 @@ export async function apiFetch<T>(
     const response = await fetch(`${BASE_URL}${endpoint}`, config)
     const data = await readJsonBody(response)
     if (!response.ok) {
+      // v11: 5xx — сбой серверной стороны (можно считать локально),
+      // 4xx — содержательный ответ на запрос (показываем как есть).
+      const reason = response.status >= 500 ? 'server' : 'http'
       if (data?.error || data?.detail) {
-        return { success: false, error: data.error || data.detail }
+        return { success: false, error: data.error || data.detail, reason }
       }
       if (response.status >= 500) {
-        return { success: false, error: 'Сервер временно недоступен. Попробуй чуть позже.' }
+        return { success: false, error: 'Сервер временно недоступен. Попробуй чуть позже.', reason }
       }
-      return { success: false, error: `HTTP ${response.status}` }
+      return { success: false, error: `HTTP ${response.status}`, reason }
     }
     if (!data) {
-      return { success: false, error: 'Сервер вернул неожиданный ответ. Попробуй ещё раз.' }
+      return {
+        success: false,
+        error: 'Сервер вернул неожиданный ответ. Попробуй ещё раз.',
+        reason: 'bad-json',
+      }
     }
     return { success: true, data: data as T }
   } catch (error) {
     console.warn('apiFetch', error)
-    return { success: false, error: humanNetworkError(error) }
+    const name = (error as { name?: string } | null)?.name
+    const reason =
+      name === 'AbortError' || name === 'TimeoutError' ? 'timeout' : 'network'
+    return { success: false, error: humanNetworkError(error), reason }
   }
 }
 

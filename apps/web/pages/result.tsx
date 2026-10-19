@@ -55,6 +55,8 @@ export default function Result() {
   const [error, setError] = React.useState<string | null>(null)
   // v7: 5 — первый экран, «показать все» раскрывает остальные (до 12)
   const [showAll, setShowAll] = React.useState(false)
+  // v11: показан локальный расчёт (сервер недоступен) — баннер + «Повторить»
+  const [offline, setOffline] = React.useState(false)
 
   // Контракт: POST /recommend { profile } → { roles: [1–12 × RoleScore] }
   // v10: reqRef — счётчик запросов: поздний ответ прошлого клика не затирает
@@ -76,8 +78,29 @@ export default function Result() {
       setRoles(res.data.roles)
       // «Визитки» направлений — для бейджа kind на /plan (переживает F5)
       saveRoles(res.data.roles)
+      setOffline(false)
+    } else if (
+      res.reason === 'network' ||
+      res.reason === 'timeout' ||
+      res.reason === 'server' ||
+      res.reason === 'bad-json'
+    ) {
+      // v11: сервер недоступен/сломан — считаем локально (движок в отдельном
+      // чанке). 4xx сюда не попадает: ответ по делу показываем как есть.
+      const local = await import('../lib/localEngine')
+      if (reqId !== reqRef.current) return
+      const out = local.recommendLocal(getStoredProfile())
+      if (out.ok) {
+        setRoles(out.data.roles)
+        saveRoles(out.data.roles)
+        setOffline(true)
+      } else {
+        setRoles([])
+        setError('error' in out.data ? out.data.error : 'Неизвестная ошибка')
+      }
     } else {
       setRoles([])
+      setOffline(false)
       setError(res.error || 'Неизвестная ошибка')
     }
     setLoading(false)
@@ -124,6 +147,16 @@ export default function Result() {
             Выбери одно — получишь план на 30 дней.
           </p>
         </section>
+
+        {offline && (
+          <div className="offline-note" role="status">
+            <span className="offline-pill">Офлайн-расчёт</span>
+            <span>Сервер недоступен — показан локальный расчёт.</span>
+            <button type="button" onClick={fetchResults} className="btn btn-ghost">
+              Повторить через сервер
+            </button>
+          </div>
+        )}
 
         {loading && (
           <div

@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import { EXAMPLE_PROFILE, isGuestMode, Profile, saveProfile } from '../lib/api'
+import { isGuestMode, pickExample, Profile, saveProfile } from '../lib/api'
 import { INTRO_MS, prefersReducedMotion, shouldShowIntro } from '../lib/intro'
 
 const SKILLS = [
@@ -48,11 +48,21 @@ export default function Home() {
     )
   }
 
+  // v11: каждый клик — новый пример (без повтора подряд). Чипами подсвечиваем
+  // только точные строки SKILLS/SKILLS_LIFE, остальные навыки — в textarea.
   const fillExample = () => {
-    saveProfile(EXAMPLE_PROFILE)
-    setSelected(EXAMPLE_PROFILE.skills)
-    setCourse(EXAMPLE_PROFILE.course ?? null)
-    setText('')
+    const picked = pickExample()
+    saveProfile(picked)
+    const allChips = [...SKILLS, ...SKILLS_LIFE]
+    const chipFor = (skill: string) =>
+      allChips.find((chip) => chip.toLowerCase() === skill.trim().toLowerCase())
+    const chips = Array.from(
+      new Set(picked.skills.map(chipFor).filter((c): c is string => Boolean(c)))
+    )
+    const rest = picked.skills.filter((skill) => !chipFor(skill))
+    setSelected(chips)
+    setText(rest.join(', '))
+    setCourse(picked.course ?? null)
     setError(null)
   }
 
