@@ -135,6 +135,12 @@ export default function Home() {
 
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 88 }}>
         <section className="band fade-in" style={{ paddingTop: 16, paddingBottom: 8 }}>
+          {/* v16: капсовый вордмарк; «переливание» — два градиентных слоя
+              на opacity (fadeIn), без новых keyframes */}
+          <p className="supernova">
+            SUPERNOVA
+            <span className="supernova__alt" aria-hidden="true">SUPERNOVA</span>
+          </p>
           <h1 style={{ maxWidth: 660 }}>
             Куда тебе <span className="grad">расти?</span>
           </h1>
