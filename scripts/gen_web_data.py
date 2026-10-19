@@ -39,6 +39,49 @@ import scoring  # noqa: E402  (нужен sys.path выше)
 
 SCHEMA = 1
 
+# v15 (совет 7/9): группы направлений колледжа — единый источник правды для
+# витрин («понятно о чём»). Порядок групп фиксирован; specialties.json получает
+# производные поля group_* (см. render_specialties). Покрытие 21/21 ровно один
+# раз проверяет генератор (fail-fast) и гейт tests/test_v15_gates.py.
+SPEC_GROUPS: list[tuple[str, str, str, list[str]]] = [
+    (
+        "tech",
+        "Техника и IT",
+        "программирование, сети, оборудование, электрика",
+        ["software_dev", "net_admin", "infocom", "electrician"],
+    ),
+    (
+        "health_sport",
+        "Здоровье и спорт",
+        "медицина, уход, лекарства, спорт",
+        ["medicine", "nursing", "pharmacy", "physical_culture"],
+    ),
+    (
+        "education_people",
+        "Образование и работа с людьми",
+        "педагогика, воспитание, помощь людям",
+        ["preschool", "pedagogy_extra", "correction_ped", "social_work"],
+    ),
+    (
+        "money_trade",
+        "Финансы, учёт и торговля",
+        "банки, учёт, торговля",
+        ["banking", "economics", "trade"],
+    ),
+    (
+        "law_safety",
+        "Право и безопасность",
+        "юриспруденция, охрана порядка, соцобеспечение",
+        ["law_court", "law_enforcement", "law_social"],
+    ),
+    (
+        "design_beauty",
+        "Дизайн и красота",
+        "графика, дизайн, индустрия красоты",
+        ["design", "graphic_design", "beauty"],
+    ),
+]
+
 # Дословные копии scoring.py/main.py — расхождение ловит test_v11_parity.py.
 CONSTANTS: dict[str, Any] = {
     "defaultLimit": 12,  # main.DEFAULT_LIMIT
@@ -189,6 +232,27 @@ def college_lists(
     return employers, positions
 
 
+def spec_group_map(spec_ids: list[str]) -> dict[str, tuple[str, str, str, int]]:
+    """id специальности → (группа, подпись, хинт, порядок) — fail-fast.
+
+    Непокрытая специальность, неизвестный id или дубль останавливают
+    генерацию: specialties.json не «потеряет» карточку молча (v15).
+    """
+    covered: dict[str, tuple[str, str, str, int]] = {}
+    for order, (slug, title, hint, ids) in enumerate(SPEC_GROUPS, start=1):
+        for sid in ids:
+            if sid in covered:
+                raise SystemExit(f"направление {sid} попало в две группы")
+            covered[sid] = (slug, title, hint, order)
+    missing = [sid for sid in spec_ids if sid not in covered]
+    if missing:
+        raise SystemExit(f"группы не покрывают специальности: {missing}")
+    stale = [sid for sid in covered if sid not in spec_ids]
+    if stale:
+        raise SystemExit(f"в группах неизвестные направления: {stale}")
+    return covered
+
+
 def render_specialties(payload: dict[str, Any] | None = None) -> str:
     """Второй выход (v13, расширен v14): специальности колледжа для витрины.
 
@@ -201,6 +265,9 @@ def render_specialties(payload: dict[str, Any] | None = None) -> str:
     иначе генерация останавливается — данные не «опустеют» молча.
     Правки строк (corrections) и переносы между списками (moves) применяет
     college_lists — источник при этом не искажается (verbatim остаётся в снимке).
+    v15 (совет 7/9): каждая специальность получает поля группы из SPEC_GROUPS
+    (group_id/group_title/group_hint/group_order) для секций витрин; порядок
+    карточек остаётся по id — байт-в-байт гейты и id-порядок не тронуты.
     """
     payload = build_payload() if payload is None else payload
     names = payload.get("skill_names", {})
@@ -223,10 +290,15 @@ def render_specialties(payload: dict[str, Any] | None = None) -> str:
         role["id"]: college_lists(pages[role["id"]], corrections, moves)
         for role in specialties
     }
+    groups = spec_group_map([role["id"] for role in specialties])
     items = [
         {
             "id": role["id"],
             "title": role["title"],
+            "group_id": groups[role["id"]][0],
+            "group_title": groups[role["id"]][1],
+            "group_hint": groups[role["id"]][2],
+            "group_order": groups[role["id"]][3],
             "description": role["description"],
             "skills": [
                 {"id": skill["id"], "name": names.get(skill["id"], skill["id"])}

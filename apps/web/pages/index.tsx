@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { isGuestMode, pickExample, Profile, saveProfile } from '../lib/api'
 import { INTRO_MS, prefersReducedMotion, shouldShowIntro } from '../lib/intro'
 import ThemeToggle from '../components/ThemeToggle'
-import DirectionCard, { SpecialtyCardData } from '../components/DirectionCard'
+import DirectionGroups from '../components/DirectionGroups'
+import { SpecialtyCardData } from '../components/DirectionCard'
 import specialties from '../lib/specialties.json'
 
 // v14 (совет 7/9): FastAPI/Docker/Kubernetes не резолвились ни в одну роль,
@@ -258,7 +259,9 @@ export default function Home() {
         {/* v13 (совет 7/9): витрина всех направлений колледжа — 21 карточка
             с навыками. Данные из specialties.json, клик не мутирует профиль.
             v14: карточка — общий DirectionCard (showcase), внутри связка
-            «Где/Кем можно работать» со страниц сайта колледжа. */}
+            «Где/Кем можно работать» со страниц сайта колледжа.
+            v15: карточки сгруппированы по сферам — общий DirectionGroups
+            (те же секции на /employer), подписи и порядок — из данных. */}
         <section
           className="spec-section"
           aria-labelledby="spec-heading"
@@ -272,11 +275,7 @@ export default function Home() {
             сайта колледжа. Отметь знакомые наверху — подбор покажет, что
             подходит именно тебе.
           </p>
-          <div className="spec-grid">
-            {SPECS.map((spec) => (
-              <DirectionCard key={spec.id} spec={spec} />
-            ))}
-          </div>
+          <DirectionGroups specs={SPECS} />
         </section>
       </main>
     </>

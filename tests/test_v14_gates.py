@@ -50,6 +50,9 @@ WORK = _strip_comments(
 )
 EMPLOYER = _strip_comments((WEB / "pages" / "employer.tsx").read_text(encoding="utf-8"))
 RESULT = _strip_comments((WEB / "pages" / "result.tsx").read_text(encoding="utf-8"))
+GROUPS = _strip_comments(
+    (WEB / "components" / "DirectionGroups.tsx").read_text(encoding="utf-8")
+)
 CSS = (WEB / "styles" / "globals.css").read_text(encoding="utf-8")
 
 SPEC_IDS = [r["id"] for r in DATA["roles"] if r.get("kind") == "specialty"]
@@ -229,15 +232,18 @@ def test_chips_resolve_and_cover_college():
 def test_cta_above_showcase():
     assert INDEX.index('id="skills-text"') < INDEX.index("cta-sticky")
     assert INDEX.index("cta-sticky") < INDEX.index("spec-section")
-    assert "DirectionCard" in INDEX and "SPECS.map" in INDEX
+    # v15: витрину рендерит общий DirectionGroups (секции-группы по данным)
+    assert "DirectionGroups" in INDEX and "specs={SPECS}" in INDEX
 
 
 # --------------------------------------------------- интерфейс работодателя
 def test_direction_card_shared_between_pages():
-    assert "DirectionCard" in INDEX and "DirectionCard" in EMPLOYER
+    # v15: обе страницы идут через общий DirectionGroups → DirectionCard
+    assert "DirectionGroups" in INDEX and "DirectionGroups" in EMPLOYER
+    assert "DirectionCard" in GROUPS
     assert "CollegeWork" in CARD
     assert "spec-item" in CARD and "spec-skill" in CARD
-    for src in (CARD, WORK):
+    for src in (CARD, WORK, GROUPS):
         assert "Math.random" not in src
         assert "offlineData" not in src and "localEngine" not in src
         assert "localStorage" not in src

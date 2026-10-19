@@ -1,13 +1,16 @@
 import React from 'react'
 import Link from 'next/link'
 import ThemeToggle from '../components/ThemeToggle'
-import DirectionCard, { SpecialtyCardData } from '../components/DirectionCard'
+import DirectionGroups from '../components/DirectionGroups'
+import { SpecialtyCardData } from '../components/DirectionCard'
 import specialties from '../lib/specialties.json'
 
 // v14 (совет 7/9): интерфейс работодателя — каталог направлений колледжа с
 // фильтром по навыкам. Только агрегаты учебной базы (навыки направлений):
 // никаких профилей студентов. Данные статические — страница работает и в
 // гостевом режиме, и без сети, и не ходит в API (localStorage не использует).
+// v15 (совет 7/9): направления сгруппированы по сферам (общий DirectionGroups);
+// пустые после фильтра группы не показываются, «Найдено N из 21» — прежний.
 const SPECS = specialties as SpecialtyCardData[]
 
 type SkillOption = { id: string; name: string; count: number }
@@ -135,11 +138,7 @@ export default function Employer() {
             </div>
           </div>
         ) : (
-          <div className="spec-grid" style={{ marginTop: 24 }}>
-            {filtered.map((spec) => (
-              <DirectionCard key={spec.id} spec={spec} variant="employer" />
-            ))}
-          </div>
+          <DirectionGroups specs={filtered} variant="employer" />
         )}
       </main>
     </>

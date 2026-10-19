@@ -67,10 +67,12 @@ def test_specialties_cover_all_college_directions():
 
 def test_index_showcase_is_static_and_lightweight():
     assert "import specialties from '../lib/specialties.json'" in INDEX
-    assert "SPECS.map" in INDEX
+    # v15: витрина рендерится секциями-группами (общий DirectionGroups),
+    # подписи и порядок групп приходят из данных specialties.json
+    assert "DirectionGroups" in INDEX
+    assert "specs={SPECS}" in INDEX
     # v14: разметка карточки переехала в общий DirectionCard (её же получает
     # /employer), поэтому spec-item/spec-skill сканируются в CARD
-    assert "DirectionCard" in INDEX
     assert "spec-item" in CARD and "spec-skill" in CARD
     # чанк движка не тронут: ни на главной, ни в карточке нет offlineData/localEngine
     for src in (INDEX, CARD):

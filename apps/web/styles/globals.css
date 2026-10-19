@@ -1299,6 +1299,26 @@ html[data-theme="dark"] {
 .check.is-locked { opacity: .45; cursor: help; }
 .mini__step { margin: 0 0 6px; }
 
+/* ---- v15: секции-группы направлений (совет 7/9) ---- */
+.spec-group { margin-top: 22px; }
+.spec-group__title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 16px;
+  margin: 0 0 2px;
+}
+.spec-group__count {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.spec-group__hint { margin: 0 0 10px; }
+
 /* ---- v11: офлайн-расчёт (пилл + баннер) ---- */
 .offline-note {
   display: flex;
