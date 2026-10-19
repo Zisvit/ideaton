@@ -1,6 +1,7 @@
 // Гейт интро-сцены (совет: неблокирующий слой поверх готовой «/», не route).
-// Правила: показ 1 раз за сессию (sessionStorage), только на «/», только при
-// охвате сверху (scrollY>0 = уже вовлечён, не мешаем), Reduce → никогда.
+// v17 (запрос пользователя): лиса пробегает при КАЖДОМ открытии главной —
+// сессионный флаг v2 больше не гейт показа. Только «/», Reduce → никогда,
+// ?intro=0 — явный выключатель для демо/скриншотов.
 // Важно: закрытие сцены — ТОЛЬКО по JS-таймеру/клику/Esc (animationend гасится
 // глобальным prefers-reduced-motion {animation:none} в globals.css).
 export const INTRO_MS = 4200
@@ -15,28 +16,18 @@ export function prefersReducedMotion(): boolean {
   return !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
-function sessionFlag(): string | null {
-  try {
-    return window.sessionStorage.getItem(INTRO_KEY)
-  } catch {
-    return null // приватный/гостевой: показываем со скипом, флаг не пишем
-  }
-}
-
 /** Показывать ли слой интро на текущем кадре. SSR-safe. */
 export function shouldShowIntro(): boolean {
   if (typeof window === 'undefined') return false
   if (prefersReducedMotion()) return false
   const opened = new URLSearchParams(window.location.search).get('intro')
-  if (opened === '0') return false
-  if (opened === '1') return true // форс для демо: ?intro=1 — показать всегда
-  if (window.location.pathname !== '/') return false
-  if (window.scrollY > 0) return false // уже проскроллил — не срываем упоминание
-  return sessionFlag() !== '1'
+  if (opened === '0') return false // демо/скриншоты: явный выключатель
+  // v17: каждое открытие главной (полная загрузка и client-side переход на «/»).
+  return window.location.pathname === '/'
 }
 
-/** Отметка «показано» пишется на монте сцены (deepseek raund 2), не на финише:
- * вкладка закрытая посреди сцены вернёт интро повторно — это ок (не видел же). */
+/** Отметка «показано» v6: пишется на монте сцены, но v17 от неё не зависит
+ * (сессионный гейт снят по запросу пользователя) — оставлена как маркер. */
 export function markIntroShown(): void {
   try {
     window.sessionStorage.setItem(INTRO_KEY, '1')
