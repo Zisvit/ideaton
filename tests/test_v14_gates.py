@@ -2,7 +2,8 @@
 
 Волна v14:
   1) снапшот страниц сайта колледжа (data/college/sielom_specialties.json) —
-     verbatim-списки «Где/Кем» на дату + карта правок опечаток; генератор
+     verbatim-списки «Где/Кем» на дату + карта правок/переносов (corrections/
+     moves); пересъёмка — scripts/refresh_college_snapshot.py; генератор
      кладёт производные в specialties.json (employers/positions/source);
   2) чипы: мёртвые FastAPI/Docker/Kubernetes заменены (их нет ни в одной роли
      и специальности), третий ряд навыков специальностей → покрытие 21/21;
@@ -49,6 +50,7 @@ WORK = _strip_comments(
 )
 EMPLOYER = _strip_comments((WEB / "pages" / "employer.tsx").read_text(encoding="utf-8"))
 RESULT = _strip_comments((WEB / "pages" / "result.tsx").read_text(encoding="utf-8"))
+CSS = (WEB / "styles" / "globals.css").read_text(encoding="utf-8")
 
 SPEC_IDS = [r["id"] for r in DATA["roles"] if r.get("kind") == "specialty"]
 SPEC_SKILLS = {
@@ -79,7 +81,8 @@ def _arr(src: str, name: str) -> list[str]:
 # --------------------------------------------------------------- снапшот сайта
 def test_snapshot_covers_all_specialties_with_date():
     assert SNAPSHOT["site"] == "https://sielom.ru"
-    assert SNAPSHOT["fetched"] == "2026-10-19"
+    # дата съёмки — формат без привязки к дню: пересъёмка скриптом не ломает гейт
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", SNAPSHOT["fetched"])
     pages = SNAPSHOT["specialties"]
     assert len(pages) == 21
     assert set(pages) == set(SPEC_IDS)
@@ -92,29 +95,33 @@ def test_snapshot_covers_all_specialties_with_date():
 
 
 def test_snapshot_data_not_empty_at_date():
-    """«Не опустеет»: точные числа на дату снимка + нижний порог на будущее."""
+    """«Не опустеет»: порог вместо точных чисел — пересъёмка не требует правок.
+
+    На дату снимка «Где» непусто у 14/21 страниц, «Кем» — у 19/21: пустота
+    честная (у части направлений блоков на сайте нет). Порог ловит массовое
+    обнуление источника или поломку парсинга, не мешая плановой пересъёмке.
+    """
     pages = SNAPSHOT["specialties"]
     sys.path.insert(0, str(ROOT / "scripts"))
     try:
         import gen_web_data  # noqa: PLC0415 — модуль лежит в scripts/
 
         corr = SNAPSHOT["corrections"]
+        moves = SNAPSHOT["moves"]
         emp = {
             sid
             for sid, page in pages.items()
-            if gen_web_data.clean_college_names(page["work_places"], corr)
+            if gen_web_data.college_lists(page, corr, moves)[0]
         }
         pos = {
             sid
             for sid, page in pages.items()
-            if gen_web_data.clean_college_names(page["works"], corr)
+            if gen_web_data.college_lists(page, corr, moves)[1]
         }
     finally:
         sys.path.pop(0)
-    # пусто у 7 страниц «Где» и у 2 «Кем» — это честная пустота источника
-    assert len(emp) == 14, sorted(set(pages) - emp)
-    assert len(pos) == 19, sorted(set(pages) - pos)
-    assert len(emp) >= 10 and len(pos) >= 15  # сигнал будущему обновлению
+    assert len(emp) >= 10, sorted(set(pages) - emp)
+    assert len(pos) >= 15, sorted(set(pages) - pos)
 
 
 def test_specialties_lockstep_with_snapshot():
@@ -126,14 +133,12 @@ def test_specialties_lockstep_with_snapshot():
         import gen_web_data  # noqa: PLC0415
 
         corr = SNAPSHOT["corrections"]
+        moves = SNAPSHOT["moves"]
         for item in SPEC:
             page = pages[item["id"]]
-            assert item["employers"] == gen_web_data.clean_college_names(
-                page["work_places"], corr
-            ), item["id"]
-            assert item["positions"] == gen_web_data.clean_college_names(
-                page["works"], corr
-            ), item["id"]
+            employers, positions = gen_web_data.college_lists(page, corr, moves)
+            assert item["employers"] == employers, item["id"]
+            assert item["positions"] == positions, item["id"]
             assert item["source"] == source, item["id"]
             for name in item["employers"] + item["positions"]:
                 assert isinstance(name, str) and name == name.strip() and name, (
@@ -154,10 +159,23 @@ def test_specialties_lockstep_with_snapshot():
     assert "Школы искусств" in by_id["preschool"]["employers"]
     assert "Типографии" in by_id["graphic_design"]["employers"]
     assert by_id["design"]["employers"].count("Фриланс") == 1  # дедуп
+    # «3D-визуализатор» — профессия, ошибочно попавшая в список мест: переносим
+    assert "3D-визуализатор" not in by_id["design"]["employers"]
+    assert by_id["design"]["positions"] == ["Дизайнер", "3D-визуализатор"]
     assert by_id["infocom"]["employers"] == ["Любые организации"]  # trim
     assert by_id["software_dev"]["employers"] == []
     assert by_id["software_dev"]["positions"] == []
     assert by_id["trade"]["positions"][0] == "Предприниматель"
+
+
+def test_snapshot_moves_reclassify_from_raw_source():
+    """moves: перенос строки между списками — источник строки остаётся в снимке."""
+    moves = SNAPSHOT["moves"]
+    assert set(moves.values()) <= {"employers", "positions"}, moves
+    assert moves.get("3D-визуализатор") == "positions"
+    raw_blob = json.dumps(SNAPSHOT["specialties"], ensure_ascii=False)
+    for name in moves:
+        assert name in raw_blob, f"перенос без источника: {name!r}"
 
 
 # ------------------------------------------------------------------- чипы v14
@@ -272,6 +290,13 @@ def test_result_specialty_work_block():
     assert "COLLEGE.get(role.role_id)" in RESULT
     # блок тот же, что на витрине (showcase-правила), скрыт при пустых данных
     assert "CollegeWork" in RESULT
+    # v14-доработка: блок и в hero-карточке, и в строках — две точки вывода
+    assert "topSpec" in RESULT
+    assert RESULT.count("<CollegeWork") == 2
+    # hero тёмная: токены блока перекрашены только для экрана — печать чёрная
+    assert ".hero-card .spec-work__list li" in CSS
+    assert ".hero-card .spec-work__source" in CSS
+    assert "@media screen {" in CSS
 
 
 def test_generator_fails_without_full_coverage():
@@ -282,3 +307,20 @@ def test_generator_fails_without_full_coverage():
     )
     assert "не покрывает специальности" in src
     assert "clean_college_names" in src
+    assert "college_lists" in src
+
+
+def test_refresh_script_keeps_snapshot_reproducible():
+    """Пересъёмка — скриптом репозитория: stdlib, сбой не трогает снимок."""
+    src = (ROOT / "scripts" / "refresh_college_snapshot.py").read_text(encoding="utf-8")
+    assert "urllib.request" in src
+    for banned in ("requests", "bs4", "playwright", "selenium"):
+        assert banned not in src, banned
+    assert "__NEXT_DATA__" in src
+    assert "--check" in src
+    assert "sielom_specialties.json" in src
+    # «всё-или-ничего»: пишем только после успешной пересъёмки всех страниц
+    assert 'updated["fetched"]' in src
+    assert "снимок не изменён" in src
+    # снимок сам рассказывает, как обновляться
+    assert "refresh_college_snapshot.py" in SNAPSHOT["note"]

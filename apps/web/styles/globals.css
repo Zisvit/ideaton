@@ -1362,3 +1362,18 @@ html[data-theme="dark"] {
   overflow-y: auto;
   padding-right: 4px;
 }
+
+/* v14-доработка: hero-карточка /result тёмная — блок «Где/Кем» читается
+   светлыми токенами. Печать не трогаем: хвост v6 делает текст чёрным
+   (.hero-card li), а светлые пилюли на бумаге остались бы невидимыми. */
+.hero-card .spec-work { margin-top: 16px; }
+@media screen {
+  .hero-card .spec-work__label,
+  .hero-card .spec-work__more,
+  .hero-card .spec-work__source { color: rgba(255,255,255,.6); }
+  .hero-card .spec-work__list li {
+    background: rgba(255,255,255,.14);
+    border-color: rgba(255,255,255,.24);
+    color: #fff;
+  }
+}

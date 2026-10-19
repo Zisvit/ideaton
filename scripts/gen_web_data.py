@@ -31,7 +31,7 @@ OUT = ROOT / "apps/web/lib/offlineData.json"
 OUT_SPECIALTIES = ROOT / "apps/web/lib/specialties.json"
 # v14: снимок страниц сайта колледжа (verbatim-списки «Где/Кем») — источник
 # полей employers/positions/source в specialties.json. Снимок не генерируется:
-# он фиксирован на дату (поле fetched) и правится только вручную.
+# он фиксирован на дату (поле fetched); пересъёмка — scripts/refresh_college_snapshot.py.
 COLLEGE_SNAPSHOT = ROOT / "data" / "college" / "sielom_specialties.json"
 
 sys.path.insert(0, str(ROOT / "services/api"))
@@ -165,6 +165,30 @@ def clean_college_names(values: Any, corrections: dict[str, str]) -> list[str]:
     return out
 
 
+def college_lists(
+    page: dict[str, Any],
+    corrections: dict[str, str],
+    moves: dict[str, str],
+) -> tuple[list[str], list[str]]:
+    """employers/positions страницы снимка (v14): правки + переносы строк.
+
+    moves — точечные переезды, когда источник положил строку не в тот список
+    («3D-визуализатор» в «Где можно работать»): строка не теряется, а встаёт
+    в конец целевого списка. Дедуп и порядок источника сохраняются.
+    """
+    employers = clean_college_names(page.get("work_places"), corrections)
+    positions = clean_college_names(page.get("works"), corrections)
+    moved_out = [n for n in employers if moves.get(n) == "positions"]
+    if moved_out:
+        employers = [n for n in employers if moves.get(n) != "positions"]
+        positions = positions + [n for n in moved_out if n not in positions]
+    moved_back = [n for n in positions if moves.get(n) == "employers"]
+    if moved_back:
+        positions = [n for n in positions if moves.get(n) != "employers"]
+        employers = employers + [n for n in moved_back if n not in employers]
+    return employers, positions
+
+
 def render_specialties(payload: dict[str, Any] | None = None) -> str:
     """Второй выход (v13, расширен v14): специальности колледжа для витрины.
 
@@ -175,6 +199,8 @@ def render_specialties(payload: dict[str, Any] | None = None) -> str:
     («Где можно работать»), positions («Кем можно работать») и source
     (домен и дата снимка). Снимок обязан покрывать все специальности,
     иначе генерация останавливается — данные не «опустеют» молча.
+    Правки строк (corrections) и переносы между списками (moves) применяет
+    college_lists — источник при этом не искажается (verbatim остаётся в снимке).
     """
     payload = build_payload() if payload is None else payload
     names = payload.get("skill_names", {})
@@ -182,6 +208,7 @@ def render_specialties(payload: dict[str, Any] | None = None) -> str:
     corrections = {
         str(k): str(v) for k, v in (college.get("corrections") or {}).items()
     }
+    moves = {str(k): str(v) for k, v in (college.get("moves") or {}).items()}
     pages = college.get("specialties") or {}
     host = urlparse(str(college.get("site") or "")).netloc
     fetched = str(college.get("fetched") or "")
@@ -192,6 +219,10 @@ def render_specialties(payload: dict[str, Any] | None = None) -> str:
     missing = [role["id"] for role in specialties if role["id"] not in pages]
     if missing:
         raise SystemExit(f"снимок сайта колледжа не покрывает специальности: {missing}")
+    lists = {
+        role["id"]: college_lists(pages[role["id"]], corrections, moves)
+        for role in specialties
+    }
     items = [
         {
             "id": role["id"],
@@ -201,12 +232,8 @@ def render_specialties(payload: dict[str, Any] | None = None) -> str:
                 {"id": skill["id"], "name": names.get(skill["id"], skill["id"])}
                 for skill in role.get("skills_required", [])
             ],
-            "employers": clean_college_names(
-                pages[role["id"]].get("work_places"), corrections
-            ),
-            "positions": clean_college_names(
-                pages[role["id"]].get("works"), corrections
-            ),
+            "employers": lists[role["id"]][0],
+            "positions": lists[role["id"]][1],
             "source": source,
         }
         for role in specialties

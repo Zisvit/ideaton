@@ -134,6 +134,8 @@ export default function Result() {
     typeof top.needed_count === 'number' &&
     top.needed_count > 0
   const topGapCount = top ? top.gaps.length : 0
+  // v14: тот же блок «Где/Кем», что у строк ниже (у карьерных ролей записи нет)
+  const topSpec = top ? COLLEGE.get(top.role_id) : undefined
 
   return (
     <>
@@ -263,6 +265,13 @@ export default function Result() {
                   </li>
                 ))}
               </ul>
+              {topSpec && (
+                <CollegeWork
+                  employers={topSpec.employers}
+                  positions={topSpec.positions}
+                  source={topSpec.source}
+                />
+              )}
               {top.gaps.length > 0 && (
                 <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
                   <span className="small" style={{ color: 'rgba(255,255,255,.6)' }}>Не хватает:</span>
