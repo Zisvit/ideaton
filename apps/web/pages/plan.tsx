@@ -13,7 +13,7 @@ import {
   saveChecks,
   saveDone,
 } from '../lib/api'
-import { buildMiniCheck, MiniCheck, MiniKind } from '../lib/planChecks'
+import { buildMiniCheck, MiniCheck, MiniKind, MiniStep } from '../lib/planChecks'
 import { buildTopicGraph, TopicInput } from '../lib/topicGraph'
 import TopicMap from '../components/TopicMap'
 import ThemeToggle from '../components/ThemeToggle'
@@ -98,12 +98,19 @@ export default function Plan() {
   }, [])
 
   // Переключение чекбокса сразу пишет в хранилище — F5 ничего не теряет.
-  const toggle = (key: string) =>
+  // v13 (совет 7/9): «изучено» — только после пройденной проверки; клик по
+  // заблокированной галочке открывает мини-проверку пункта (а не переключает).
+  const toggle = (key: string) => {
+    if (!canMarkDone(key)) {
+      setOpenMini(key)
+      return
+    }
     setDone((d) => {
       const next = { ...d, [key]: !d[key] }
       saveDone(roleId.current, next)
       return next
     })
+  }
 
   // Проверка поняла себя (CHOICE верно / SELF «Разобрался») — пишет в своё хранилище.
   const settle = (id: string) =>
@@ -141,8 +148,6 @@ export default function Plan() {
   const taskKeys = plan
     ? plan.weeks.flatMap((w) => w.tasks.map((t, i) => taskKey(w.n, i, t)))
     : []
-  const doneCount = taskKeys.filter((k) => done[k]).length
-  const isComplete = totalTasks > 0 && doneCount >= totalTasks
   // Аддитивное поле /plan: рендерим блок только при непустом массиве.
   // Слепой каст apiFetch -> T не валидирует форму, поэтому рантайм-гвард тут.
   const checks = Array.isArray(plan && plan.checks) ? (plan as PlanResponse).checks ?? [] : []
@@ -165,6 +170,13 @@ export default function Plan() {
   const selectedTopic = topicSel
     ? graphItems.find((item) => item.key === topicSel && item.mini) || null
     : null
+
+  // v13 (совет 7/9): галочка «изучено» — ворота пройденной проверки. Пункты
+  // без теста (no-signal) отмечаются как раньше; stale-ключи не считаются.
+  const canMarkDone = (key: string) => !miniByKey[key] || !!mini[key]
+  const isDone = (key: string) => !!done[key] && canMarkDone(key)
+  const doneCount = taskKeys.filter((k) => isDone(k)).length
+  const isComplete = totalTasks > 0 && doneCount >= totalTasks
 
   return (
     <>
@@ -252,8 +264,8 @@ export default function Plan() {
                 <div className="topic-map-head">
                   <h2>Карта тем</h2>
                   <p className="small">
-                    Клик по теме — мини-проверка. Центр — направление, лучи — недели,
-                    пунктир — темы с общим навыком.
+                    Наведи на точку — увидишь тему, клик — мини-проверка. Центр —
+                    направление, лучи — недели, пунктир — темы с общим навыком.
                   </p>
                 </div>
                 <TopicMap
@@ -332,12 +344,15 @@ export default function Plan() {
                       const miniCheck = miniByKey[key]
                       return (
                         <React.Fragment key={key}>
-                          <li id={`task-${key}`} className={done[key] ? 'done is-done' : ''}>
+                          <li id={`task-${key}`} className={isDone(key) ? 'done is-done' : ''}>
                             <button
                               type="button"
-                              className="check"
+                              className={`check${canMarkDone(key) ? '' : ' is-locked'}`}
                               onClick={() => toggle(key)}
-                              aria-pressed={!!done[key]}
+                              aria-pressed={isDone(key)}
+                              title={
+                                canMarkDone(key) ? undefined : 'Сначала пройдите проверку — она ниже'
+                              }
                               aria-label={`Неделя ${week.n}, шаг ${i + 1}: ${task}`}
                             />
                             <span>{task}</span>
@@ -608,15 +623,43 @@ type MiniCheckBodyProps = {
 // v7: тело мини-проверки вынесено из MiniRow, чтобы тот же интерактив жил в
 // панели «Карты тем». Классы и слоты v6 сохранены (CLS = 0, no-score).
 function MiniCheckBody({ mini, solved, onSolve }: MiniCheckBodyProps) {
+  const [stage, setStage] = React.useState(0)
   const [picked, setPicked] = React.useState<number | null>(null)
   const [hintShown, setHintShown] = React.useState(false)
-  const options = Array.isArray(mini.options) ? mini.options : []
-  const correct = typeof mini.correct === 'number' ? mini.correct : -1
+  // v13: цепочка этапов — верхние поля mini = этап 1, mini.more = этапы 2–3.
+  // Прогресс эфемерный (совет 7/9): закрыл карточку — цепочка начнётся сначала,
+  // в хранилище уходит только финальное «пройдено» (saveMini).
+  const chain: MiniStep[] = [
+    {
+      kind: mini.kind,
+      prompt: mini.prompt,
+      options: mini.options,
+      correct: mini.correct,
+      hint: mini.hint,
+    },
+    ...(Array.isArray(mini.more) ? mini.more : []),
+  ]
+  const cur = chain[Math.min(stage, chain.length - 1)]
+  const last = stage >= chain.length - 1
+  const options = Array.isArray(cur.options) ? cur.options : []
+  const correct = typeof cur.correct === 'number' ? cur.correct : -1
+
+  const next = () => {
+    setPicked(null)
+    setHintShown(false)
+    if (last) onSolve()
+    else setStage((s) => s + 1)
+  }
 
   return (
     <>
-      <div className="mini__task">{mini.prompt}</div>
-      {mini.kind === 'choice' && !solved && (
+      {chain.length > 1 && !solved && (
+        <div className="small mini__step" role="note">
+          Шаг {Math.min(stage, chain.length - 1) + 1} из {chain.length}
+        </div>
+      )}
+      <div className="mini__task">{cur.prompt}</div>
+      {cur.kind === 'choice' && !solved && (
         <div className="mini__opts">
           {options.map((option, i) => {
             const revealed = picked !== null && i === correct
@@ -629,7 +672,7 @@ function MiniCheckBody({ mini, solved, onSolve }: MiniCheckBodyProps) {
                 }`}
                 onClick={() => {
                   setPicked(i)
-                  if (i === correct) onSolve()
+                  if (i === correct) next()
                 }}
               >
                 {option}
@@ -638,19 +681,19 @@ function MiniCheckBody({ mini, solved, onSolve }: MiniCheckBodyProps) {
           })}
         </div>
       )}
-      {mini.kind === 'self' && !solved && (
+      {cur.kind === 'self' && !solved && (
         <div className="mini__actions">
           <button type="button" className="mini__v" onClick={() => setHintShown(true)}>
             Показать ориентир
           </button>
-          <button type="button" className="mini__v is-go" onClick={onSolve}>
+          <button type="button" className="mini__v is-go" onClick={next}>
             Объяснил — Разобрался
           </button>
         </div>
       )}
-      {mini.kind === 'do' && !solved && (
+      {cur.kind === 'do' && !solved && (
         <div className="mini__actions">
-          <button type="button" className="mini__v is-go" onClick={onSolve}>
+          <button type="button" className="mini__v is-go" onClick={next}>
             Готово, могу показать
           </button>
           <button
@@ -665,8 +708,8 @@ function MiniCheckBody({ mini, solved, onSolve }: MiniCheckBodyProps) {
       {/* зарезервированный слот подсказки: min-height в CSS ⇒ нет сдвига;
           сообщения взаимоисключающие (один span) ⇒ высота слота не растёт */}
       <div className="mini__hint" role="note">
-        {hintShown && mini.hint ? (
-          <span>Ориентир: {mini.hint}</span>
+        {hintShown && (cur.hint || mini.hint) ? (
+          <span>Ориентир: {cur.hint || mini.hint}</span>
         ) : (!solved && picked !== null && picked !== correct && correct >= 0) ? (
           <span>Смотри, как это записано в базе: {options[correct]}</span>
         ) : null}

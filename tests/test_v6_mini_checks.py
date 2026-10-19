@@ -2,8 +2,9 @@
 
 Контракты (совет v6, раунд 2):
   - no-score: без счёта и красного; повтор безлимитный;
-  - мини-проверка НЕ меняет done («понял» ≠ «сделал») — отдельное хранилище
-    career-tracker-mini:v1:{role} (versioned, deepseek);
+  - v6: мини-проверка не двигала done («понял» ≠ «сделал»); v13 (совет 7/9):
+    пройденная проверка — ворота done (no-signal-пункты — как раньше),
+    хранилище отдельное career-tracker-mini:v1:{role} (versioned, deepseek);
   - генерация на фронте по префиксам; навык вне глоссария → теста нет
     (нет кнопки — нет обещания);
   - accordion: раскрыта ровно одна; grid-template-rows transition —
@@ -80,7 +81,7 @@ def test_plan_wires_mini_rows_and_accordion():
     assert "function MiniRow" in PLAN
     assert "cur === key ? null : key" in PLAN
     assert "settleMini" in PLAN
-    # done-галочка осталась на своей кнопке (мини-тест done не двигает)
+    # done-галочка на своей кнопке; ворота проверки — v13 (tests/test_v13_gates.py)
     assert "onClick={() => toggle(key)}" in PLAN
     # чип-строка прячется на печати (v1-правило .plan-print-hide)
     assert "mini-row plan-print-hide" in PLAN
