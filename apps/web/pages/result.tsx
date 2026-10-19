@@ -57,14 +57,22 @@ export default function Result() {
   const [showAll, setShowAll] = React.useState(false)
 
   // Контракт: POST /recommend { profile } → { roles: [1–12 × RoleScore] }
+  // v10: reqRef — счётчик запросов: поздний ответ прошлого клика не затирает
+  // свежий стейт, анмаунт инкрементом отменяет setState после размонтирования.
+  const reqRef = React.useRef(0)
   const fetchResults = async () => {
+    const reqId = ++reqRef.current
     setLoading(true)
     setError(null)
     const res = await apiFetch<RecommendResponse>('/recommend', {
       method: 'POST',
       body: { profile: getStoredProfile() },
+      // v10: /recommend не ходит в LLM — 8 с вместо дефолтных 15: короче
+      // скелетон при зависшем апстриме (совет: call-site, не общий дефолт)
+      timeout: 8000,
     })
-    if (res.success && res.data) {
+    if (reqId !== reqRef.current) return // устаревший ответ — стейт не трогаем
+    if (res.success && res.data && Array.isArray(res.data.roles)) {
       setRoles(res.data.roles)
       // «Визитки» направлений — для бейджа kind на /plan (переживает F5)
       saveRoles(res.data.roles)
@@ -77,6 +85,7 @@ export default function Result() {
 
   React.useEffect(() => {
     fetchResults()
+    return () => { reqRef.current++ } // анмаунт: поздний ответ не трогает стейт
   }, [])
 
   const top = roles[0]
@@ -102,7 +111,12 @@ export default function Result() {
         <div className="step-line" style={{ '--p': '66%' } as React.CSSProperties} />
       </header>
 
-      <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+      <main
+        id="main"
+        className="container"
+        style={{ paddingTop: 40, paddingBottom: 80 }}
+        aria-busy={loading}
+      >
         <section className="fade-in">
           <h1><span className="grad">Твои направления</span></h1>
           <p className="hero__sub">
@@ -147,7 +161,6 @@ export default function Result() {
           <div
             className="stagger"
             style={{ marginTop: 32, display: 'grid', gap: 14 }}
-            aria-busy={loading}
           >
             <article className="hero-card fade-in">
               <div className="row-between">

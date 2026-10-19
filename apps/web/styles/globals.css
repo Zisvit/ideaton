@@ -541,27 +541,33 @@ main, .site-header { position: relative; z-index: 1; }
 .intro-fox .fx-dust { transform-box: fill-box; transform-origin: 50% 50%; }
 /* ==== хореография (бег 0–1720, посадка 1560–1860, idle до 4200) ==== */
 .is-run .intro-fox-wrap { animation: foxRun 1720ms cubic-bezier(.3, 0, .38, 1) both; }
+/* v10: 90.7%→96% — к старту прыжка остаётся ~6px хода (замер @1280): лис
+   доезжает в первые ~90мс полёта, а не замирает заранее; 42/68% подстроены
+   под новый финал, чтобы темп бега по фазам не просел */
 @keyframes foxRun {
   0%    { opacity: 0; transform: translate3d(-58vw, 0, 0); }
   5.8%  { opacity: 1; }
-  42%   { transform: translate3d(-32vw, 0, 0); }
-  68%   { transform: translate3d(-14vw, 0, 0); }
-  90.7% { transform: translate3d(0, 0, 0); }
+  42%   { transform: translate3d(-30vw, 0, 0); }
+  68%   { transform: translate3d(-13vw, 0, 0); }
+  96%   { transform: translate3d(0, 0, 0); }
   100%  { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 /* тело: боб в беге + прыжок-дуга со squash-посадкой (второй в списке
-   animation-name перекрывает transform с 1560 мс — поздний прав) */
+   animation-name перекрывает transform с 1560 мс — поздний прав).
+   v10: последний — forwards, не both: backwards-fill держал 0%-кадр весь
+   бег (замер: computed transform застывал на 1.06) и глушил foxBob; 0%
+   foxLand — поза боба на стыке 1560 (4-й цикл, 51.2%: -5px / -.7deg). */
 .is-run .fox-bob {
   animation:
     foxBob 430ms ease-in-out 50ms 4 both,
-    foxLand 300ms ease-in-out 1560ms 1 both;
+    foxLand 300ms ease-in-out 1560ms 1 forwards;
 }
 @keyframes foxBob {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-5px) rotate(-.7deg); }
 }
 @keyframes foxLand {
-  0%   { transform: translateY(0) scale(1.06, 1); }
+  0%   { transform: translateY(-5px) rotate(-.7deg) scale(1, 1); }
   43%  { transform: translateY(-52px) scale(1.06, 1); }
   60%  { transform: translateY(0) scale(1.16, .84); }
   80%  { transform: translateY(4px) scale(.98, 1.03); }
@@ -585,7 +591,8 @@ main, .site-header { position: relative; z-index: 1; }
   100% { transform: rotate(0); }
 }
 /* ноги: 4 отдельных хода (диагональный галоп), у голени/носка свои суставы;
-   215 ms × 8 = ровно окно бега 1720 ms */
+   215 ms × 8 = ровно окно бега 1720 ms. v10: 62%-кадр больше не «складывает»
+   ногу (.78→.88), 46% чуть вытянут (1.08→1.10) — галоп читается по фазам */
 .is-run .fx-leg-fh   { animation: legStride 215ms ease-in-out 0ms   8 both; }
 .is-run .fx-leg-ff   { animation: legStride 215ms ease-in-out 161ms 8 both; }
 .is-run .fx-thigh-nh { animation: legStride 215ms ease-in-out 54ms 8 both; }
@@ -597,8 +604,8 @@ main, .site-header { position: relative; z-index: 1; }
 @keyframes legStride {
   0%   { transform: scaleY(1)   rotate(-13deg); }
   22%  { transform: scaleY(.86) rotate(-4deg); }
-  46%  { transform: scaleY(1.08) rotate(7deg); }
-  62%  { transform: scaleY(.78) rotate(11deg); }
+  46%  { transform: scaleY(1.10) rotate(7deg); }
+  62%  { transform: scaleY(.88) rotate(11deg); }
   84%  { transform: scaleY(.6)  rotate(3deg); }
   100% { transform: scaleY(1)   rotate(-13deg); }
 }

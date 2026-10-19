@@ -30,15 +30,27 @@ export default function Plan() {
   const roleId = React.useRef<string>('')
 
   // Контракт: POST /plan { role_id, profile } → { weeks[], checklist[], title, disclaimer }
+  // v10: reqRef — тот же seq-guard, что на /result: поздний ответ не затирает
+  // свежий план, анмаунт инкрементом отменяет setState после размонтирования.
+  const reqRef = React.useRef(0)
   const fetchPlan = async () => {
+    const reqId = ++reqRef.current
     setLoading(true)
     setError(null)
     const res = await apiFetch<PlanResponse>('/plan', {
       method: 'POST',
       body: { role_id: getStoredRoleId(), profile: getStoredProfile() },
+      // v10: LLM-ветке /plan нужно больше дефолтных 15 с — 30 с, чтобы
+      // медленный сбор шагов не падал в таймаут на середине
+      timeout: 30000,
     })
-    if (res.success && res.data) {
-      setPlan(res.data)
+    if (reqId !== reqRef.current) return // устаревший ответ — стейт не трогаем
+    if (res.success && res.data && Array.isArray(res.data.weeks)) {
+      setPlan({
+        ...res.data,
+        // аддитивное поле: без нормализации рендер падает на .length/.map
+        checklist: Array.isArray(res.data.checklist) ? res.data.checklist : [],
+      })
     } else {
       setPlan(null)
       setError(res.error || 'Неизвестная ошибка')
@@ -56,6 +68,7 @@ export default function Plan() {
     const roleRef = getRoles().find((item) => item.role_id === roleId.current)
     setRoleKind(roleRef?.kind ?? null)
     fetchPlan()
+    return () => { reqRef.current++ } // анмаунт: поздний ответ не трогает стейт
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
