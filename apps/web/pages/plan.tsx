@@ -16,6 +16,7 @@ import {
 import { buildMiniCheck, MiniCheck, MiniKind } from '../lib/planChecks'
 import { buildTopicGraph, TopicInput } from '../lib/topicGraph'
 import TopicMap from '../components/TopicMap'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function Plan() {
   const [plan, setPlan] = React.useState<PlanResponse | null>(null)
@@ -170,7 +171,10 @@ export default function Plan() {
       <header className="site-header">
         <div className="container site-header__inner">
           <Link href="/" className="brand">Карьерный трекер</Link>
-          <span className="step-pill">Шаг 3 из 3</span>
+          <div className="site-header__side">
+            <ThemeToggle />
+            <span className="step-pill">Шаг 3 из 3</span>
+          </div>
         </div>
         <div className="step-line" style={{ '--p': '100%' } as React.CSSProperties} />
       </header>

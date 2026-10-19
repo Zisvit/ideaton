@@ -8,6 +8,7 @@ import {
   saveRoleId,
   saveRoles,
 } from '../lib/api'
+import ThemeToggle from '../components/ThemeToggle'
 
 // Цвет-маркер каждой роли (fallback — детерминированный акцент v7)
 const ROLE_COLORS: Record<string, string> = {
@@ -129,7 +130,10 @@ export default function Result() {
       <header className="site-header">
         <div className="container site-header__inner">
           <Link href="/" className="brand">Карьерный трекер</Link>
-          <span className="step-pill">Шаг 2 из 3</span>
+          <div className="site-header__side">
+            <ThemeToggle />
+            <span className="step-pill">Шаг 2 из 3</span>
+          </div>
         </div>
         <div className="step-line" style={{ '--p': '66%' } as React.CSSProperties} />
       </header>

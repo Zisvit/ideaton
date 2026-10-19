@@ -10,6 +10,7 @@ import {
   ScriptMessage,
   Topic,
 } from '../lib/consultantScripts'
+import ThemeToggle from '../components/ThemeToggle'
 
 // Быстрые чипы-подсказки под полем ввода (реюз .suggest, v1)
 const QUICK = [
@@ -122,7 +123,10 @@ export default function Consultant() {
       <header className="site-header">
         <div className="container site-header__inner">
           <Link href="/" className="brand">Карьерный трекер</Link>
-          <span className="step-pill">Консультант</span>
+          <div className="site-header__side">
+            <ThemeToggle />
+            <span className="step-pill">Консультант</span>
+          </div>
         </div>
         <div className="step-line" style={{ '--p': '100%' } as React.CSSProperties} />
       </header>
