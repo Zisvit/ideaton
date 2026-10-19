@@ -27,6 +27,8 @@ export default function Plan() {
   const [checked, setChecked] = React.useState<Record<string, boolean>>({})
   // v7: kind выбранного направления — подпись «специальность» под заголовком
   const [roleKind, setRoleKind] = React.useState<'role' | 'specialty' | null>(null)
+  // v11: план посчитан локально (сервер недоступен) — баннер + «Повторить»
+  const [offline, setOffline] = React.useState(false)
   const roleId = React.useRef<string>('')
 
   // Контракт: POST /plan { role_id, profile } → { weeks[], checklist[], title, disclaimer }
@@ -51,8 +53,30 @@ export default function Plan() {
         // аддитивное поле: без нормализации рендер падает на .length/.map
         checklist: Array.isArray(res.data.checklist) ? res.data.checklist : [],
       })
+      setOffline(false)
+    } else if (
+      res.reason === 'network' ||
+      res.reason === 'timeout' ||
+      res.reason === 'server' ||
+      res.reason === 'bad-json'
+    ) {
+      // v11: API недоступен — план собирает локальный движок (отдельный чанк).
+      const local = await import('../lib/localEngine')
+      if (reqId !== reqRef.current) return
+      const out = local.planLocal(getStoredRoleId(), getStoredProfile())
+      if (out && out.ok) {
+        setPlan({
+          ...out.data,
+          checklist: Array.isArray(out.data.checklist) ? out.data.checklist : [],
+        })
+        setOffline(true)
+      } else {
+        setPlan(null)
+        setError('Для этой роли нет плана — выбери другое направление.')
+      }
     } else {
       setPlan(null)
+      setOffline(false)
       setError(res.error || 'Неизвестная ошибка')
     }
     setLoading(false)
@@ -166,6 +190,16 @@ export default function Plan() {
             </p>
           )}
         </section>
+
+        {offline && (
+          <div className="offline-note" role="status">
+            <span className="offline-pill">Офлайн-расчёт</span>
+            <span>Сервер недоступен — показан локальный расчёт.</span>
+            <button type="button" onClick={fetchPlan} className="btn btn-ghost">
+              Повторить через сервер
+            </button>
+          </div>
+        )}
 
         {loading && (
           <div style={{ marginTop: 32, display: 'grid', gap: 14 }} role="status" aria-live="polite">

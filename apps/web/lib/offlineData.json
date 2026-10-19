@@ -1,0 +1,1820 @@
+{
+ "aliases": {
+  "1c": "1c",
+  "1с": "1c",
+  "1с предприятие": "1c",
+  "1с:предприятие": "1c",
+  "accounting": "accounting",
+  "activity_design": "activity_design",
+  "analytics": "analytics",
+  "automation": "automation",
+  "bank_docs": "bank_docs",
+  "bank_products": "bank_products",
+  "beauty_hygiene": "beauty_hygiene",
+  "beauty_materials": "beauty_materials",
+  "beauty_services": "beauty_services",
+  "bpmn": "bpmn",
+  "cash_ops": "cash_ops",
+  "child_development": "child_development",
+  "child_safety": "child_safety",
+  "citizen_service": "citizen_service",
+  "client_service": "client_service",
+  "communication": "communication",
+  "composition": "composition",
+  "correction_pedagogy": "correction_pedagogy",
+  "court_docs": "court_docs",
+  "court_process": "court_process",
+  "crm": "crm",
+  "css": "css",
+  "design_project": "design_project",
+  "documents": "documents",
+  "dosage_forms": "dosage_forms",
+  "electrical_safety": "electrical_safety",
+  "electrical_schemes": "electrical_schemes",
+  "electrical_work": "electrical_work",
+  "finance": "finance",
+  "financial_statements": "financial_statements",
+  "first_aid": "first_aid",
+  "git": "git",
+  "graphic_editors": "graphic_editors",
+  "hardware_support": "hardware_support",
+  "html": "html",
+  "illustrator": "graphic_editors",
+  "inclusive_edu": "inclusive_edu",
+  "infocom_systems": "infocom_systems",
+  "javascript": "javascript",
+  "js": "javascript",
+  "ledger": "ledger",
+  "legal_basics": "legal_basics",
+  "legal_docs": "legal_docs",
+  "legal_systems": "legal_systems",
+  "manual testing": "manual_testing",
+  "manual_testing": "manual_testing",
+  "marketing": "marketing",
+  "materials_design": "materials_design",
+  "measuring_tools": "measuring_tools",
+  "med_docs": "med_docs",
+  "med_products": "med_products",
+  "merchandising": "merchandising",
+  "net_security": "net_security",
+  "networks": "networks",
+  "node": "nodejs",
+  "node.js": "nodejs",
+  "nodejs": "nodejs",
+  "nursing_care": "nursing_care",
+  "official_docs": "official_docs",
+  "os_admin": "os_admin",
+  "patient_care": "patient_care",
+  "pedagogy_basics": "pedagogy_basics",
+  "pharmacy_docs": "pharmacy_docs",
+  "pharmacy_storage": "pharmacy_storage",
+  "photoshop": "graphic_editors",
+  "play_activities": "play_activities",
+  "playwright": "automation",
+  "prepress": "prepress",
+  "product management": "product_management",
+  "product_management": "product_management",
+  "programming_basics": "programming_basics",
+  "psychology_basics": "psychology_basics",
+  "public_order": "public_order",
+  "python": "python",
+  "react": "react",
+  "reactjs": "react",
+  "safety": "safety",
+  "selenium": "automation",
+  "server_admin": "server_admin",
+  "social_aid": "social_aid",
+  "social_docs": "social_docs",
+  "social_law": "social_law",
+  "software_lifecycle": "software_lifecycle",
+  "sport_events": "sport_events",
+  "sport_safety": "sport_safety",
+  "sports_training": "sports_training",
+  "sql": "sql",
+  "sterility": "sterility",
+  "taxes": "taxes",
+  "team management": "team_management",
+  "team_management": "team_management",
+  "test design": "test_design",
+  "test_design": "test_design",
+  "trade_ops": "trade_ops",
+  "troubleshooting": "troubleshooting",
+  "ts": "typescript",
+  "typescript": "typescript",
+  "typography": "typography",
+  "warehouse": "warehouse",
+  "автоматизацию": "automation",
+  "автоматизация": "automation",
+  "автотесты": "automation",
+  "анализ данных": "analytics",
+  "аналитика": "analytics",
+  "аппаратное обеспечение": "hardware_support",
+  "аппаратным обеспечением": "hardware_support",
+  "аптечный учёт": "pharmacy_docs",
+  "аптечным учётом": "pharmacy_docs",
+  "банковская документация": "bank_docs",
+  "банковские документы": "bank_docs",
+  "банковские продукты": "bank_products",
+  "банковские услуги": "bank_products",
+  "банковскими продуктами": "bank_products",
+  "банковских документов": "bank_docs",
+  "безопасности детей": "child_safety",
+  "безопасности занятий": "sport_safety",
+  "безопасность детей": "child_safety",
+  "безопасность занятий": "sport_safety",
+  "безопасность занятий спортом": "sport_safety",
+  "безопасность и охрана труда": "safety",
+  "бизнес-процессов": "bpmn",
+  "бизнес-процессы": "bpmn",
+  "бухгалтерия": "accounting",
+  "бухгалтерск": "accounting",
+  "бухгалтерская отчётность": "financial_statements",
+  "бухгалтерские проводки": "ledger",
+  "бухгалтерский учёт": "accounting",
+  "бухгалтерского учёта": "accounting",
+  "бухгалтерской отчётности": "financial_statements",
+  "бухучёт": "accounting",
+  "версионирование": "git",
+  "возрастные особенности": "child_development",
+  "возрастные особенности детей": "child_development",
+  "возрастных особенностей": "child_development",
+  "выкладка товара": "merchandising",
+  "выкладки товара": "merchandising",
+  "гит": "git",
+  "графические редакторы": "graphic_editors",
+  "графических редакторов": "graphic_editors",
+  "делопроизводство": "documents",
+  "диагностика": "troubleshooting",
+  "диагностировать": "troubleshooting",
+  "дизайн": "design_project",
+  "дизайн-проект": "design_project",
+  "дизайн-проекта": "design_project",
+  "дизайн-проектирование": "design_project",
+  "документами": "documents",
+  "документами социальной работы": "social_docs",
+  "документы": "documents",
+  "документы социальной работы": "social_docs",
+  "жизненного цикла": "software_lifecycle",
+  "жизненный цикл": "software_lifecycle",
+  "жизненный цикл по": "software_lifecycle",
+  "жизненным циклом": "software_lifecycle",
+  "запросы": "sql",
+  "игровые занятия": "play_activities",
+  "игровыми занятиями": "play_activities",
+  "игры с детьми": "play_activities",
+  "измерительные приборы": "measuring_tools",
+  "измерительными приборами": "measuring_tools",
+  "инклюзивного обучения": "inclusive_edu",
+  "инклюзивное обучение": "inclusive_edu",
+  "инклюзия": "inclusive_edu",
+  "инструменты мастера": "beauty_materials",
+  "инфокоммуникации": "infocom_systems",
+  "инфокоммуникационные системы": "infocom_systems",
+  "инфокоммуникационными системами": "infocom_systems",
+  "информационная безопасность": "net_security",
+  "информационной безопасности": "net_security",
+  "к печати": "prepress",
+  "кассовые операции": "cash_ops",
+  "кассовых операций": "cash_ops",
+  "клиентский сервис": "client_service",
+  "коммуникация": "communication",
+  "композиции": "composition",
+  "композиция": "composition",
+  "компьютерные сети": "networks",
+  "компьютерными сетями": "networks",
+  "компьютерных сетей": "networks",
+  "консультант плюс": "legal_systems",
+  "контроль версий": "git",
+  "коррекционная педагогика": "correction_pedagogy",
+  "коррекционное обучение": "correction_pedagogy",
+  "коррекционной педагогики": "correction_pedagogy",
+  "косметические услуги": "beauty_services",
+  "кружковая работа": "activity_design",
+  "лекарственные средства": "med_products",
+  "лекарственные формы": "dosage_forms",
+  "лекарственных средств": "med_products",
+  "лекарственных форм": "dosage_forms",
+  "локальная сеть": "networks",
+  "маркетинг": "marketing",
+  "материалами и инструментами": "beauty_materials",
+  "материалами и технологиями": "materials_design",
+  "материалы и инструменты": "beauty_materials",
+  "материалы и технологии": "materials_design",
+  "меддокументация": "med_docs",
+  "медикаменты": "med_products",
+  "медицинская документация": "med_docs",
+  "медицинской документации": "med_docs",
+  "мерчандайзинг": "merchandising",
+  "мультиметр": "measuring_tools",
+  "наблюдение за пациентом": "nursing_care",
+  "наблюдения за пациентом": "nursing_care",
+  "налогами": "taxes",
+  "налоги": "taxes",
+  "налоги и сборы": "taxes",
+  "налогообложение": "taxes",
+  "настройка операционных систем": "os_admin",
+  "настройка ос": "os_admin",
+  "обращений граждан": "citizen_service",
+  "обращения граждан": "citizen_service",
+  "обслуживание клиентов": "client_service",
+  "обслуживанию клиентов": "client_service",
+  "общаться": "communication",
+  "общение": "communication",
+  "общению": "communication",
+  "общения": "communication",
+  "общественного порядка": "public_order",
+  "общественный порядок": "public_order",
+  "операционные системы": "os_admin",
+  "операционных систем": "os_admin",
+  "основам педагогики": "pedagogy_basics",
+  "основам права": "legal_basics",
+  "основами педагогики": "pedagogy_basics",
+  "основами права": "legal_basics",
+  "основами психологии": "psychology_basics",
+  "основы коррекционной педагогики": "correction_pedagogy",
+  "основы педагогики": "pedagogy_basics",
+  "основы права": "legal_basics",
+  "основы программирования": "programming_basics",
+  "основы психологии": "psychology_basics",
+  "отделочные материалы": "materials_design",
+  "охрана жизни детей": "child_safety",
+  "охрана общественного порядка": "public_order",
+  "охрана труда": "safety",
+  "охране труда": "safety",
+  "охраны общественного порядка": "public_order",
+  "охраны труда": "safety",
+  "пайтон": "python",
+  "парикмахерские услуги": "beauty_services",
+  "педагогика": "pedagogy_basics",
+  "первая помощь": "first_aid",
+  "первой помощи": "first_aid",
+  "первую помощь": "first_aid",
+  "периферией": "hardware_support",
+  "периферия": "hardware_support",
+  "питон": "python",
+  "планирование занятий": "activity_design",
+  "планирования занятий": "activity_design",
+  "подготовка к печати": "prepress",
+  "подготовку к печати": "prepress",
+  "правила электробезопасности": "electrical_safety",
+  "право": "legal_basics",
+  "право социального обеспечения": "social_law",
+  "правовая грамотность": "legal_basics",
+  "правовые документы": "legal_docs",
+  "препараты": "med_products",
+  "препресс": "prepress",
+  "приём граждан": "citizen_service",
+  "приёме граждан": "citizen_service",
+  "проводки": "ledger",
+  "программирование": "programming_basics",
+  "программирования": "programming_basics",
+  "продакт": "product_management",
+  "продукт-менеджмент": "product_management",
+  "процессуальные сроки": "court_process",
+  "процессуальных сроков": "court_process",
+  "психология": "psychology_basics",
+  "работа с документами": "documents",
+  "работа с кассой": "cash_ops",
+  "работа с клиентами": "client_service",
+  "работа с обращениями граждан": "citizen_service",
+  "работе с клиентами": "client_service",
+  "развитие ребёнка": "child_development",
+  "разметка": "html",
+  "ремонт и настройка оборудования": "hardware_support",
+  "розничная торговля": "trade_ops",
+  "ручное тестирование": "manual_testing",
+  "санитария": "beauty_hygiene",
+  "санитарные правила": "sterility",
+  "санитарные правила красоты": "beauty_hygiene",
+  "санитарные правила сферы красоты": "beauty_hygiene",
+  "серверного администрирования": "server_admin",
+  "серверное администрирование": "server_admin",
+  "серверы": "server_admin",
+  "сестринские процедуры": "nursing_care",
+  "сестринскими процедурами": "nursing_care",
+  "сетевая безопасность": "net_security",
+  "сети": "networks",
+  "складского учёта": "warehouse",
+  "складской учёт": "warehouse",
+  "складском учёте": "warehouse",
+  "служебная документация": "official_docs",
+  "служебные документы": "official_docs",
+  "служебных документов": "official_docs",
+  "соревнования": "sport_events",
+  "социальная поддержка": "social_aid",
+  "социальная помощь": "social_aid",
+  "социального обеспечения": "social_law",
+  "социального сопровождения": "social_docs",
+  "социальное обеспечение": "social_law",
+  "социальное сопровождение": "social_docs",
+  "социальной помощи": "social_aid",
+  "спортивные мероприятия": "sport_events",
+  "спортивных мероприятий": "sport_events",
+  "справочно-правовые системы": "legal_systems",
+  "справочно-правовыми системами": "legal_systems",
+  "стерильности": "sterility",
+  "стерильность": "sterility",
+  "стерильность и гигиена": "sterility",
+  "стили": "css",
+  "страховка на занятиях": "sport_safety",
+  "судебного делопроизводства": "court_docs",
+  "судебное делопроизводство": "court_docs",
+  "судебном делопроизводстве": "court_docs",
+  "судебные процедуры": "court_process",
+  "тест-дизайн": "test_design",
+  "тест-кейс": "test_design",
+  "тестирование": "manual_testing",
+  "тестирования": "manual_testing",
+  "техника безопасности": "safety",
+  "тимлид": "team_management",
+  "типографика": "typography",
+  "типографикой": "typography",
+  "торговля": "trade_ops",
+  "торговые операции": "trade_ops",
+  "торговыми операциями": "trade_ops",
+  "тренировки": "sports_training",
+  "тренировочного процесса": "sports_training",
+  "тренировочный процесс": "sports_training",
+  "управление командой": "team_management",
+  "условия хранения": "pharmacy_storage",
+  "услугами красоты": "beauty_services",
+  "услуги красоты": "beauty_services",
+  "уход": "patient_care",
+  "уход за пациентами": "patient_care",
+  "ухода за пациентами": "patient_care",
+  "уходом за пациентами": "patient_care",
+  "учёт лекарств": "pharmacy_docs",
+  "учёт операций": "ledger",
+  "финансовая отчётность": "financial_statements",
+  "финансовое планирование": "finance",
+  "финансы": "finance",
+  "формы выпуска": "dosage_forms",
+  "хранение лекарств": "pharmacy_storage",
+  "хранение лекарственных средств": "pharmacy_storage",
+  "хранения лекарственных средств": "pharmacy_storage",
+  "цветоведение": "composition",
+  "чек-лист": "test_design",
+  "шрифты": "typography",
+  "электрические схемы": "electrical_schemes",
+  "электрическими схемами": "electrical_schemes",
+  "электрических схем": "electrical_schemes",
+  "электробезопасности": "electrical_safety",
+  "электробезопасность": "electrical_safety",
+  "электромонтаж": "electrical_work",
+  "электромонтажные работы": "electrical_work",
+  "электромонтажных работ": "electrical_work",
+  "этапы разработки": "software_lifecycle",
+  "юридические документы": "legal_docs",
+  "юридических документов": "legal_docs",
+  "язык запросов": "sql"
+ },
+ "constants": {
+  "checkForbiddenWords": [
+   "гарант",
+   "оффер",
+   "офер",
+   "трудоустро",
+   "зарплат"
+  ],
+  "defaultLimit": 12,
+  "gapTaskLimit": 3,
+  "interestBonusCap": 3
+ },
+ "generatedBy": "scripts/gen_web_data.py",
+ "roles": [
+  {
+   "description": "Автоматизирует учёт и управление бизнесом на платформе 1С:Предприятие.",
+   "development_steps": [
+    "Установить 1С:Предприятие и познакомиться с конфигурациями",
+    "Изучить встроенный язык 1С",
+    "Освоить язык запросов 1С и SQL",
+    "Написать собственный отчёт и обработку"
+   ],
+   "id": "1c",
+   "kind": "role",
+   "related_specialties": [
+    "1c-developer",
+    "erp"
+   ],
+   "resources": [
+    {
+     "minutes": 120,
+     "title": "1С:Предприятие — руководство разработчика",
+     "type": null,
+     "url": "https://its.1c.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "1c",
+     "weight": 1.0
+    },
+    {
+     "id": "sql",
+     "weight": 0.5
+    },
+    {
+     "id": "accounting",
+     "weight": 0.6
+    },
+    {
+     "id": "bpmn",
+     "weight": 0.4
+    }
+   ],
+   "tags": [],
+   "title": "Разработчик 1С"
+  },
+  {
+   "description": "Работает с банковскими продуктами и клиентами: операции, документы.",
+   "development_steps": [
+    "Познакомиться с банковскими продуктами и услугами",
+    "Освоить кассовые операции",
+    "Познакомиться с видами банковских документов",
+    "Научиться работе с клиентами в отделении",
+    "Собрать памятку: последовательность типовых операций консультанта"
+   ],
+   "id": "banking",
+   "kind": "specialty",
+   "related_specialties": [
+    "банк",
+    "финансы",
+    "клиенты"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Банк России — официальный сайт",
+     "type": null,
+     "url": "https://www.cbr.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "bank_products",
+     "weight": 0.8
+    },
+    {
+     "id": "cash_ops",
+     "weight": 0.8
+    },
+    {
+     "id": "bank_docs",
+     "weight": 0.6
+    },
+    {
+     "id": "client_service",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Банковское дело"
+  },
+  {
+   "description": "Работает в сфере услуг красоты: процедуры, санитарные правила, материалы.",
+   "development_steps": [
+    "Познакомиться с основными услугами красоты",
+    "Освоить санитарные правила сферы красоты",
+    "Познакомиться с материалами и инструментами мастера",
+    "Научиться общению с клиентами",
+    "Собрать подборку: уходовые процедуры и их этапы"
+   ],
+   "id": "beauty",
+   "kind": "specialty",
+   "related_specialties": [
+    "красота",
+    "сервис",
+    "клиенты"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": 60,
+     "title": "Stepik — курсы для сферы услуг",
+     "type": "course",
+     "url": "https://stepik.org"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "beauty_services",
+     "weight": 0.9
+    },
+    {
+     "id": "beauty_hygiene",
+     "weight": 0.8
+    },
+    {
+     "id": "beauty_materials",
+     "weight": 0.7
+    },
+    {
+     "id": "communication",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Технологии индустрии красоты"
+  },
+  {
+   "description": "Работает с детьми с особыми образовательными потребностями: методы, поддержка.",
+   "development_steps": [
+    "Познакомиться с основами коррекционной педагогики",
+    "Освоить основы инклюзивного обучения",
+    "Познакомиться с основами психологии",
+    "Научиться основам педагогики в работе с детьми",
+    "Собрать подборку: задания для коррекционных занятий"
+   ],
+   "id": "correction_ped",
+   "kind": "specialty",
+   "related_specialties": [
+    "педагогика",
+    "особые потребности",
+    "дети"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Минпросвещения России — официальный портал",
+     "type": null,
+     "url": "https://edu.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "correction_pedagogy",
+     "weight": 0.9
+    },
+    {
+     "id": "psychology_basics",
+     "weight": 0.8
+    },
+    {
+     "id": "inclusive_edu",
+     "weight": 0.7
+    },
+    {
+     "id": "pedagogy_basics",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Коррекционная педагогика в начальном образовании"
+  },
+  {
+   "description": "Ведёт дизайн-проекты: композиция, материалы, подготовка макетов.",
+   "development_steps": [
+    "Познакомиться с основами композиции и цвета",
+    "Освоить ведение дизайн-проекта",
+    "Познакомиться с материалами и технологиями",
+    "Освоить подготовку макетов к печати",
+    "Собрать проект: концепция оформления пространства"
+   ],
+   "id": "design",
+   "kind": "specialty",
+   "related_specialties": [
+    "дизайн",
+    "проекты",
+    "креатив"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": 90,
+     "title": "Stepik — курсы по дизайну",
+     "type": "course",
+     "url": "https://stepik.org"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "design_project",
+     "weight": 0.9
+    },
+    {
+     "id": "composition",
+     "weight": 0.7
+    },
+    {
+     "id": "materials_design",
+     "weight": 0.7
+    },
+    {
+     "id": "prepress",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Дизайн (по отраслям)"
+  },
+  {
+   "description": "Ведёт учёт операций и отчётность, работает с налогами организации.",
+   "development_steps": [
+    "Познакомиться с основами бухгалтерского учёта",
+    "Освоить составление бухгалтерской отчётности",
+    "Познакомиться с налогами и сборами организации",
+    "Научиться вести учёт операций и проводки",
+    "Собрать подборку: типовые хозяйственные операции с проводками"
+   ],
+   "id": "economics",
+   "kind": "specialty",
+   "related_specialties": [
+    "экономика",
+    "бухгалтерия",
+    "учёт"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "ФНС России — официальный сайт",
+     "type": null,
+     "url": "https://www.nalog.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "accounting",
+     "weight": 0.9
+    },
+    {
+     "id": "financial_statements",
+     "weight": 0.8
+    },
+    {
+     "id": "taxes",
+     "weight": 0.7
+    },
+    {
+     "id": "ledger",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Экономика и бухгалтерский учёт (по отраслям)"
+  },
+  {
+   "description": "Обслуживает и ремонтирует электрооборудование по схемам и правилам безопасности.",
+   "development_steps": [
+    "Познакомиться с видами электромонтажных работ",
+    "Освоить правила электробезопасности при работе с оборудованием",
+    "Научиться читать электрические схемы",
+    "Познакомиться с измерительными приборами и мультиметром",
+    "Собрать подборку: типовые неисправности электрооборудования и их причины"
+   ],
+   "id": "electrician",
+   "kind": "specialty",
+   "related_specialties": [
+    "электротехника",
+    "монтаж",
+    "оборудование"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": 90,
+     "title": "Stepik — курсы по электротехнике",
+     "type": "course",
+     "url": "https://stepik.org"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "electrical_safety",
+     "weight": 1.0
+    },
+    {
+     "id": "electrical_work",
+     "weight": 0.9
+    },
+    {
+     "id": "electrical_schemes",
+     "weight": 0.7
+    },
+    {
+     "id": "measuring_tools",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Электромонтёр по ремонту и обслуживанию электрооборудования (по отраслям)"
+  },
+  {
+   "description": "Создаёт графические макеты: композиция, типографика, подготовка к печати.",
+   "development_steps": [
+    "Познакомиться с основами композиции и цвета",
+    "Освоить графические редакторы",
+    "Познакомиться с типографикой",
+    "Освоить подготовку макетов к печати",
+    "Собрать проект: серия макетов для учебного бренда"
+   ],
+   "id": "graphic_design",
+   "kind": "specialty",
+   "related_specialties": [
+    "дизайн",
+    "графика",
+    "креатив"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": 90,
+     "title": "Stepik — курсы по дизайну",
+     "type": "course",
+     "url": "https://stepik.org"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "graphic_editors",
+     "weight": 0.9
+    },
+    {
+     "id": "composition",
+     "weight": 0.8
+    },
+    {
+     "id": "typography",
+     "weight": 0.7
+    },
+    {
+     "id": "prepress",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Графический дизайнер"
+  },
+  {
+   "description": "Настраивает и обслуживает компьютерное и инфокоммуникационное оборудование.",
+   "development_steps": [
+    "Познакомиться с аппаратным обеспечением и периферией компьютера",
+    "Освоить настройку операционных систем",
+    "Познакомиться с инфокоммуникационными системами и их обслуживанием",
+    "Познакомиться с правилами охраны труда на рабочем месте",
+    "Собрать подборку: типовые неисправности и порядок действий"
+   ],
+   "id": "infocom",
+   "kind": "specialty",
+   "related_specialties": [
+    "инфокоммуникации",
+    "оборудование",
+    "ит-инфраструктура"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": 120,
+     "title": "Stepik — курсы по информационным технологиям",
+     "type": "course",
+     "url": "https://stepik.org"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "hardware_support",
+     "weight": 0.9
+    },
+    {
+     "id": "infocom_systems",
+     "weight": 0.8
+    },
+    {
+     "id": "os_admin",
+     "weight": 0.6
+    },
+    {
+     "id": "safety",
+     "weight": 0.5
+    }
+   ],
+   "tags": [],
+   "title": "Наладчик аппаратных и программных средств инфокоммуникационных систем"
+  },
+  {
+   "description": "Ведёт судебное делопроизводство и работу со справочно-правовыми системами.",
+   "development_steps": [
+    "Познакомиться с судебным делопроизводством",
+    "Освоить работу со справочно-правовыми системами",
+    "Познакомиться с оформлением юридических документов",
+    "Научиться отслеживать процессуальные сроки",
+    "Собрать подборку: этапы движения дела в суде"
+   ],
+   "id": "law_court",
+   "kind": "specialty",
+   "related_specialties": [
+    "право",
+    "суд",
+    "делопроизводство"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Официальный интернет-портал правовой информации",
+     "type": null,
+     "url": "https://pravo.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "court_docs",
+     "weight": 0.9
+    },
+    {
+     "id": "legal_docs",
+     "weight": 0.8
+    },
+    {
+     "id": "legal_systems",
+     "weight": 0.7
+    },
+    {
+     "id": "court_process",
+     "weight": 0.7
+    }
+   ],
+   "tags": [],
+   "title": "Юриспруденция (в сфере судебного администрирования)"
+  },
+  {
+   "description": "Обеспечивает порядок и безопасность, работает со служебными документами.",
+   "development_steps": [
+    "Познакомиться с основами права для служебной деятельности",
+    "Освоить правила охраны общественного порядка",
+    "Познакомиться с ведением служебных документов",
+    "Освоить приёмы первой помощи",
+    "Собрать подборку: типовые ситуации и порядок действий"
+   ],
+   "id": "law_enforcement",
+   "kind": "specialty",
+   "related_specialties": [
+    "право",
+    "безопасность",
+    "служба"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Официальный интернет-портал правовой информации",
+     "type": null,
+     "url": "https://pravo.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "public_order",
+     "weight": 0.9
+    },
+    {
+     "id": "legal_basics",
+     "weight": 0.8
+    },
+    {
+     "id": "official_docs",
+     "weight": 0.6
+    },
+    {
+     "id": "first_aid",
+     "weight": 0.5
+    }
+   ],
+   "tags": [],
+   "title": "Правоохранительная деятельность"
+  },
+  {
+   "description": "Работает с правом социального обеспечения: документы, обращения граждан.",
+   "development_steps": [
+    "Познакомиться с системой социального обеспечения",
+    "Освоить основы права в сфере соцобеспечения",
+    "Познакомиться с оформлением юридических документов",
+    "Научиться вести приём обращений граждан",
+    "Собрать подборку: категории граждан и меры поддержки"
+   ],
+   "id": "law_social",
+   "kind": "specialty",
+   "related_specialties": [
+    "право",
+    "социальное обеспечение",
+    "юриспруденция"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Официальный интернет-портал правовой информации",
+     "type": null,
+     "url": "https://pravo.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "social_law",
+     "weight": 0.9
+    },
+    {
+     "id": "legal_docs",
+     "weight": 0.8
+    },
+    {
+     "id": "legal_basics",
+     "weight": 0.7
+    },
+    {
+     "id": "citizen_service",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Юриспруденция (в сфере социального обеспечения)"
+  },
+  {
+   "description": "Работает с пациентами в учреждениях здравоохранения: уход, первая помощь, документы.",
+   "development_steps": [
+    "Познакомиться с основами ухода за пациентами",
+    "Освоить приёмы первой помощи",
+    "Познакомиться с ведением медицинской документации",
+    "Научиться соблюдать стерильность и санитарные правила",
+    "Собрать памятку по уходу для учебной практики"
+   ],
+   "id": "medicine",
+   "kind": "specialty",
+   "related_specialties": [
+    "медицина",
+    "здравоохранение",
+    "лечебное дело"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Минздрав России — официальный портал",
+     "type": null,
+     "url": "https://minzdrav.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "first_aid",
+     "weight": 1.0
+    },
+    {
+     "id": "patient_care",
+     "weight": 0.9
+    },
+    {
+     "id": "sterility",
+     "weight": 0.8
+    },
+    {
+     "id": "med_docs",
+     "weight": 0.7
+    }
+   ],
+   "tags": [],
+   "title": "Лечебное дело"
+  },
+  {
+   "description": "Настраивает компьютерные сети и серверы, следит за их стабильной работой.",
+   "development_steps": [
+    "Познакомиться с компьютерными сетями и их топологией",
+    "Освоить серверное администрирование",
+    "Познакомиться с основами информационной безопасности",
+    "Научиться настраивать операционные системы",
+    "Собрать чек-лист диагностики локальной сети"
+   ],
+   "id": "net_admin",
+   "kind": "specialty",
+   "related_specialties": [
+    "сети",
+    "администрирование",
+    "ит-инфраструктура"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": 120,
+     "title": "Stepik — курсы по сетям и администрированию",
+     "type": "course",
+     "url": "https://stepik.org"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "networks",
+     "weight": 0.9
+    },
+    {
+     "id": "server_admin",
+     "weight": 0.9
+    },
+    {
+     "id": "net_security",
+     "weight": 0.7
+    },
+    {
+     "id": "os_admin",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Сетевое и системное администрирование"
+  },
+  {
+   "description": "Выполняет сестринские процедуры и уход, ведёт медицинскую документацию.",
+   "development_steps": [
+    "Познакомиться с сестринскими процедурами и наблюдением за пациентом",
+    "Освоить уход за пациентами в учебной практике",
+    "Научиться соблюдать стерильность при процедурах",
+    "Познакомиться с основами медицинской документации",
+    "Собрать чек-лист подготовки к процедуре"
+   ],
+   "id": "nursing",
+   "kind": "specialty",
+   "related_specialties": [
+    "медицина",
+    "сестринское дело",
+    "уход"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Минздрав России — официальный портал",
+     "type": null,
+     "url": "https://minzdrav.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "nursing_care",
+     "weight": 0.9
+    },
+    {
+     "id": "patient_care",
+     "weight": 0.9
+    },
+    {
+     "id": "sterility",
+     "weight": 0.7
+    },
+    {
+     "id": "med_docs",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Сестринское дело"
+  },
+  {
+   "description": "Ведёт занятия в кружках и секциях: программы, игры, поддержка детей.",
+   "development_steps": [
+    "Познакомиться с основами педагогики",
+    "Освоить планирование занятий",
+    "Познакомиться с игровыми занятиями",
+    "Познакомиться с основами психологии",
+    "Собрать подборку: программа кружка на месяц"
+   ],
+   "id": "pedagogy_extra",
+   "kind": "specialty",
+   "related_specialties": [
+    "педагогика",
+    "кружки",
+    "дети"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Минпросвещения России — официальный портал",
+     "type": null,
+     "url": "https://edu.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "pedagogy_basics",
+     "weight": 0.8
+    },
+    {
+     "id": "activity_design",
+     "weight": 0.8
+    },
+    {
+     "id": "play_activities",
+     "weight": 0.6
+    },
+    {
+     "id": "psychology_basics",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Педагогика дополнительного образования"
+  },
+  {
+   "description": "Работает с лекарственными средствами: классификация, хранение, аптечный учёт.",
+   "development_steps": [
+    "Познакомиться с классификацией лекарственных средств",
+    "Освоить правила хранения лекарственных средств",
+    "Познакомиться с аптечным учётом и документооборотом",
+    "Научиться различать лекарственные формы",
+    "Собрать подборку: виды лекарственных форм с примерами"
+   ],
+   "id": "pharmacy",
+   "kind": "specialty",
+   "related_specialties": [
+    "медицина",
+    "фармация",
+    "аптека"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Минздрав России — официальный портал",
+     "type": null,
+     "url": "https://minzdrav.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "med_products",
+     "weight": 0.9
+    },
+    {
+     "id": "pharmacy_storage",
+     "weight": 0.8
+    },
+    {
+     "id": "pharmacy_docs",
+     "weight": 0.7
+    },
+    {
+     "id": "dosage_forms",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Фармация"
+  },
+  {
+   "description": "Проводит занятия физической культурой: тренировки, безопасность, мероприятия.",
+   "development_steps": [
+    "Познакомиться с построением тренировочного процесса",
+    "Освоить правила безопасности занятий спортом",
+    "Познакомиться с организацией спортивных мероприятий",
+    "Освоить приёмы первой помощи на занятиях",
+    "Собрать подборку: комплексы упражнений для группы"
+   ],
+   "id": "physical_culture",
+   "kind": "specialty",
+   "related_specialties": [
+    "спорт",
+    "физкультура",
+    "дети"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Минспорт России — официальный портал",
+     "type": null,
+     "url": "https://minsport.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "sports_training",
+     "weight": 0.9
+    },
+    {
+     "id": "sport_safety",
+     "weight": 0.7
+    },
+    {
+     "id": "first_aid",
+     "weight": 0.7
+    },
+    {
+     "id": "sport_events",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Физическая культура"
+  },
+  {
+   "description": "Работает с детьми дошкольного возраста: занятия, игры, безопасность.",
+   "development_steps": [
+    "Познакомиться с основами педагогики",
+    "Освоить возрастные особенности детей",
+    "Познакомиться с игровыми занятиями",
+    "Освоить правила безопасности детей",
+    "Собрать подборку: занятия для младшей группы"
+   ],
+   "id": "preschool",
+   "kind": "specialty",
+   "related_specialties": [
+    "педагогика",
+    "дети",
+    "дошкольное образование"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Минпросвещения России — официальный портал",
+     "type": null,
+     "url": "https://edu.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "pedagogy_basics",
+     "weight": 0.8
+    },
+    {
+     "id": "child_development",
+     "weight": 0.8
+    },
+    {
+     "id": "play_activities",
+     "weight": 0.7
+    },
+    {
+     "id": "child_safety",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Дошкольное образование"
+  },
+  {
+   "description": "Проверяет качество ПО: тест-кейсы, автотесты, дефекты до релиза.",
+   "development_steps": [
+    "Познакомиться с основами тестирования",
+    "Научиться писать тест-кейсы и чек-листы",
+    "Освоить баг-трекинг (Jira, YouTrack)",
+    "Изучить автоматизацию на Python + pytest"
+   ],
+   "id": "qa",
+   "kind": "role",
+   "related_specialties": [
+    "manual-qa",
+    "auto-qa"
+   ],
+   "resources": [
+    {
+     "minutes": 90,
+     "title": "Основы тестирования ПО",
+     "type": null,
+     "url": "https://testengineer.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "manual_testing",
+     "weight": 0.9
+    },
+    {
+     "id": "test_design",
+     "weight": 0.8
+    },
+    {
+     "id": "sql",
+     "weight": 0.5
+    },
+    {
+     "id": "automation",
+     "weight": 0.6
+    },
+    {
+     "id": "python",
+     "weight": 0.5
+    }
+   ],
+   "tags": [],
+   "title": "Тестировщик"
+  },
+  {
+   "description": "Помогает людям в трудной ситуации: меры поддержки, документы, сопровождение.",
+   "development_steps": [
+    "Познакомиться с направлениями социальной помощи",
+    "Освоить основы права социального обеспечения",
+    "Познакомиться с документами социального сопровождения",
+    "Научиться общаться с получателями услуг",
+    "Собрать подборку: типовые обращения и порядок работы"
+   ],
+   "id": "social_work",
+   "kind": "specialty",
+   "related_specialties": [
+    "социальная работа",
+    "поддержка",
+    "люди"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": null,
+     "title": "Минтруд России — официальный портал",
+     "type": null,
+     "url": "https://mintrud.gov.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "social_aid",
+     "weight": 0.9
+    },
+    {
+     "id": "social_law",
+     "weight": 0.8
+    },
+    {
+     "id": "communication",
+     "weight": 0.7
+    },
+    {
+     "id": "social_docs",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Социальная работа"
+  },
+  {
+   "description": "Участвует в разработке программ: от идеи и кода до сопровождения.",
+   "development_steps": [
+    "Освоить основы программирования и алгоритмы",
+    "Познакомиться с жизненным циклом программного обеспечения",
+    "Освоить систему контроля версий Git",
+    "Научиться писать код на Python",
+    "Собрать проект: консольная утилита с документацией"
+   ],
+   "id": "software_dev",
+   "kind": "specialty",
+   "related_specialties": [
+    "разработка",
+    "программирование",
+    "ит"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": 120,
+     "title": "Git — книга Pro Git (на русском)",
+     "type": "book",
+     "url": "https://git-scm.com/book/ru/v2"
+    },
+    {
+     "minutes": 120,
+     "title": "Stepik — курсы по программированию",
+     "type": "course",
+     "url": "https://stepik.org"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "programming_basics",
+     "weight": 0.9
+    },
+    {
+     "id": "software_lifecycle",
+     "weight": 0.8
+    },
+    {
+     "id": "git",
+     "weight": 0.6
+    },
+    {
+     "id": "python",
+     "weight": 0.5
+    }
+   ],
+   "tags": [],
+   "title": "Разработка и управление программным обеспечением"
+  },
+  {
+   "description": "Запускает технологические стартапы, ищет продуктово-рыночное соответствие.",
+   "development_steps": [
+    "Сформулировать гипотезу продукта",
+    "Провести проблемные интервью",
+    "Создать MVP",
+    "Настроить аналитику"
+   ],
+   "id": "startup",
+   "kind": "role",
+   "related_specialties": [
+    "founder",
+    "product-manager"
+   ],
+   "resources": [
+    {
+     "minutes": 240,
+     "title": "Y Combinator Startup School",
+     "type": null,
+     "url": "https://www.startupschool.org"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "product_management",
+     "weight": 0.9
+    },
+    {
+     "id": "marketing",
+     "weight": 0.7
+    },
+    {
+     "id": "finance",
+     "weight": 0.5
+    },
+    {
+     "id": "team_management",
+     "weight": 0.6
+    },
+    {
+     "id": "analytics",
+     "weight": 0.6
+    }
+   ],
+   "tags": [],
+   "title": "Стартап / Продакт"
+  },
+  {
+   "description": "Помогает пользователям решать проблемы, диагностирует сбои.",
+   "development_steps": [
+    "Познакомиться с продуктом и базой знаний",
+    "Освоить коммуникацию и работу с возражениями",
+    "Научиться диагностировать типовые проблемы",
+    "Освоить CRM-систему"
+   ],
+   "id": "support",
+   "kind": "role",
+   "related_specialties": [
+    "support-engineer",
+    "customer-success"
+   ],
+   "resources": [
+    {
+     "minutes": 60,
+     "title": "Курс по техподдержке",
+     "type": null,
+     "url": "https://atalent.ru"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "communication",
+     "weight": 0.9
+    },
+    {
+     "id": "troubleshooting",
+     "weight": 0.8
+    },
+    {
+     "id": "sql",
+     "weight": 0.3
+    },
+    {
+     "id": "crm",
+     "weight": 0.4
+    }
+   ],
+   "tags": [],
+   "title": "Специалист техподдержки"
+  },
+  {
+   "description": "Работает с товаром и покупателями: операции, склад, выкладка.",
+   "development_steps": [
+    "Познакомиться с основными торговыми операциями",
+    "Освоить складской учёт",
+    "Познакомиться с правилами выкладки товара",
+    "Научиться работе с клиентами торгового зала",
+    "Собрать подборку: сезонные товары и выкладка"
+   ],
+   "id": "trade",
+   "kind": "specialty",
+   "related_specialties": [
+    "торговля",
+    "магазин",
+    "продажи"
+   ],
+   "resources": [
+    {
+     "minutes": null,
+     "title": "СИУЭиП — специальности колледжа",
+     "type": null,
+     "url": "https://sielom.ru"
+    },
+    {
+     "minutes": 90,
+     "title": "Stepik — курсы по торговле и маркетплейсам",
+     "type": "course",
+     "url": "https://stepik.org"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "trade_ops",
+     "weight": 0.9
+    },
+    {
+     "id": "warehouse",
+     "weight": 0.7
+    },
+    {
+     "id": "merchandising",
+     "weight": 0.6
+    },
+    {
+     "id": "client_service",
+     "weight": 0.8
+    }
+   ],
+   "tags": [],
+   "title": "Торговое дело"
+  },
+  {
+   "description": "Создаёт сайты и веб-приложения на HTML, CSS и JavaScript.",
+   "development_steps": [
+    "Изучить основы HTML и CSS, сверстать первую страницу",
+    "Освоить JavaScript на уровне DOM и асинхронности",
+    "Познакомиться с React",
+    "Научиться работать с API и fetch-запросами",
+    "Собрать проект: фронтенд + бэкенд + база данных"
+   ],
+   "id": "web",
+   "kind": "role",
+   "related_specialties": [
+    "frontend",
+    "backend",
+    "fullstack"
+   ],
+   "resources": [
+    {
+     "minutes": 60,
+     "title": "MDN Web Docs",
+     "type": null,
+     "url": "https://developer.mozilla.org"
+    },
+    {
+     "minutes": 120,
+     "title": "JavaScript.info",
+     "type": null,
+     "url": "https://javascript.info"
+    },
+    {
+     "minutes": 90,
+     "title": "React Docs",
+     "type": null,
+     "url": "https://react.dev"
+    }
+   ],
+   "skills_required": [
+    {
+     "id": "html",
+     "weight": 0.9
+    },
+    {
+     "id": "css",
+     "weight": 0.9
+    },
+    {
+     "id": "javascript",
+     "weight": 1.0
+    },
+    {
+     "id": "typescript",
+     "weight": 0.7
+    },
+    {
+     "id": "react",
+     "weight": 0.6
+    },
+    {
+     "id": "nodejs",
+     "weight": 0.5
+    }
+   ],
+   "tags": [],
+   "title": "Веб-разработчик"
+  }
+ ],
+ "schema": 1,
+ "skill_names": {
+  "1c": "1С",
+  "accounting": "Бухучёт",
+  "activity_design": "Планирование занятий",
+  "analytics": "Аналитика",
+  "automation": "Автотесты",
+  "bank_docs": "Банковские документы",
+  "bank_products": "Банковские продукты",
+  "beauty_hygiene": "Санитарные правила сферы красоты",
+  "beauty_materials": "Материалы и инструменты",
+  "beauty_services": "Услуги красоты",
+  "bpmn": "BPMN",
+  "cash_ops": "Кассовые операции",
+  "child_development": "Возрастные особенности детей",
+  "child_safety": "Безопасность детей",
+  "citizen_service": "Работа с обращениями граждан",
+  "client_service": "Клиентский сервис",
+  "communication": "Коммуникация",
+  "composition": "Композиция",
+  "correction_pedagogy": "Основы коррекционной педагогики",
+  "court_docs": "Судебное делопроизводство",
+  "court_process": "Судебные процедуры",
+  "crm": "CRM",
+  "css": "CSS",
+  "design_project": "Дизайн-проект",
+  "documents": "Работа с документами",
+  "dosage_forms": "Лекарственные формы",
+  "electrical_safety": "Электробезопасность",
+  "electrical_schemes": "Электрические схемы",
+  "electrical_work": "Электромонтажные работы",
+  "finance": "Финансы",
+  "financial_statements": "Бухгалтерская отчётность",
+  "first_aid": "Первая помощь",
+  "git": "Git",
+  "graphic_editors": "Графические редакторы",
+  "hardware_support": "Ремонт и настройка оборудования",
+  "html": "HTML",
+  "inclusive_edu": "Инклюзивное обучение",
+  "infocom_systems": "Инфокоммуникационные системы",
+  "javascript": "JavaScript",
+  "ledger": "Учёт операций",
+  "legal_basics": "Основы права",
+  "legal_docs": "Юридические документы",
+  "legal_systems": "Справочно-правовые системы",
+  "manual_testing": "Ручное тестирование",
+  "marketing": "Маркетинг",
+  "materials_design": "Материалы и технологии",
+  "measuring_tools": "Измерительные приборы",
+  "med_docs": "Медицинская документация",
+  "med_products": "Лекарственные средства",
+  "merchandising": "Выкладка товара",
+  "net_security": "Сетевая безопасность",
+  "networks": "Компьютерные сети",
+  "nodejs": "Node.js",
+  "nursing_care": "Сестринские процедуры",
+  "official_docs": "Служебные документы",
+  "os_admin": "Настройка операционных систем",
+  "patient_care": "Уход за пациентами",
+  "pedagogy_basics": "Основы педагогики",
+  "pharmacy_docs": "Аптечный учёт",
+  "pharmacy_storage": "Хранение лекарств",
+  "play_activities": "Игровые занятия",
+  "prepress": "Подготовка к печати",
+  "product_management": "Продакт",
+  "programming_basics": "Основы программирования",
+  "psychology_basics": "Основы психологии",
+  "public_order": "Охрана общественного порядка",
+  "python": "Python",
+  "react": "React",
+  "safety": "Безопасность и охрана труда",
+  "server_admin": "Серверное администрирование",
+  "social_aid": "Социальная помощь",
+  "social_docs": "Документы социальной работы",
+  "social_law": "Право социального обеспечения",
+  "software_lifecycle": "Жизненный цикл ПО",
+  "sport_events": "Спортивные мероприятия",
+  "sport_safety": "Безопасность занятий спортом",
+  "sports_training": "Тренировочный процесс",
+  "sql": "SQL",
+  "sterility": "Стерильность и гигиена",
+  "taxes": "Налоги и сборы",
+  "team_management": "Управление командой",
+  "test_design": "Тест-дизайн",
+  "trade_ops": "Торговые операции",
+  "troubleshooting": "Диагностика",
+  "typescript": "TypeScript",
+  "typography": "Типографика",
+  "warehouse": "Складской учёт"
+ },
+ "sourceHash": "sha256:a54aa1dc4de2ccd37de795a72ec08930e1d7e743e38994ba4733180f53ed547d",
+ "strings": {
+  "checkChoiceId": "{id}-what-is",
+  "checkChoicePrompt": "Что делает {title}?",
+  "checkSelfId": "{id}-own-words",
+  "checkSelfRolePrompt": "Объясни своими словами: в чём суть роли «{title}»?",
+  "checkSelfSkillPrompt": "Объясни своими словами: что такое {skill} и зачем оно в роли «{title}»?",
+  "checkSource": "role:{id} — description",
+  "checklistDone": "Освоен навык «{id}»",
+  "checklistFull": "Профиль покрывает навыки роли — план расширяет опыт",
+  "disclaimer": "План носит рекомендательный характер и не является гарантией трудоустройства или оффера.",
+  "emptyProfileWhy": "Заполните профиль — направление включено как базовый ориентир",
+  "gapHuman": "Не хватает навыка: {name}",
+  "gapTask": "Закрыть пробел «{name}»: обязательный навык роли, в профиле его нет",
+  "summary": "План на 30 дней для роли «{title}»: 4 недели, {steps} шагов из рубрики роли, {gaps} пробелов в профиле. Все шаги взяты из закрытой базы ролей.",
+  "summaryPersonal": " Недели 1–2 начинаются с {n} персональных задач закрытия твоих пробелов.",
+  "whyInterests": "Интересы напрямую соответствуют роли: ",
+  "whyMatched": "Совпадают навыки: ",
+  "whyNoMatch": "Прямых совпадений с навыками нет — направление включено для старта с нуля",
+  "whySpecialty": "Специальность «{specialty}» близка к роли",
+  "whySubjects": "Предметы профиля пересекаются с ролью: "
+ }
+}

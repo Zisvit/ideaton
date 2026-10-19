@@ -1148,3 +1148,32 @@ main, .site-header { position: relative; z-index: 1; }
   .topic-map__legend { display: none; }
   .topic-map-hint { display: block; }
 }
+
+/* ---- v11: офлайн-расчёт (пилл + баннер) ---- */
+.offline-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 14px;
+}
+.offline-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--gap-soft);
+  color: var(--gap);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.offline-note .btn {
+  margin-left: auto;
+}
