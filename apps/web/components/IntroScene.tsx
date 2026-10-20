@@ -281,10 +281,11 @@ export function Fox() {
   )
 }
 
-// Интро-сцена: неблокирующий слой НАД уже отрендеренной «/». Никакого route
-// и никакого overflow:hidden (скролл не блокируем — CLS/scrollbar). Закрытие
-// только по JS-таймеру или явному действию (клик/Esc/колесо/тач): animationend
-// при prefers-reduced-motion не приходит НИКОГДА — глобальный animation:none.
+// Интро-сцена: слой НАД уже отрендеренной «/». Контент под ним inert
+// (см. _app), поэтому фокус/клики не уходят в скрытые контролы; overflow не
+// трогаем — скролл не блокируем. Закрытие только по JS-таймеру или явному
+// действию (клик/Esc/колесо/тач): animationend при prefers-reduced-motion
+// не приходит НИКОГДА — глобальный animation:none.
 export default function IntroScene({ onDone }: { onDone: () => void }) {
   // Прогон сцены стартует после fonts-гейта (потолок 400 мс): сцена не
   // ждёт wifi в демо-зале, FOUT не рвёт блик в середине.
@@ -303,7 +304,8 @@ export default function IntroScene({ onDone }: { onDone: () => void }) {
     let cancelled = false
     let closeTimer = 0
     // клавиатурному/SR-пользователю нужен якорь сразу (glm, раунд 2):
-    // Esc/Enter/Space с него закрывают сцену, сцена немодальна — без ловушки
+    // Esc/Enter/Space с него закрывают сцену; контент под сценой inert,
+    // поэтому фокус не уходит в скрытые контролы
     skipRef.current?.focus({ preventScroll: true })
     const fonts = (document as Document & { fonts?: FontFaceSet }).fonts
     Promise.race([

@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import React from 'react'
 import FixLayer from '../components/FixLayer'
 import IntroScene from '../components/IntroScene'
-import { markIntroShown, shouldShowIntro } from '../lib/intro'
+import { shouldShowIntro } from '../lib/intro'
 import '../styles/globals.css'
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -11,39 +11,74 @@ export default function App({ Component, pageProps }: AppProps) {
   // SSR отдаёт страницу БЕЗ интро; гейт в useEffect → ноль hydration mismatch,
   // SSG-вывод не зависит от window (совет: интро поверх готового контента).
   const [showIntro, setShowIntro] = React.useState(false)
+  const prevPath = React.useRef<string | null>(null)
+  const firstRun = React.useRef(true)
+
+  // v17b (совет): единственный источник истины — URL. Уход с «/» гасит сцену,
+  // даже если она ещё играет; иначе оверлей висит поверх чужой страницы.
+  // Query/hash на той же «/» — не «открытие»: сцену не перезапускаем.
+  const syncIntro = React.useCallback((force = false) => {
+    const path = window.location.pathname
+    const changed = prevPath.current !== path
+    prevPath.current = path
+    if (force || changed) setShowIntro(shouldShowIntro())
+  }, [])
 
   React.useEffect(() => {
-    // v17 (запрос пользователя): лиса — на КАЖДОЕ открытие главной. Монт ловит
-    // полную загрузку/refresh, routeChangeComplete — client-side переход на «/»
-    // (в т.ч. back/forward); на прочие страницы shouldShowIntro вернёт false.
-    const maybeShow = () => {
-      if (shouldShowIntro()) {
-        markIntroShown() // v6-маркер v2; показ v17 от флага не зависит
-        setShowIntro(true)
-      }
+    // v17: лиса — на КАЖДОЕ открытие главной. Монт/reload ловит полную
+    // загрузку, routeChangeComplete — client-side переход на «/» (в т.ч.
+    // back/forward). v17b: pageshow(persisted) — возврат из bfcache, где
+    // React-состояние заморожено и routeChangeComplete не приходит.
+    syncIntro(firstRun.current)
+    firstRun.current = false
+    const onRoute = () => syncIntro()
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) syncIntro(true)
     }
-    maybeShow()
-    router.events.on('routeChangeComplete', maybeShow)
-    return () => router.events.off('routeChangeComplete', maybeShow)
-  }, [router])
+    router.events.on('routeChangeComplete', onRoute)
+    window.addEventListener('pageshow', onPageShow)
+    return () => {
+      router.events.off('routeChangeComplete', onRoute)
+      window.removeEventListener('pageshow', onPageShow)
+    }
+  }, [router, syncIntro])
 
   // Закрытие сцены: фокус возвращается контенту (a11y: во вкладку до «К содержанию»,
   // а не «в никуда» — иначе клавиатура теряет позицию после оверлея).
+  // v17b: контент под сценой inert, поэтому focus() зовём после коммита React;
+  // у того, кто уже работает с полем вне оверлея (inert не поддержан), фокус
+  // не отбираем.
   const closeIntro = React.useCallback(() => {
+    const active = document.activeElement as HTMLElement | null
+    const restore =
+      !active || active === document.body || !!active.closest('.intro-overlay')
     setShowIntro(false)
-    const main = document.getElementById('main')
-    if (main) {
-      main.setAttribute('tabindex', '-1')
-      main.focus({ preventScroll: true })
-    }
+    if (!restore) return
+    window.setTimeout(() => {
+      const main = document.getElementById('main')
+      if (main) {
+        main.setAttribute('tabindex', '-1')
+        main.focus({ preventScroll: true })
+      }
+    }, 0)
   }, [])
 
   return (
     <>
-      <a href="#main" className="skip-link">К содержанию</a>
+      <a
+        href="#main"
+        className="skip-link"
+        inert={showIntro ? true : undefined}
+      >
+        К содержанию
+      </a>
       <FixLayer />
       {showIntro ? <IntroScene onDone={closeIntro} /> : null}
-      <Component {...pageProps} />
+      {/* v17b: под сценой нет фокуса/кликов в скрытые контролы (WCAG 2.4.11);
+          inert снимается в момент закрытия. */}
+      <div inert={showIntro ? true : undefined}>
+        <Component {...pageProps} />
+      </div>
     </>
   )
 }

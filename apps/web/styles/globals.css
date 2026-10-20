@@ -19,6 +19,9 @@
   /* громкая палитра интро/фона/конфетти (голубо-сине-фиолет, совет longcat):
      одна семья, оранжевые маркеры gap в неё не миксуем */
   --brand-blue: #4E8CFF;
+  /* v17b (совет): голубой стоп вордмарка в светлой теме — 3.7:1 на --bg
+     (AA для крупного текста); #4E8CFF давал 2.9:1. В тёмной — brand-blue. */
+  --supernova-blue: #3B7AE8;
   --brand-violet: #8B5CF6;
   --conf-1: var(--brand-blue);
   --conf-2: var(--brand-violet);
@@ -206,9 +209,18 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   text-transform: uppercase;
   color: var(--accent-text); /* фолбэк без background-clip: сплошной акцент */
 }
+/* v17b (совет): базовая геометрия второго слоя — ВНЕ @supports. Если браузер
+   не умеет background-clip:text, слой не должен показываться вторым текстом. */
+.supernova__alt {
+  position: absolute; inset: 0; pointer-events: none;
+  /* копирование/выделение берёт только базовый слой — без дубля «SUPERNOVA» */
+  user-select: none;
+  opacity: 0;
+  transform: none !important;
+}
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .supernova {
-    background-image: linear-gradient(96deg, var(--accent-text) 0%, var(--brand-blue) 28%, var(--accent-2) 52%, var(--brand-violet) 76%, var(--accent-text) 100%);
+    background-image: linear-gradient(96deg, var(--accent-text) 0%, var(--supernova-blue) 28%, var(--accent-2) 52%, var(--brand-violet) 76%, var(--accent-text) 100%);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
   }
@@ -217,16 +229,18 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
      !important: нужен только opacity, иначе слой ездит по вертикали и в
      полупрозрачной фазе даёт двойной контур. */
   .supernova__alt {
-    position: absolute; inset: 0; pointer-events: none;
-    /* копирование/выделение берёт только базовый слой — без дубля «SUPERNOVA» */
-    user-select: none;
-    background-image: linear-gradient(96deg, var(--brand-violet) 0%, var(--accent-2) 28%, var(--brand-blue) 52%, var(--accent-2) 76%, var(--brand-violet) 100%);
+    background-image: linear-gradient(96deg, var(--brand-violet) 0%, var(--accent-2) 28%, var(--supernova-blue) 52%, var(--accent-2) 76%, var(--brand-violet) 100%);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
-    opacity: 0;
-    transform: none !important;
     animation: fadeIn 2.8s var(--ease) infinite alternate;
   }
+}
+
+/* v17b: при background-clip:text заливка прозрачна — выделенный текст был
+   невидим (в т.ч. Ctrl+A). Возвращаем цвет букв только на время выделения. */
+.supernova::selection, .grad::selection {
+  -webkit-text-fill-color: var(--ink);
+  color: var(--ink);
 }
 
 /* v17-риск: Windows High Contrast (forced-colors) — градиент с прозрачной
@@ -234,6 +248,10 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
 @media (forced-colors: active) {
   .supernova { background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
   .supernova__alt { display: none; }
+  /* v17b (совет): тот же приём у остального градиентного текста. */
+  .grad, .intro-mark__glyph {
+    background: none; color: CanvasText; -webkit-text-fill-color: CanvasText;
+  }
 }
 
 .label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .08em; }
@@ -365,12 +383,14 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
 @media print {
   .site-header, .cta-bar, .cta-sticky, .confetti, .skeleton, .alert,
   .skip-link, .badge, .progress, .check, .milestone, .plan-print-hide,
-  .btn { display: none !important; }
+  .intro-overlay, .btn { display: none !important; }
   body { background: #fff; color: #000; font-family: var(--font-sans); }
   /* v17-риск: градиентный вордмарк на бумаге без фоновой графики исчезает —
      печатаем сплошным чёрным; декоративный второй слой не печатаем. */
   .supernova { background: none; color: #000; -webkit-text-fill-color: #000; }
   .supernova__alt { display: none; }
+  /* v17b (совет): .grad — тот же background-clip:text, на бумаге был пустым. */
+  .grad { background: none; color: #000; -webkit-text-fill-color: #000; }
   .container { max-width: none; padding: 0; }
   main { padding: 0 !important; }
   h1 { font-size: 16pt; font-family: var(--font-sans); font-weight: 700; }
@@ -493,14 +513,15 @@ main, .site-header { position: relative; z-index: 1; }
   position: fixed; inset: 0; z-index: 200;
   display: grid; place-items: center;
   background: var(--veil);
-  animation: introVeil var(--tl) linear 1 both;
   cursor: pointer;
 }
+/* v17b (совет): вуаль стартует вместе с прогоном (.is-run), а не с монта.
+   Иначе fonts-гейт (≤400 мс) сдвигал CSS-часы относительно JS-таймера:
+   вуаль уже погасла, а невидимый оверлей ещё ловил клики. */
+.intro-overlay.is-run { animation: introVeil var(--tl) linear 1 both; }
 @keyframes introVeil {
-  0%   { opacity: 0; }
-  3%   { opacity: 1; }
-  89%  { opacity: 1; }
-  100% { opacity: 0; }
+  0%, 89% { opacity: 1; }
+  100%    { opacity: 0; }
 }
 .intro-scene {
   position: relative; display: grid; place-items: center; row-gap: 4px;
@@ -750,7 +771,8 @@ main, .site-header { position: relative; z-index: 1; }
   font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font-sans);
 }
 .intro-skip:hover { background: var(--skip-bg-hover); }
-.intro-skip:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+/* v17b (совет): белое кольцо терялось на светлой вуали — берём токен темы. */
+.intro-skip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* ---- 4. МИКРО-слой (повсеместный): отклик и вход, не «декорация» ---- */
 /* 4.1 пружинные попы: state-change (галочка / выбор / settled) */
@@ -1091,6 +1113,7 @@ html[data-theme="dark"] {
   --gap: #FFA05C; --gap-soft: #2A1A10;
   --warn: #FBBF24; --danger: #F87171;
   --brand-blue: #6CA0FF; --brand-violet: #A78BFA;
+  --supernova-blue: var(--brand-blue); /* v17b: 7.3:1 на тёмной --bg */
   --fox-deep: #D2691E;  /* пыль+мех-мини читаются на тёмной вуали */
   --fox-dark: #B85C1A;
   --accent-text: #8F84FF;  /* текст-акцент: 6.2:1 на --bg (5B4CFF давал 3.5) */

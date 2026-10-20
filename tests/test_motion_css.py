@@ -92,9 +92,11 @@ def test_no_paint_or_layout_properties_in_keyframes():
     assert not hits, f"paint/layout в @keyframes (v5-контракт): {hits}"
 
 
-def test_intro_scale_is_4200_and_v2_key():
+def test_intro_scale_is_4200():
     assert "INTRO_MS = 4200" in INTRO
-    assert "career-tracker-intro:v2" in INTRO
+    # v17/v17b: сессионный ключ удалён — гейт только по URL
+    assert "career-tracker-intro:v2" not in INTRO
+    assert "sessionStorage" not in INTRO
     # единая шкала: сцена и знак живут от --tl
     assert "animation: introVeil var(--tl) linear 1 both" in CSS
     assert "animation: markReact var(--tl) linear 1 both" in CSS
