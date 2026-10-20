@@ -32,9 +32,9 @@ def _strip_comments(text: str) -> str:
 
 def test_intro_gate_replays_on_every_home_open():
     intro = _strip_comments(INTRO)
-    # сессионный гейт снят: флаг v2 больше не решает, показывать ли сцену
-    assert "sessionFlag" not in intro
-    assert "getItem(INTRO_KEY)" not in intro
+    # v17b: сессионный флаг удалён целиком; гейт только по URL/Reduce/?intro=0
+    assert "sessionStorage" not in intro
+    assert "INTRO_KEY" not in intro
     assert "scrollY" not in intro  # «уже проскроллил» тоже больше не блокирует
     assert "window.location.pathname === '/'" in intro
     # доступность/демо-выключатели не отменены
@@ -42,14 +42,31 @@ def test_intro_gate_replays_on_every_home_open():
     assert "opened === '0'" in intro
 
 
-def test_app_replays_intro_on_client_navigation_to_home():
+def test_app_resets_intro_when_leaving_home():
     app = _strip_comments(APP)
     assert "useRouter" in app
-    assert "router.events.on('routeChangeComplete', maybeShow)" in app
-    assert "router.events.off('routeChangeComplete', maybeShow)" in app
-    # гейт живёт в maybeShow, который зовётся и на монте, и на переходе
-    assert "if (shouldShowIntro())" in app
-    assert "maybeShow()" in app
+    assert "router.events.on('routeChangeComplete', onRoute)" in app
+    assert "router.events.off('routeChangeComplete', onRoute)" in app
+    # единый источник истины — URL: уход с «/» гасит сцену, возврат — снова
+    assert "setShowIntro(shouldShowIntro())" in app
+    assert "const changed = prevPath.current !== path" in app
+    assert "syncIntro(firstRun.current)" in app
+    assert "markIntroShown" not in app  # мёртвая запись v6 удалена
+
+
+def test_app_replays_intro_from_bfcache():
+    app = _strip_comments(APP)
+    assert "window.addEventListener('pageshow', onPageShow)" in app
+    assert "e.persisted" in app
+    assert "syncIntro(true)" in app
+
+
+def test_intro_blocks_focus_behind_overlay():
+    app = _strip_comments(APP)
+    # v17b: контент и skip-link inert, пока сцена открыта (WCAG 2.4.11)
+    assert app.count("inert={showIntro ? true : undefined}") >= 2
+    # фокус возвращаем после коммита React (снятия inert), не в тот же кадр
+    assert "setTimeout" in app
 
 
 def test_conic_delay_matches_intro_replay():
