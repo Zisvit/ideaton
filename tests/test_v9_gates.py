@@ -51,4 +51,4 @@ def test_non_json_body_is_guarded():
 def test_fox_has_no_svg_rotate_attribute():
     assert 'transform="rotate' not in FOX
     assert "transform: 'rotate(-10deg)'" in FOX  # глаз и зрачок — CSS
-    assert "transformOrigin: '352px 122px'" in FOX  # нос — CSS
+    assert "transformOrigin: '354px 121px'" in FOX  # нос — CSS (v19: нос сдвинут)
