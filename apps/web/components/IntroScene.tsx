@@ -1,8 +1,9 @@
 import React from 'react'
 import { INTRO_MS, SWIPE_GRACE_MS } from '../lib/intro'
 
-// v22: в интро — реальное фото лиса (public domain, Wikimedia Commons);
-// SVG-лис v20 оставлен ниже как legacy: на нём держатся гейты v9/v19/v20.
+// v22b: в интро — реальное фото нормального рыжего лиса (public domain,
+// USFWS Alaska / Wikimedia Commons); SVG-лис v20 оставлен ниже как legacy:
+// на нём держатся гейты v9/v19/v20.
 // Лис «Идея» v20 — анатомия v19 + растровая шерсть: бесшовный PNG-тайл
 // 128×128 в pattern на корпус/голову/хвост/уши (гибрид: SVG-риг + растр,
 // совет mix, раунд 2). Геометрия — в defs, заливку задают <use>, поэтому
@@ -386,9 +387,9 @@ export function Fox() {
   )
 }
 
-// v22: фото-карточка лиса. Фото: «Vulpes vulpes standing in snow»,
-// Wikimedia Commons, public domain:
-// https://commons.wikimedia.org/wiki/File:Vulpes_vulpes_standing_in_snow.jpg
+// v22b: фото-карточка лиса. Фото: «Red Fox at Puale Bay», USFWS Alaska,
+// public domain:
+// https://commons.wikimedia.org/wiki/File:Red_Fox_at_Puale_Bay_(7550652356).jpg
 // JPEG запечён (900×650), без runtime-фильтров/blend; зум и посадка —
 // transition, не keyframes (бюджет 30 не трогаем).
 function FoxPhoto() {
