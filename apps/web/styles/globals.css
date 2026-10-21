@@ -169,7 +169,9 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
 
 /* ---- layout helpers ---- */
 /* шапка без backdrop-blur: два blur-слоя на странице = «UI поехал» на проекторе */
-.site-header { position: sticky; top: 0; z-index: 40; background: var(--header-bg); border-bottom: 1px solid var(--line); }
+/* v19: solid --bg (а не 98% --header-bg): контент не просвечивает; токен
+   --header-bg оставлен как historical literal (гейт test_v12 byte-stable). */
+.site-header { position: sticky; top: 0; z-index: 40; background: var(--bg); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .site-header__inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; }
 .brand { font-family: var(--font-display); font-weight: 500; font-size: 13px; color: var(--ink); }
 .brand:hover { text-decoration: none; }
@@ -258,6 +260,9 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   .grad, .intro-mark__glyph {
     background: none; color: CanvasText; -webkit-text-fill-color: CanvasText;
   }
+  /* v19: реальный border переживает HCM, градиентный sheen — нет */
+  .site-header { border-top: 1px solid CanvasText; }
+  .site-header::after { display: none; }
 }
 
 .label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .08em; }
@@ -449,12 +454,18 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   --fox-dark: #7A3208;  /* штрихи меха */
   --fox-nose: #2C1C15;
   --fox-eye: #C97A1E;
+  --fox-ink: #241811;   /* чёрные чулки/лапы/зрачок; в тёмной — приподнят */
+  --fox-ao: #7A3208;    /* мягкая тень меха */
+  --fox-rim: #FFD8A6;   /* тёплый свет по верхней кромке */
+  --fox-contact: rgba(18,20,26,.30);
 }
 
 /* ---- 2. ФОН: aurora 4 блоба без blur + dot-grid + 3 микро-фигуры ----
    5 композитных узлов; скорости ≤ 4 px/s (longcat), одна палитра бренда:
    4-й блоб — --brand-blue .09 (не чужой #2563EB — упало на совете). */
-main, .site-header { position: relative; z-index: 1; }
+/* v19: шапку не включаем в z-index:1 — иначе правило ниже по файлу
+   перебивало z-index:40 и main рисовался поверх шапки. */
+main { position: relative; z-index: 1; }
 .fix-bg {
   position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
   contain: strict; user-select: none;
@@ -938,7 +949,8 @@ main, .site-header { position: relative; z-index: 1; }
     var(--sheen) 80%, transparent);
 }
 .site-header { position: sticky; }
-.site-header::after { top: 0; }
+/* v19: 2px bevel — 1px тёмный hairline (border-top) + 1px световой catch */
+.site-header::after { top: 1px; }
 .cta-bar { position: relative; }
 .cta-bar::before { top: -1px; }
 
@@ -1122,6 +1134,12 @@ html[data-theme="dark"] {
   --supernova-blue: var(--brand-blue); /* v17b: 7.3:1 на тёмной --bg */
   --fox-deep: #D2691E;  /* пыль+мех-мини читаются на тёмной вуали */
   --fox-dark: #B85C1A;
+  --fox-ink: #3A2A20;
+  --fox-ao: #C25716;
+  --fox-rim: #FFE2BC;
+  --fox-contact: rgba(255,255,255,.16);
+  --fox-nose: #4A3026;
+  --fox-eye: #E8A63D;
   --accent-text: #8F84FF;  /* текст-акцент: 6.2:1 на --bg (5B4CFF давал 3.5) */
   --accent-2: #9A8FFF;
   --on-ink: #121110;

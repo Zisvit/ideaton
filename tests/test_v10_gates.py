@@ -80,8 +80,9 @@ def test_foxrun_stops_in_flight():
 def test_fur_has_no_horns():
     assert "M156 128" not in FOX  # парящий штрих над спиной
     assert "M132 150 C148 140" not in FOX  # старый штрих меха
-    # три лопасти (space-bunny) ниже линии спины
-    assert "M134 151" in FOX and "M129 157" in FOX and "M239 152" in FOX
+    # v19: старые три лопасти заменены крупными прядями/воротником
+    # (корпус перерисован; проверяем, что пряди остались ниже линии спины)
+    assert "M176 132" in FOX and "M160 172" in FOX and "M298 126" in FOX
     # старая stroked-группа меха удалена целиком (у rim ноги strokeWidth 1)
     assert 'stroke="#FFF6EA" strokeWidth="1.3"' not in FOX
 
