@@ -1,0 +1,14 @@
+# Контекст сборки web-образа = apps/web (infra/docker-compose.yml).
+# Без этого в контекст уезжают node_modules и .next — сборка каждый раз
+# без кеша. Секреты в образ не нужны: фронт читает только NEXT_PUBLIC_*.
+node_modules
+.next
+out
+*.tsbuildinfo
+.git
+.gitignore
+.env
+.env.*
+.playwright-mcp
+npm-debug.log*
+.DS_Store

@@ -39,6 +39,9 @@
   --radius-lg: 24px;
   --shadow-sm: 0 1px 2px rgba(18,20,26,.06);
   --shadow: 0 8px 24px rgba(18,20,26,.08);
+  /* v24: фото-карточка лиса — своя тень и скрим (в тёмной теме переопределяются) */
+  --photo-shadow: 0 8px 24px rgba(18,20,26,.08);
+  --photo-scrim: transparent;
   --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: "Unbounded", "Manrope", system-ui, sans-serif;
   --max: 1180px;
@@ -632,11 +635,20 @@ main { position: relative; z-index: 1; }
   border-radius: var(--radius-lg); overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
-  box-shadow: var(--shadow);
+  box-shadow: var(--photo-shadow);
   transform: translateY(-6px);
   transition: transform 360ms var(--ease) 1560ms;
 }
 .is-run .intro-photo { transform: translateY(0); }
+/* v24: скрим поверх фото (тёмная тема приглушает снимок, без filter/blend) */
+.intro-photo::after {
+  content: ""; position: absolute; inset: 0;
+  background: var(--photo-scrim); pointer-events: none;
+}
+/* v24: фото не загрузилось — нейтральная карточка вместо битой картинки */
+.intro-photo--fallback {
+  background: linear-gradient(135deg, var(--hero-a) 0%, var(--hero-b) 100%);
+}
 .intro-photo__img {
   display: block; width: 100%; height: 100%;
   object-fit: cover; object-position: center;
@@ -1166,6 +1178,9 @@ html[data-theme="dark"] {
   --track: #3A332A;
   --veil: rgba(18,17,16,.97);
   --header-bg: rgba(18,17,16,.98);
+  /* v24: на тёмной вуали фото-карточка не должна читаться «наклейкой» */
+  --photo-shadow: 0 18px 44px rgba(0,0,0,.55), 0 0 0 1px rgba(255,214,170,.10);
+  --photo-scrim: rgba(18,17,16,.14);
   --hero-a: #1E1A16; --hero-b: #2B2620;
   --ring-mix: #1B1815;
   --bubble-bg: #262119; --bubble-ink: #F0ECE6;

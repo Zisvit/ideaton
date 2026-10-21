@@ -16,6 +16,7 @@ COPY pages ./pages
 COPY lib ./lib
 COPY components ./components
 COPY styles ./styles
+COPY public ./public
 RUN npm run build
 
 FROM node:22-alpine AS runner
