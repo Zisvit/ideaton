@@ -30,11 +30,28 @@ PHOTO_MD5 = "867a398af20211d89c84c9d9cbfa35c3"
 
 
 def _dark_block() -> str:
+    """Тело первого блока html[data-theme="dark"] — по балансу скобок.
+
+    Не ищем просто первую "}": вложенная конструкция внутри блока обрезала
+    бы его (longcat, раунд 2)."""
     m = re.search(r'html\[data-theme="dark"\]\s*\{', CSS)
     assert m, 'нет блока html[data-theme="dark"]'
     i = CSS.index("{", m.end() - 1)
-    j = CSS.index("}", i)
+    depth, j = 0, i
+    while j < len(CSS):
+        if CSS[j] == "{":
+            depth += 1
+        elif CSS[j] == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        j += 1
     return CSS[i + 1 : j]
+
+
+def _flat(text: str) -> str:
+    """Схлопнутые пробелы: атрибуты JSX могут разъехаться переносом строки."""
+    return re.sub(r"\s+", " ", text)
 
 
 def test_photo_asset_pinned_by_md5():
@@ -45,10 +62,11 @@ def test_photo_asset_pinned_by_md5():
 
 
 def test_photo_preloaded_and_high_priority():
-    assert 'rel="preload"' in INTRO
-    assert 'as="image"' in INTRO
-    assert 'href="/fox-photo.jpg"' in INTRO
-    assert "fetchPriority" in INTRO
+    intro = _flat(INTRO)
+    assert 'rel="preload"' in intro
+    assert 'as="image"' in intro
+    assert 'href="/fox-photo.jpg"' in intro
+    assert "fetchPriority" in intro
 
 
 def test_photo_has_error_fallback_not_svg():
