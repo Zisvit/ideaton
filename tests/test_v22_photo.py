@@ -50,7 +50,7 @@ def test_intro_renders_photo_not_svg():
     assert "width={900}" in INTRO and "height={650}" in INTRO
     # провенанс: public domain, источник указан в коде
     assert "public domain" in INTRO
-    assert "Vulpes_vulpes_standing_in_snow" in INTRO
+    assert "Red_Fox_at_Puale_Bay" in INTRO
     # legacy-лис остаётся для старых гейтов, но не в рендере
     assert "export function Fox()" in INTRO
 
