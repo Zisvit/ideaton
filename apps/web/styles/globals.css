@@ -209,15 +209,10 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   text-transform: uppercase;
   color: var(--accent-text); /* фолбэк без background-clip: сплошной акцент */
 }
-/* v17b (совет): базовая геометрия второго слоя — ВНЕ @supports. Если браузер
-   не умеет background-clip:text, слой не должен показываться вторым текстом. */
-.supernova__alt {
-  position: absolute; inset: 0; pointer-events: none;
-  /* копирование/выделение берёт только базовый слой — без дубля «SUPERNOVA» */
-  user-select: none;
-  opacity: 0;
-  transform: none !important;
-}
+/* v17c (совет): второй слой — ::after, а не живой текст в DOM. innerText и
+   копирование дают одну «SUPERNOVA»; content с alt-текстом скрывает
+   псевдоэлемент от скринридера. Геометрия/градиент только внутри
+   @supports: без background-clip:text второго слоя нет. */
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .supernova {
     background-image: linear-gradient(96deg, var(--accent-text) 0%, var(--supernova-blue) 28%, var(--accent-2) 52%, var(--brand-violet) 76%, var(--accent-text) 100%);
@@ -228,11 +223,22 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
      opacity (fadeIn переиспользован как цикл). transform из fadeIn снят
      !important: нужен только opacity, иначе слой ездит по вертикали и в
      полупрозрачной фазе даёт двойной контур. */
-  .supernova__alt {
+  .supernova::after {
+    content: "SUPERNOVA";
+    position: absolute; inset: 0; pointer-events: none;
+    /* копирование/выделение берёт только базовый слой — без дубля «SUPERNOVA» */
+    user-select: none;
+    opacity: 0;
+    transform: none !important;
     background-image: linear-gradient(96deg, var(--brand-violet) 0%, var(--accent-2) 28%, var(--supernova-blue) 52%, var(--accent-2) 76%, var(--brand-violet) 100%);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
     animation: fadeIn 2.8s var(--ease) infinite alternate;
+  }
+  /* content с alt-текстом: псевдотекст не дублируется в accessibility tree
+     (Chrome 131+). Старые браузеры оставляют простое content — визуал тот же. */
+  @supports (content: "x" / "") {
+    .supernova::after { content: "SUPERNOVA" / ""; }
   }
 }
 
@@ -247,7 +253,7 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
    заливкой не должен оставлять пустое место: сплошной системный цвет. */
 @media (forced-colors: active) {
   .supernova { background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
-  .supernova__alt { display: none; }
+  .supernova::after { display: none; }
   /* v17b (совет): тот же приём у остального градиентного текста. */
   .grad, .intro-mark__glyph {
     background: none; color: CanvasText; -webkit-text-fill-color: CanvasText;
@@ -388,7 +394,7 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   /* v17-риск: градиентный вордмарк на бумаге без фоновой графики исчезает —
      печатаем сплошным чёрным; декоративный второй слой не печатаем. */
   .supernova { background: none; color: #000; -webkit-text-fill-color: #000; }
-  .supernova__alt { display: none; }
+  .supernova::after { display: none; }
   /* v17b (совет): .grad — тот же background-clip:text, на бумаге был пустым. */
   .grad { background: none; color: #000; -webkit-text-fill-color: #000; }
   .container { max-width: none; padding: 0; }

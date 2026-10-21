@@ -1,6 +1,7 @@
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router'
 import React from 'react'
+import { flushSync } from 'react-dom'
 import FixLayer from '../components/FixLayer'
 import IntroScene from '../components/IntroScene'
 import { shouldShowIntro } from '../lib/intro'
@@ -48,11 +49,14 @@ export default function App({ Component, pageProps }: AppProps) {
   // v17b: контент под сценой inert, поэтому focus() зовём после коммита React;
   // у того, кто уже работает с полем вне оверлея (inert не поддержан), фокус
   // не отбираем.
+  // v17c: flushSync снимает inert ДО setTimeout-фокуса — при естественном
+  // закрытии таймером state-update не из React-события, и main мог быть ещё
+  // inert, focus() терялся (активным оставался body).
   const closeIntro = React.useCallback(() => {
     const active = document.activeElement as HTMLElement | null
     const restore =
       !active || active === document.body || !!active.closest('.intro-overlay')
-    setShowIntro(false)
+    flushSync(() => setShowIntro(false))
     if (!restore) return
     window.setTimeout(() => {
       const main = document.getElementById('main')

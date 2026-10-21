@@ -27,10 +27,10 @@ def _strip_comments(text: str) -> str:
 
 def test_wordmark_is_first_block_of_home_hero():
     index = _strip_comments(INDEX)
-    assert '<p className="supernova">' in index
+    # v17c: второй слой — ::after, в DOM только одна надпись
+    assert '<p className="supernova">SUPERNOVA</p>' in index
     assert "SUPERNOVA" in index
-    # второй слой — декоративный дубль, скрыт от скринридера
-    assert 'className="supernova__alt" aria-hidden="true"' in index
+    assert "supernova__alt" not in index
     # вордмарк стоит до заголовка страницы
     assert index.index('className="supernova"') < index.index("<h1")
 
@@ -38,7 +38,7 @@ def test_wordmark_is_first_block_of_home_hero():
 def test_wordmark_is_gradient_text_with_solid_fallback():
     css = _strip_comments(CSS)
     assert ".supernova {" in css
-    assert ".supernova__alt" in css
+    assert ".supernova::after" in css
     assert "var(--brand-violet)" in css
     # тот же приём, что у .grad/.intro-mark: фолбэк-цвет вне @supports
     assert "-webkit-text-fill-color: transparent" in css
@@ -51,11 +51,10 @@ def test_iridescence_reuses_existing_keyframe():
     assert "animation: fadeIn 2.8s var(--ease) infinite alternate" in css
     # из fadeIn нужен только opacity: vertical-сдвиг снят каскадом
     assert "transform: none !important" in css
-    # v17b: базовый блок .supernova__alt вынесен из @supports; анимацию
-    # проверяем в блоке после @supports (там же градиент и fadeIn).
+    # v17c: второй слой — ::after внутри @supports (там же градиент и fadeIn).
     supernova = css.index(".supernova {")
     supports = css.index("@supports ((-webkit-background-clip: text)", supernova)
-    alt = css[css.index(".supernova__alt {", supports) :]
+    alt = css[css.index(".supernova::after {", supports) :]
     alt = alt[: alt.index("}")]
     for banned in (
         "background-position",
@@ -81,7 +80,7 @@ def test_wordmark_print_is_legible():
         ".supernova { background: none; color: #000; -webkit-text-fill-color: #000; }"
         in first_print
     )
-    assert ".supernova__alt { display: none; }" in first_print
+    assert ".supernova::after { display: none; }" in first_print
 
 
 def test_wordmark_forced_colors_fallback():
@@ -91,27 +90,29 @@ def test_wordmark_forced_colors_fallback():
     fc = re.search(r"@media \(forced-colors: active\) \{([\s\S]*?)\n\}", css)
     assert fc, "нет @media (forced-colors: active)"
     assert "CanvasText" in fc.group(1)
-    assert ".supernova__alt { display: none; }" in fc.group(1)
+    assert ".supernova::after { display: none; }" in fc.group(1)
 
 
 def test_wordmark_copy_has_no_duplicate():
-    """Риск v16: второй слой — живой текст в DOM; без user-select:none
-    копирование даёт «SUPERNOVASUPERNOVA»."""
+    """Риск v16/v17c: второй слой — ::after; в DOM/innerText только одна
+    надпись, а user-select:none не даёт выделить псевдотекст."""
     css = _strip_comments(CSS)
-    alt_start = css.index(".supernova__alt {")
+    assert ".supernova__alt" not in css
+    alt_start = css.index(".supernova::after {")
     alt = css[alt_start : css.index("}", alt_start)]
     assert "user-select: none" in alt
+    assert 'content: "SUPERNOVA"' in alt
 
 
-def test_alt_layer_is_hidden_without_background_clip():
-    """v17b (совет): без background-clip:text второй слой не должен быть
-    видимым текстом в потоке — базовая геометрия/opacity живут вне @supports."""
+def test_alt_layer_is_pseudo_inside_background_clip_supports():
+    """v17c: второй слой — ::after внутри @supports background-clip. Без
+    поддержки clip псевдоэлемент не создаётся — второго текста в потоке нет."""
     css = _strip_comments(CSS)
-    alt = css.index(".supernova__alt {")
     supports = css.index(
         "@supports ((-webkit-background-clip: text)", css.index(".supernova {")
     )
-    assert alt < supports, "базовый .supernova__alt должен быть вне @supports"
+    alt = css.index(".supernova::after {", supports)
+    assert alt > supports
     block = css[alt : css.index("}", alt)]
     assert "position: absolute" in block
     assert "opacity: 0" in block
