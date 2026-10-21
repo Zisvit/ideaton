@@ -392,11 +392,15 @@ export function Fox() {
 // https://commons.wikimedia.org/wiki/File:Red_Fox_at_Puale_Bay_(7550652356).jpg
 // v23: тот же снимок (оригинал 4000×3000) кадрирован плотно — лис ~85%
 // ширины кадра вместо ~55%, насыщенность поднята на ~18% и запечена в JPEG
-// (растр, не CSS-фильтр). JPEG запечён (900×650), без runtime-фильтров/blend;
-// зум и посадка — transition, не keyframes (бюджет 30 не трогаем).
+// (растр, не CSS-фильтр).
 // v24: фото могло не загрузиться (офлайн, прокси, 404) — тогда показываем
 // карточку с токенным градиентом, а не битую картинку; legacy-SVG-лис в
 // разметку не возвращаем (гейт v22 требует, чтобы он не рендерился).
+// v25: пользователь попросил лиса БЕЗ заднего фона — тот же снимок вырезан
+// в PNG с альфой (900×650): трава снята по HSL-маске, связные компоненты
+// оставили только силуэт лиса, RGB — оригинал с медианной «починкой» зоны
+// травы. Растр запечён, без runtime-фильтров/blend; зум и посадка —
+// transition, не keyframes (бюджет 30 не трогаем).
 function FoxPhoto() {
   const [failed, setFailed] = React.useState(false)
   return (
@@ -404,7 +408,7 @@ function FoxPhoto() {
       {!failed && (
         <img
           className="intro-photo__img"
-          src="/fox-photo.jpg"
+          src="/fox-cutout.png"
           alt=""
           width={900}
           height={650}
@@ -548,7 +552,7 @@ export default function IntroScene({ onDone }: { onDone: () => void }) {
       <link
         rel="preload"
         as="image"
-        href="/fox-photo.jpg"
+        href="/fox-cutout.png"
         fetchPriority="high"
       />
       <div className="intro-scene" aria-hidden="true">
