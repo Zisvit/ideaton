@@ -131,16 +131,54 @@ export default function Consultant() {
         <div className="step-line" style={{ '--p': '100%' } as React.CSSProperties} />
       </header>
 
-      <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80, maxWidth: 760 }}>
-        <section className="fade-in">
-          <h1><span className="grad">Консультант</span></h1>
-          <p className="hero__sub">
-            Отвечаю по заготовленным памяткам проекта: выбирай чип или спроси словами.
-            Честный режим — без подключённого ИИ и без обещаний.
-          </p>
+      <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+        {/* v29: герой в две колонки — как на главной */}
+        <section className="hero-grid fade-in">
+          <div className="hero-main">
+            <p className="supernova">SUPERNOVA</p>
+            <h1><span className="grad">Консультант</span></h1>
+            <p className="hero__sub">
+              Отвечаю по заготовленным памяткам проекта: выбирай чип или спроси словами.
+              Честный режим — без подключённого ИИ и без обещаний.
+            </p>
+            <div className="hero__actions">
+              <a className="btn btn-primary" href="#consultant-chat">
+                Начать разговор ↓
+              </a>
+            </div>
+          </div>
+          <aside className="hero-side">
+            <div className="preview-card">
+              <span className="preview-card__eyebrow">Как это работает</span>
+              <p className="preview-card__title">Три шага до плана</p>
+              <div className="preview-list">
+                <div className="preview-row">
+                  <div>
+                    <div className="preview-row__name">1 · Выберите тему</div>
+                    <div className="preview-row__meta">чип или свой вопрос</div>
+                  </div>
+                </div>
+                <div className="preview-row">
+                  <div>
+                    <div className="preview-row__name">2 · Получите памятку</div>
+                    <div className="preview-row__meta">заготовленный ответ по проекту</div>
+                  </div>
+                </div>
+                <div className="preview-row">
+                  <div>
+                    <div className="preview-row__name">3 · Договоритесь о шаге</div>
+                    <div className="preview-row__meta">что сделать на этой неделе</div>
+                  </div>
+                </div>
+              </div>
+              <p className="preview-foot">
+                Честный режим: ответы заготовлены заранее, текст не уходит в сеть.
+              </p>
+            </div>
+          </aside>
         </section>
 
-        <section className="card chatBot plan-print-hide" style={{ marginTop: 28 }}>
+        <section className="card chatBot plan-print-hide" id="consultant-chat" style={{ marginTop: 28 }}>
           <BotHead />
           <div className="chatBot__log" ref={logRef} aria-live="polite" aria-label="Диалог с консультантом">
             {items.map((item, mi) => (

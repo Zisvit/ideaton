@@ -70,3 +70,37 @@ def test_preload_has_crossorigin():
     for p in fonts:
         assert "crossOrigin" in p, "preload шрифта без crossOrigin — скачается дважды"
         assert "/fonts/" in p
+
+
+def test_fallback_metrics_are_measured():
+    """Метрики фолбэков — измерены по woff2 (fontTools), а не взяты на глаз.
+
+    Ошибка в ascent-override на 10% даёт видимый прыжок строк при подмене
+    шрифта, поэтому значения запинены: пересчитывать только вместе с новой
+    версией шрифтов (и обновлением этого теста)."""
+    expected = {
+        "Manrope Fallback": ("104.14%", "106.60%", "30.00%", "0%"),
+        "Unbounded Fallback": ("109.15%", "112.85%", "26.55%", "0%"),
+    }
+    for family, (size, asc, desc, gap) in expected.items():
+        block = re.search(
+            r'@font-face \{\s*font-family: "' + re.escape(family) + r'";(.*?)\}',
+            CSS,
+            re.S,
+        )
+        assert block, f"нет фолбэка {family}"
+        body = block.group(1)
+        assert f"size-adjust: {size}" in body, f"{family}: size-adjust изменился"
+        assert f"ascent-override: {asc}" in body, f"{family}: ascent-override изменился"
+        assert f"descent-override: {desc}" in body, f"{family}: descent-override изменился"
+        assert f"line-gap-override: {gap}" in body, f"{family}: line-gap-override изменился"
+
+
+def test_display_font_always_applies():
+    """Unbounded — на swap: с измеренным фолбэком подмена невидима, и
+    брендовый заголовок появляется всегда (optional мог не дать его на первом
+    визите — тихая потеря фирменного вида)."""
+    for block in re.findall(r"@font-face \{(.*?)\}", CSS, re.S):
+        if 'font-family: "Unbounded"' in block:
+            assert "font-display: swap" in block
+    assert "font-display: optional" not in CSS
