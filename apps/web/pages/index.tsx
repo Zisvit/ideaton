@@ -298,6 +298,25 @@ export default function Home() {
           </p>
           <DirectionGroups specs={SPECS} />
         </section>
+
+        {/* v18: вход в версию для работодателя — внизу, после каталога;
+            ссылка в шапке остаётся как быстрый доступ. */}
+        <section
+          className="cta-bar employer-cta"
+          aria-labelledby="employer-cta-heading"
+          style={{ marginTop: 36 }}
+        >
+          <h2 id="employer-cta-heading" style={{ fontSize: 20, marginBottom: 6 }}>
+            Вы работодатель?
+          </h2>
+          <p className="small" style={{ margin: '0 0 14px' }}>
+            Каталог направлений колледжа и навыки выпускников — без персональных
+            данных.
+          </p>
+          <Link href="/employer" className="btn btn-primary">
+            Версия для работодателя →
+          </Link>
+        </section>
       </main>
     </>
   )
