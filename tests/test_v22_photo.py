@@ -1,8 +1,9 @@
 """v22 (→ v25): лис в интро — реальное фото, а не SVG; v25 — вырезка без фона.
 
 История: v22 поставил фото-карточку (public domain, JPEG), v23 перекадрировал
-плотнее, v25 по запросу пользователя («лиса с задним фоном» → «лис без фона»)
-заменил снимок на вырезку того же снимка — PNG 900×650 с альфой. SVG-лис v20
+плотнее, v25 заменил снимок на вырезку (PNG с альфой), v27 — по запросу
+«лис вообще без фона + более подходящая картинка» — новая вырезка головы
+рыжего лиса (USFWS Midwest, public domain): PNG 900×650 с альфой. SVG-лис v20
 остаётся в файле как legacy для гейтов v9/v19/v20, но в разметке сцены не
 рендерится. У вырезки нет runtime-фильтров/blend: только transform (зум/посадка
 через transition, бюджет @keyframes не тратится).
@@ -35,6 +36,8 @@ def test_photo_asset_is_baked_png():
     )
     assert depth == 8, f"ожидаем 8 бит на канал, а не {depth}"
     assert color == 6, f"ожидаем RGBA (тип 6) с альфой, а не тип {color}"
+    # v27: вырезка — фото в RGBA (мягкий край требует полупрозрачных пикселей,
+    # PNG8 их теряет). Браузеры получают WebP (~37 КБ), PNG — запасной вариант.
     assert len(raw) < 400_000, f"вырезка слишком тяжёлая: {len(raw)} байт"
 
 
@@ -45,7 +48,7 @@ def test_intro_renders_photo_not_svg():
     assert "width={900}" in INTRO and "height={650}" in INTRO
     # провенанс: public domain, источник указан в коде
     assert "public domain" in INTRO
-    assert "Red_Fox_at_Puale_Bay" in INTRO
+    assert "Red_fox_(52869982404)" in INTRO
     # legacy-лис остаётся для старых гейтов, но не в рендере
     assert "export function Fox()" in INTRO
 

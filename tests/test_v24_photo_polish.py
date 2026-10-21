@@ -26,8 +26,8 @@ CSS = (ROOT / "apps/web/styles/globals.css").read_text(encoding="utf-8")
 DOCKERFILE = (ROOT / "apps/web/Dockerfile").read_text(encoding="utf-8")
 DOCKERIGNORE = ROOT / "apps/web/.dockerignore"
 
-# md5 запечённой вырезки (900×650 RGBA, public domain USFWS «Red Fox at Puale Bay»).
-PHOTO_MD5 = "9d801c9e01c70acdfa6ac4dffabf5f21"
+# md5 запечённой вырезки (900×650 RGBA, public domain USFWS «Red fox (52869982404)»).
+PHOTO_MD5 = "cc6dc50ad03d84d483784f0318f0dcaa"
 
 
 def _dark_block() -> str:

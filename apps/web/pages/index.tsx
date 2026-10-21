@@ -236,7 +236,6 @@ export default function Home() {
                   decoding="async"
                 />
               </picture>
-              <p className="mascot-card__cap">Лис Идея — талисман проекта</p>
             </div>
           </aside>
         </section>
@@ -410,8 +409,8 @@ export default function Home() {
             <Link href="/employer">Версия для работодателя</Link>
           </span>
           <span className="site-footer__credit">
-            Фото лиса: «Red Fox at Puale Bay», USFWS Alaska, public domain
-            (Wikimedia Commons)
+            Фото лиса: «Red fox (52869982404)», USFWS Midwest Region, public
+            domain (Wikimedia Commons)
           </span>
         </footer>
       </main>
