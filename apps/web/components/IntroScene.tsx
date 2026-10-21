@@ -390,8 +390,10 @@ export function Fox() {
 // v22b: фото-карточка лиса. Фото: «Red Fox at Puale Bay», USFWS Alaska,
 // public domain:
 // https://commons.wikimedia.org/wiki/File:Red_Fox_at_Puale_Bay_(7550652356).jpg
-// JPEG запечён (900×650), без runtime-фильтров/blend; зум и посадка —
-// transition, не keyframes (бюджет 30 не трогаем).
+// v23: тот же снимок (оригинал 4000×3000) кадрирован плотно — лис ~85%
+// ширины кадра вместо ~55%, насыщенность поднята на ~18% и запечена в JPEG
+// (растр, не CSS-фильтр). JPEG запечён (900×650), без runtime-фильтров/blend;
+// зум и посадка — transition, не keyframes (бюджет 30 не трогаем).
 function FoxPhoto() {
   return (
     <div className="intro-photo">
