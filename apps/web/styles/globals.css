@@ -219,7 +219,11 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
 .tag-neutral { background: var(--surface-2); color: var(--muted); }
 
 .progress { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
-.progress > span { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width .5s var(--ease); }
+.progress > span {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--brand-violet));
+  transition: width .5s var(--ease);
+}
 
 .skeleton { position: relative; overflow: hidden; background: var(--surface-2); border-radius: var(--radius-sm); }
 .skeleton::after {
@@ -254,7 +258,8 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
     radial-gradient(900px 300px at 15% -20%, rgba(91,76,255,.22), transparent 62%),
     linear-gradient(135deg, var(--hero-a) 0%, var(--hero-b) 100%);
   color: #fff; border-radius: var(--radius-lg); padding: 26px;
-  box-shadow: 0 12px 32px rgba(18,20,26,.10);
+  /* v28: та же «плоскость + хайрлайн», что на главной */
+  box-shadow: var(--shadow-float), inset 0 1px 0 rgba(255,255,255,.14);
 }
 .hero-card .muted { color: rgba(255,255,255,.6); }
 .hero-card .tag-match { background: rgba(18,185,129,.2); color: #6EE7B7; }
@@ -396,36 +401,68 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
 .alert-warn { background: var(--gap-soft); color: var(--warn-ink); border: 1px solid var(--warn-line); }
 
 /* result */
+/* v28: плоскость + хайрлайн + акцентная кромка роли; подъём на hover */
 .role-card {
-  padding: 20px; border-radius: var(--radius); background: var(--surface);
-  border: 1px solid var(--line); border-left: 2px solid var(--role, var(--accent));
-  transition: transform .15s var(--ease), box-shadow .15s;
+  position: relative; overflow: hidden;
+  padding: 20px 20px 20px 22px; border-radius: var(--radius); background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow), inset 0 1px 0 var(--hairline);
+  transition: transform var(--m-fast) var(--ease), box-shadow var(--m-fast) var(--ease),
+              border-color var(--m-fast) var(--ease);
 }
-.role-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.role-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--role, var(--accent)); opacity: .85;
+}
+.role-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-float), inset 0 1px 0 var(--hairline);
+}
 .role-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.role-card__title { font-size: 19px; font-weight: 700; }
+.role-card__title { font-size: 19px; font-weight: 700; letter-spacing: -0.012em; }
 .num-order { font-weight: 800; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--muted-2); margin-bottom: 4px; }
 /* бейдж: цвет роли только в тинте фона, текст всегда --ink (контраст) */
 .score-ring {
   display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800;
-  padding: 4px 10px; border-radius: 999px;
+  padding: 5px 12px; border-radius: 999px;
   background: var(--accent-soft);
   background: color-mix(in srgb, var(--role, var(--accent)) 14%, var(--ring-mix));
   color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--role, var(--accent)) 28%, var(--line));
 }
 .role-card__why { margin-top: 10px; color: var(--ink-2); font-size: 14px; line-height: 1.5; }
 .role-card__gaps { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
 .role-card__foot { margin-top: 16px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
 
 /* plan */
-.week { padding: 20px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+/* v28: плоскости плана — с хайрлайном и мягкой тенью */
+.week {
+  padding: 20px; border-radius: var(--radius); background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow), inset 0 1px 0 var(--hairline);
+}
 .week__title { font-size: 16px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-.week__num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-text); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.week__num {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft);
+  color: var(--accent-text); font-size: 13px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+}
 .week ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
-.week li { padding: 12px 14px; min-height: 46px; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 14px; display: flex; gap: 12px; align-items: flex-start; }
+.week li {
+  padding: 12px 14px; min-height: 46px; border-radius: var(--radius-sm);
+  background: var(--surface-2); font-size: 14px; display: flex; gap: 12px; align-items: flex-start;
+  border: 1px solid transparent; transition: border-color var(--m-fast) var(--ease), background-color var(--m-fast) var(--ease);
+}
+.week li:hover { border-color: var(--line-strong); }
 .week li.done span { text-decoration: line-through; color: var(--muted); }
 
-.checklist { padding: 20px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.checklist {
+  padding: 20px; border-radius: var(--radius); background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow), inset 0 1px 0 var(--hairline);
+}
 .checklist ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .checklist li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
 
