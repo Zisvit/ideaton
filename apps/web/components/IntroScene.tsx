@@ -394,18 +394,26 @@ export function Fox() {
 // ширины кадра вместо ~55%, насыщенность поднята на ~18% и запечена в JPEG
 // (растр, не CSS-фильтр). JPEG запечён (900×650), без runtime-фильтров/blend;
 // зум и посадка — transition, не keyframes (бюджет 30 не трогаем).
+// v24: фото могло не загрузиться (офлайн, прокси, 404) — тогда показываем
+// карточку с токенным градиентом, а не битую картинку; legacy-SVG-лис в
+// разметку не возвращаем (гейт v22 требует, чтобы он не рендерился).
 function FoxPhoto() {
+  const [failed, setFailed] = React.useState(false)
   return (
-    <div className="intro-photo">
-      <img
-        className="intro-photo__img"
-        src="/fox-photo.jpg"
-        alt=""
-        width={900}
-        height={650}
-        loading="eager"
-        decoding="async"
-      />
+    <div className={failed ? 'intro-photo intro-photo--fallback' : 'intro-photo'}>
+      {!failed && (
+        <img
+          className="intro-photo__img"
+          src="/fox-photo.jpg"
+          alt=""
+          width={900}
+          height={650}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          onError={() => setFailed(true)}
+        />
+      )}
     </div>
   )
 }
@@ -535,6 +543,14 @@ export default function IntroScene({ onDone }: { onDone: () => void }) {
       role="presentation"
       onClick={onOverlayClick}
     >
+      {/* v24: фото лиса качается параллельно сценой — прелоад, чтобы первые
+          секунды интро карточка не была пустой рамкой */}
+      <link
+        rel="preload"
+        as="image"
+        href="/fox-photo.jpg"
+        fetchPriority="high"
+      />
       <div className="intro-scene" aria-hidden="true">
         <div className="intro-aurora" />
         <div className="intro-glow" />
