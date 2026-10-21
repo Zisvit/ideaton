@@ -1,4 +1,5 @@
 import { Html, Head, Main, NextScript } from 'next/document'
+import { CRITICAL_CSS } from '../lib/criticalCss'
 
 // v12: тема применяется ДО первой отрисовки. Скрипт стоит в <Head> после meta
 // theme-color (его же и обновляет) и до таблицы стилей; читает ровно один ключ,
@@ -23,6 +24,10 @@ export default function Document() {
         {/* v12: до первой отрисовки — выбор темы из localStorage (ноль FOUC);
             без JS и без ключа остаётся серверный data-theme="light" */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+        {/* v30: страховка на случай, если CSS-чанк с хешем в имени не
+            загрузился (старая вкладка после пересборки): базовый вид
+            приложения рисуется встроенными правилами, а не стеной текста */}
+        <style dangerouslySetInnerHTML={{ __html: CRITICAL_CSS }} />
         {/* v28: preload своих шрифтов (Manrope — текст, Unbounded — заголовки).
             crossOrigin обязателен: иначе preload и CSS-фетч разъедутся и файл
             скачается дважды. Unbounded в CSS с font-display: optional — без

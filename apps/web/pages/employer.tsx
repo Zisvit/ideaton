@@ -97,7 +97,7 @@ export default function Employer() {
         <section className="hero-grid fade-in">
           <div className="hero-main">
             <p className="supernova">SUPERNOVA</p>
-            <h1>
+            <h1 className="hero-title">
               Кого готовит <span className="grad">колледж?</span>
             </h1>
             <p className="hero__sub">
