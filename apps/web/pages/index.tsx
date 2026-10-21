@@ -139,7 +139,7 @@ export default function Home() {
             {/* v14: кросс-ссылка на интерфейс работодателя — маршрут, без JS */}
             <Link
               href="/employer"
-              className="btn btn-ghost"
+              className="btn btn-ghost header-employer-link"
               style={{ padding: '6px 12px', fontSize: 13 }}
             >
               Я работодатель
@@ -151,19 +151,94 @@ export default function Home() {
       </header>
 
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 88 }}>
-        <section className="band fade-in" style={{ paddingTop: 16, paddingBottom: 8 }}>
-          {/* v16: капсовый вордмарк; «переливание» — два градиентных слоя
-              на opacity (fadeIn), без новых keyframes. v17c: второй слой —
-              ::after, в innerText/копировании одна «SUPERNOVA». */}
-          <p className="supernova">SUPERNOVA</p>
-          <h1 style={{ maxWidth: 660 }}>
-            Куда тебе <span className="grad">расти?</span>
-          </h1>
-          <p className="hero__sub">
-            Отметь навыки, которые уже есть — покажу до 12 направлений: карьерные
-            роли и специальности колледжа — и план на 30 дней. Без резюме и
-            тестов: просто карта маршрута.
-          </p>
+        {/* v26: герой в две колонки — слева обещание и действия, справа
+            «стеклянное» превью выдачи и талисман. Чистый CSS, без blur. */}
+        <section className="hero-grid fade-in">
+          <div className="hero-main">
+            {/* v16: капсовый вордмарк; «переливание» — два градиентных слоя
+                на opacity (fadeIn), без новых keyframes. v17c: второй слой —
+                ::after, в innerText/копировании одна «SUPERNOVA». */}
+            <p className="supernova">SUPERNOVA</p>
+            <h1>
+              Куда тебе <span className="grad">расти?</span>
+            </h1>
+            <p className="hero__sub">
+              Отметь навыки, которые уже есть — покажу до 12 направлений: карьерные
+              роли и специальности колледжа — и план на 30 дней. Без резюме и
+              тестов: просто карта маршрута.
+            </p>
+            <div className="hero__actions">
+              <a className="btn btn-primary" href="#skills">
+                Отметить навыки ↓
+              </a>
+              <button type="button" onClick={fillExample} className="btn btn-ghost">
+                Подставить пример
+              </button>
+            </div>
+            <ul className="hero__facts">
+              <li>
+                <b>21</b> направление в базе
+              </li>
+              <li>
+                <b>12</b> ролей в подборе
+              </li>
+              <li>
+                <b>30</b> дней в плане
+              </li>
+            </ul>
+          </div>
+
+          <aside className="hero-side">
+            <div className="preview-card">
+              <span className="preview-card__eyebrow">Пример подбора</span>
+              <p className="preview-card__title">Направления за пару секунд</p>
+              <p className="preview-card__sub">
+                Так выглядит выдача для навыков «html, css, python, 1с»
+              </p>
+              <div className="preview-list">
+                <div className="preview-row">
+                  <div>
+                    <div className="preview-row__name">Веб-разработчик</div>
+                    <div className="preview-row__meta">совпало 8 навыков из 10</div>
+                  </div>
+                  <span className="preview-row__score">92%</span>
+                </div>
+                <div className="preview-row">
+                  <div>
+                    <div className="preview-row__name">1С-разработчик</div>
+                    <div className="preview-row__meta">совпало 6 навыков из 10</div>
+                  </div>
+                  <span className="preview-row__score preview-row__score--mid">74%</span>
+                </div>
+                <div className="preview-row">
+                  <div>
+                    <div className="preview-row__name">QA-инженер</div>
+                    <div className="preview-row__meta">совпало 5 навыков из 10</div>
+                  </div>
+                  <span className="preview-row__score preview-row__score--mid">63%</span>
+                </div>
+              </div>
+              <p className="preview-foot">
+                Пример для показа. Реальный подбор считает совпадения по базе
+                навыков и объясняет, чего не хватает.
+              </p>
+            </div>
+            <div className="mascot-card">
+              <picture>
+                <source srcSet="/fox-cutout.webp" type="image/webp" />
+                <img
+                  className="mascot-card__img"
+                  src="/fox-cutout.png"
+                  alt=""
+                  width={900}
+                  height={650}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
+              <p className="mascot-card__cap">Лис Идея — талисман проекта</p>
+            </div>
+          </aside>
         </section>
 
         {guest && (
@@ -172,8 +247,18 @@ export default function Home() {
           </p>
         )}
 
-        <section className="card fx-conic" style={{ marginTop: 28 }}>
-          <label className="label" htmlFor="skills-text">Твои навыки</label>
+        {/* v26: пикер разложен по смысловым группам (чипы 44px, подписи-разделители) */}
+        <section className="card picker fx-conic" id="skills" style={{ marginTop: 28 }}>
+          <div className="picker__head">
+            <label className="label" htmlFor="skills-text" style={{ marginBottom: 0 }}>
+              Твои навыки
+            </label>
+            <span className="picker__count">
+              {hasSelection
+                ? `${selected.length} выбрано — этого достаточно`
+                : 'Можно выбрать чипы или написать текстом'}
+            </span>
+          </div>
           <textarea
             id="skills-text"
             rows={2}
@@ -181,56 +266,63 @@ export default function Home() {
             onChange={(e) => setText(e.target.value)}
             placeholder="например: html, css, python, 1с"
             className="input"
+            style={{ marginTop: 12 }}
           />
 
-          <div className="chips">
-            {SKILLS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => toggleChip(chip)}
-                className={`chip ${selected.includes(chip) ? 'on' : ''}`}
-                aria-pressed={selected.includes(chip)}
-              >
-                {chip}
-              </button>
-            ))}
+          <div className="picker-group">
+            <div className="picker-group__label">Разработка и IT</div>
+            <div className="chips">
+              {SKILLS.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => toggleChip(chip)}
+                  className={`chip ${selected.includes(chip) ? 'on' : ''}`}
+                  aria-pressed={selected.includes(chip)}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="chips" style={{ marginTop: 8 }}>
-            {SKILLS_LIFE.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => toggleChip(chip)}
-                className={`chip chip-sm ${selected.includes(chip) ? 'on' : ''}`}
-                aria-pressed={selected.includes(chip)}
-              >
-                {chip}
-              </button>
-            ))}
+          <div className="picker-group">
+            <div className="picker-group__label">Профессии вне IT</div>
+            <div className="chips">
+              {SKILLS_LIFE.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => toggleChip(chip)}
+                  className={`chip chip-sm ${selected.includes(chip) ? 'on' : ''}`}
+                  aria-pressed={selected.includes(chip)}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="chips" style={{ marginTop: 8 }}>
-            {SKILLS_SPEC.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => toggleChip(chip)}
-                className={`chip chip-sm ${selected.includes(chip) ? 'on' : ''}`}
-                aria-pressed={selected.includes(chip)}
-              >
-                {chip}
-              </button>
-            ))}
+          <div className="picker-group">
+            <div className="picker-group__label">Специальности колледжа</div>
+            <div className="chips">
+              {SKILLS_SPEC.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => toggleChip(chip)}
+                  className={`chip chip-sm ${selected.includes(chip) ? 'on' : ''}`}
+                  aria-pressed={selected.includes(chip)}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
           </div>
-          <p className="small" style={{ margin: '8px 0 0' }}>
-            Не только IT: специальности колледжа — в той же базе направлений.
-          </p>
 
-          <div style={{ marginTop: 20 }}>
-            <span className="label">Курс</span>
-            <div className="chips" style={{ marginTop: 0 }}>
+          <div className="picker-group">
+            <div className="picker-group__label">Курс</div>
+            <div className="chips">
               {COURSES.map((c) => (
                 <button
                   key={c}
@@ -246,16 +338,9 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="row-between" style={{ marginTop: 18 }}>
-            <span className="small">
-              {hasSelection
-                ? `${selected.length} выбрано — этого достаточно`
-                : 'Можно выбрать чипы или написать текстом'}
-            </span>
-            <button type="button" onClick={fillExample} className="btn btn-ghost">
-              Подставить пример
-            </button>
-          </div>
+          <p className="small picker-note">
+            Не только IT: специальности колледжа — в той же базе направлений.
+          </p>
 
           {error && (
             <div className="alert alert-warn" role="alert" style={{ marginTop: 16 }}>
@@ -317,6 +402,18 @@ export default function Home() {
             Версия для работодателя →
           </Link>
         </section>
+
+        {/* v26: футер + атрибуция фото талисмана (public domain) */}
+        <footer className="site-footer">
+          <span>Карьерный трекер СИУЭиП</span>
+          <span>
+            <Link href="/employer">Версия для работодателя</Link>
+          </span>
+          <span className="site-footer__credit">
+            Фото лиса: «Red Fox at Puale Bay», USFWS Alaska, public domain
+            (Wikimedia Commons)
+          </span>
+        </footer>
       </main>
     </>
   )

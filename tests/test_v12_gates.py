@@ -74,18 +74,20 @@ def test_dark_block_rewrites_tokens_only():
 
 
 def test_light_palette_byte_stable():
+    # v26: палитра обновлена осознанно (редизайн) — пин пересчитан, чтобы
+    # новые значения снова не «утекли» молча. Тёмная тема — в v26-гейте.
     for pair in (
-        "--bg: #F6F4EF;",
+        "--bg: #F2EFE8;",
         "--surface: #FFFFFF;",
-        "--surface-2: #F1EFE7;",
-        "--line: #DCD6C9;",
-        "--ink: #12141A;",
+        "--surface-2: #ECE8DE;",
+        "--line: #DFD9CB;",
+        "--ink: #14161C;",
         "--accent: #5B4CFF;",
         "--match: #12B981;",
         "--gap: #FF8A3D;",
-        "--accent-text: #5B4CFF;",
-        "--veil: rgba(246,244,239,.97);",
-        "--header-bg: rgba(246,244,239,.98);",
+        "--accent-text: #4A3EE0;",
+        "--veil: rgba(242,239,232,.97);",
+        "--header-bg: rgba(242,239,232,.86);",
         "--track: #D8D2C4;",
     ):
         assert pair in CSS, f"светлая палитра изменилась: {pair}"
@@ -102,7 +104,7 @@ def test_print_reset_inside_last_mute_block_and_after_dark():
     assert 'html[data-theme="dark"]' in tail
     assert "--ink: #000" in tail
     # сброс в файле ПОСЛЕ dark-блока — иначе каскад отменит его в печати
-    assert CSS.rindex('html[data-theme="dark"]') > CSS.index("--muted-2: #8A8074;")
+    assert CSS.rindex('html[data-theme="dark"]') > CSS.index("--muted-2: #9C9285;")
 
 
 def test_toggle_wired_on_all_pages():
