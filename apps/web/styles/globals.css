@@ -625,6 +625,25 @@ main { position: relative; z-index: 1; }
    и пыль «прорастает» из брюха и тонет ниже земли. Специфичность (0,2,0)
    выше (0,1,0) у .intro-fox *, порядок объявления не важен. */
 .intro-fox .fx-dust { transform-box: fill-box; transform-origin: 50% 50%; }
+/* v22: фото-карточка лиса вместо SVG. Фото запечено (public domain),
+   без фильтров/blend; зум и посадка — transition, не @keyframes. */
+.intro-photo {
+  position: absolute; inset: 0;
+  border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  transform: translateY(-6px);
+  transition: transform 360ms var(--ease) 1560ms;
+}
+.is-run .intro-photo { transform: translateY(0); }
+.intro-photo__img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  transform: scale(1.03);
+  transition: transform var(--tl, 4200ms) linear;
+}
+.is-run .intro-photo__img { transform: scale(1); }
 /* ==== хореография (бег 0–1720, посадка 1560–1860, idle до 4200) ==== */
 .is-run .intro-fox-wrap { animation: foxRun 1720ms cubic-bezier(.3, 0, .38, 1) both; }
 /* v10: 90.7%→96% — к старту прыжка остаётся ~6px хода (замер @1280): лис
