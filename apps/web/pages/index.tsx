@@ -159,7 +159,7 @@ export default function Home() {
                 на opacity (fadeIn), без новых keyframes. v17c: второй слой —
                 ::after, в innerText/копировании одна «SUPERNOVA». */}
             <p className="supernova">SUPERNOVA</p>
-            <h1>
+            <h1 className="hero-title">
               Куда тебе <span className="grad">расти?</span>
             </h1>
             <p className="hero__sub">

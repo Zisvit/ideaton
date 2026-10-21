@@ -97,14 +97,17 @@ def test_fallback_metrics_are_measured():
 
 
 def test_font_display_strategy():
-    """Manrope — swap (фолбэк повторяет строчку точно), Unbounded — optional.
+    """Обе гарнитуры — на swap: брендовый заголовок появляется всегда.
 
-    Замерено в браузере: у Manrope фолбэк даёт ту же высоту строки (delta 0),
-    а у Unbounded фолбэк не воспроизводит перенос заголовка (2 строки против
-    1 → прыжок 58 px). Со swap это даёт CLS, с optional — брендовый заголовок
-    появляется, только если файл успел за ~100 мс (preload + свой origin)."""
+    Чтобы подмена не двигала макет, ширина заголовка зафиксирована так, что
+    Unbounded и метрический фолбэк дают одинаковое число строк (замерено в
+    браузере: высота блока совпадает)."""
     for block in re.findall(r"@font-face \{(.*?)\}", CSS, re.S):
         if 'font-family: "Manrope"' in block and "font-style" in block:
             assert "font-display: swap" in block
         if 'font-family: "Unbounded"' in block:
-            assert "font-display: optional" in block
+            assert "font-display: swap" in block
+    # заголовок резервирует две строки: без резерва подмена шрифта (Unbounded
+    # против фолбэка) сдвигала бы блок на 58 px
+    assert ".hero-title { min-height: 2.08em; }" in CSS
+    assert 'className="hero-title"' in (WEB / "pages/index.tsx").read_text(encoding="utf-8")
