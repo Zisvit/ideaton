@@ -84,7 +84,7 @@ def test_fallback_metrics_are_measured():
     }
     for family, (size, asc, desc, gap) in expected.items():
         block = re.search(
-            r'@font-face \{\s*font-family: "' + re.escape(family) + r'";(.*?)\}',
+            r'@font-face \{[^}]*?font-family: "' + re.escape(family) + r'";(.*?)\}',
             CSS,
             re.S,
         )
@@ -96,11 +96,15 @@ def test_fallback_metrics_are_measured():
         assert f"line-gap-override: {gap}" in body, f"{family}: line-gap-override изменился"
 
 
-def test_display_font_always_applies():
-    """Unbounded — на swap: с измеренным фолбэком подмена невидима, и
-    брендовый заголовок появляется всегда (optional мог не дать его на первом
-    визите — тихая потеря фирменного вида)."""
+def test_font_display_strategy():
+    """Manrope — swap (фолбэк повторяет строчку точно), Unbounded — optional.
+
+    Замерено в браузере: у Manrope фолбэк даёт ту же высоту строки (delta 0),
+    а у Unbounded фолбэк не воспроизводит перенос заголовка (2 строки против
+    1 → прыжок 58 px). Со swap это даёт CLS, с optional — брендовый заголовок
+    появляется, только если файл успел за ~100 мс (preload + свой origin)."""
     for block in re.findall(r"@font-face \{(.*?)\}", CSS, re.S):
-        if 'font-family: "Unbounded"' in block:
+        if 'font-family: "Manrope"' in block and "font-style" in block:
             assert "font-display: swap" in block
-    assert "font-display: optional" not in CSS
+        if 'font-family: "Unbounded"' in block:
+            assert "font-display: optional" in block
