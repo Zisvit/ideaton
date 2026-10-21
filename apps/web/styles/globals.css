@@ -41,7 +41,8 @@
   --shadow: 0 8px 24px rgba(18,20,26,.08);
   /* v24: фото-карточка лиса — своя тень и скрим (в тёмной теме переопределяются) */
   --photo-shadow: 0 8px 24px rgba(18,20,26,.08);
-  --photo-scrim: transparent;
+  /* v25: фон карточки под вырезкой лиса (PNG с альфой) — тёплый градиент */
+  --photo-bg: radial-gradient(120% 110% at 32% 22%, #FFF7EA 0%, #F3E6D2 55%, #E7D6BB 100%);
   --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: "Unbounded", "Manrope", system-ui, sans-serif;
   --max: 1180px;
@@ -628,30 +629,27 @@ main { position: relative; z-index: 1; }
    и пыль «прорастает» из брюха и тонет ниже земли. Специфичность (0,2,0)
    выше (0,1,0) у .intro-fox *, порядок объявления не важен. */
 .intro-fox .fx-dust { transform-box: fill-box; transform-origin: 50% 50%; }
-/* v22: фото-карточка лиса вместо SVG. Фото запечено (public domain),
-   без фильтров/blend; зум и посадка — transition, не @keyframes. */
+/* v22: фото-карточка лиса вместо SVG. Растр запечён (public domain),
+   без фильтров/blend; зум и посадка — transition, не @keyframes.
+   v25: в карточке теперь вырезка лиса без фона (PNG с альфой), поэтому
+   фон карточки — токенный градиент, а картинку нельзя кропить (contain). */
 .intro-photo {
   position: absolute; inset: 0;
   border-radius: var(--radius-lg); overflow: hidden;
-  background: var(--surface);
+  background: var(--photo-bg);
   border: 1px solid var(--line);
   box-shadow: var(--photo-shadow);
   transform: translateY(-6px);
   transition: transform 360ms var(--ease) 1560ms;
 }
 .is-run .intro-photo { transform: translateY(0); }
-/* v24: скрим поверх фото (тёмная тема приглушает снимок, без filter/blend) */
-.intro-photo::after {
-  content: ""; position: absolute; inset: 0;
-  background: var(--photo-scrim); pointer-events: none;
-}
 /* v24: фото не загрузилось — нейтральная карточка вместо битой картинки */
 .intro-photo--fallback {
-  background: linear-gradient(135deg, var(--hero-a) 0%, var(--hero-b) 100%);
+  background: var(--surface-2);
 }
 .intro-photo__img {
   display: block; width: 100%; height: 100%;
-  object-fit: cover; object-position: center;
+  object-fit: contain; object-position: center;
   transform: scale(1.03);
   transition: transform var(--tl, 4200ms) linear;
 }
@@ -1180,7 +1178,7 @@ html[data-theme="dark"] {
   --header-bg: rgba(18,17,16,.98);
   /* v24: на тёмной вуали фото-карточка не должна читаться «наклейкой» */
   --photo-shadow: 0 18px 44px rgba(0,0,0,.55), 0 0 0 1px rgba(255,214,170,.10);
-  --photo-scrim: rgba(18,17,16,.14);
+  --photo-bg: radial-gradient(120% 110% at 32% 22%, #4A3A29 0%, #2A211A 55%, #181310 100%);
   --hero-a: #1E1A16; --hero-b: #2B2620;
   --ring-mix: #1B1815;
   --bubble-bg: #262119; --bubble-ink: #F0ECE6;
