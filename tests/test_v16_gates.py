@@ -104,16 +104,18 @@ def test_wordmark_copy_has_no_duplicate():
     assert 'content: "SUPERNOVA"' in alt
 
 
-def test_alt_layer_is_pseudo_inside_background_clip_supports():
-    """v17c: второй слой — ::after внутри @supports background-clip. Без
-    поддержки clip псевдоэлемент не создаётся — второго текста в потоке нет."""
+def test_alt_layer_requires_content_alt_support():
+    """v17d: псевдослой создаём только при поддержке alt-текста в content.
+    Старый браузер получает один базовый градиент — без дубля для SR."""
     css = _strip_comments(CSS)
     supports = css.index(
         "@supports ((-webkit-background-clip: text)", css.index(".supernova {")
     )
-    alt = css.index(".supernova::after {", supports)
-    assert alt > supports
+    alt_supports = css.index('@supports (content: "x" / "")', supports)
+    alt = css.index(".supernova::after {", alt_supports)
+    assert alt > alt_supports
     block = css[alt : css.index("}", alt)]
+    assert 'content: "SUPERNOVA" / ""' in block
     assert "position: absolute" in block
     assert "opacity: 0" in block
     assert "user-select: none" in block

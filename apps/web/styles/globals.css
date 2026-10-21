@@ -212,33 +212,33 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
 /* v17c (совет): второй слой — ::after, а не живой текст в DOM. innerText и
    копирование дают одну «SUPERNOVA»; content с alt-текстом скрывает
    псевдоэлемент от скринридера. Геометрия/градиент только внутри
-   @supports: без background-clip:text второго слоя нет. */
+   @supports: без background-clip:text второго слоя нет.
+   v17d: псевдослой создаём ТОЛЬКО там, где поддержан alt-текст content.
+   Иначе (старый браузер) второго слоя нет вовсе — базовый градиент
+   остаётся, дубля для скринридера не появляется. */
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .supernova {
     background-image: linear-gradient(96deg, var(--accent-text) 0%, var(--supernova-blue) 28%, var(--accent-2) 52%, var(--brand-violet) 76%, var(--accent-text) 100%);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
   }
-  /* второй слой — та же надпись зеркальным градиентом; перетекание по
-     opacity (fadeIn переиспользован как цикл). transform из fadeIn снят
-     !important: нужен только opacity, иначе слой ездит по вертикали и в
-     полупрозрачной фазе даёт двойной контур. */
-  .supernova::after {
-    content: "SUPERNOVA";
-    position: absolute; inset: 0; pointer-events: none;
-    /* копирование/выделение берёт только базовый слой — без дубля «SUPERNOVA» */
-    user-select: none;
-    opacity: 0;
-    transform: none !important;
-    background-image: linear-gradient(96deg, var(--brand-violet) 0%, var(--accent-2) 28%, var(--supernova-blue) 52%, var(--accent-2) 76%, var(--brand-violet) 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent; color: transparent;
-    animation: fadeIn 2.8s var(--ease) infinite alternate;
-  }
-  /* content с alt-текстом: псевдотекст не дублируется в accessibility tree
-     (Chrome 131+). Старые браузеры оставляют простое content — визуал тот же. */
   @supports (content: "x" / "") {
-    .supernova::after { content: "SUPERNOVA" / ""; }
+    /* второй слой — та же надпись зеркальным градиентом; перетекание по
+       opacity (fadeIn переиспользован как цикл). transform из fadeIn снят
+       !important: нужен только opacity, иначе слой ездит по вертикали и в
+       полупрозрачной фазе даёт двойной контур. */
+    .supernova::after {
+      content: "SUPERNOVA" / "";
+      position: absolute; inset: 0; pointer-events: none;
+      /* копирование/выделение берёт только базовый слой — без дубля «SUPERNOVA» */
+      user-select: none;
+      opacity: 0;
+      transform: none !important;
+      background-image: linear-gradient(96deg, var(--brand-violet) 0%, var(--accent-2) 28%, var(--supernova-blue) 52%, var(--accent-2) 76%, var(--brand-violet) 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: transparent;
+      animation: fadeIn 2.8s var(--ease) infinite alternate;
+    }
   }
 }
 
