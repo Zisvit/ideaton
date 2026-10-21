@@ -30,8 +30,12 @@ def test_boot_script_is_prepaint_and_strict_light():
     # строгий дефолт: системная тема НЕ читается
     assert "prefers-color-scheme" not in DOC
     assert "matchMedia" not in DOC
-    # скрипт объявлен до компонента и стоит до таблицы шрифтов
-    assert DOC.index("THEME_BOOT") < DOC.index("fonts.googleapis.com")
+    # v28: внешнего CSS шрифтов больше нет (свои файлы в public/fonts) —
+    # boot-скрипт темы обязан идти до preload шрифтов, иначе первая
+    # отрисовка будет без темы.
+    assert DOC.index("THEME_BOOT") < DOC.index('rel="preload"')
+    assert "fonts.googleapis.com" not in DOC
+    assert "fonts.gstatic.com" not in DOC
     assert DOC.index("const THEME_BOOT") < DOC.index("export default function Document")
 
 

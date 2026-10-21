@@ -1,3 +1,51 @@
+/* v28: шрифты живут в репозитории (public/fonts), а не на внешнем CDN Google:
+   он в РФ часто недоступен — пользователь молча получал system-ui. Лицензии SIL OFL 1.1: public/fonts/OFL.txt (Manrope) и
+   public/fonts/OFL-unbounded.txt (Unbounded). Нам нужны только кириллица и
+   латиница (плюс cyrillic-ext про запас) — greek/vietnamese/latin-ext не
+   отдаём: у Unbounded latin-ext весит 118 КБ.
+   Manrope — вариативная гарнитура (200–800), Unbounded — 500/600 из одного файла. */
+@font-face {
+  font-family: "Manrope"; font-style: normal; font-weight: 200 800;
+  font-display: swap; src: url("/fonts/manrope-cyrillic-ext.woff2") format("woff2");
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: "Manrope"; font-style: normal; font-weight: 200 800;
+  font-display: swap; src: url("/fonts/manrope-cyrillic.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Manrope"; font-style: normal; font-weight: 200 800;
+  font-display: swap; src: url("/fonts/manrope-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Unbounded"; font-style: normal; font-weight: 500 600;
+  font-display: optional; src: url("/fonts/unbounded-cyrillic-ext.woff2") format("woff2");
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: "Unbounded"; font-style: normal; font-weight: 500 600;
+  font-display: optional; src: url("/fonts/unbounded-cyrillic.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Unbounded"; font-style: normal; font-weight: 500 600;
+  font-display: optional; src: url("/fonts/unbounded-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* метрические фолбэки: пока приходит свой шрифт, строки не прыгают */
+@font-face {
+  font-family: "Manrope Fallback"; src: local("Arial"), local("Helvetica Neue");
+  size-adjust: 100.8%; ascent-override: 90.6%; descent-override: 25.4%; line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Unbounded Fallback"; src: local("Arial");
+  size-adjust: 104.1%; ascent-override: 96.5%; descent-override: 24.1%; line-gap-override: 0%;
+}
+
 :root {
   /* v26: новая светлая палитра — тёплая бумага + плоскости с хайрлайном.
      Контраст текста ≥4.5:1, интерактивных границ ≥3:1 (совет minimax). */
@@ -53,8 +101,8 @@
   --photo-shadow: 0 8px 24px rgba(18,20,26,.08);
   /* v25: фон карточки под вырезкой лиса (PNG с альфой) — тёплый градиент */
   --photo-bg: radial-gradient(120% 110% at 32% 22%, #FFF7EA 0%, #F3E6D2 55%, #E7D6BB 100%);
-  --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Unbounded", "Manrope", system-ui, sans-serif;
+  --font-sans: "Manrope", "Manrope Fallback", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Unbounded", "Unbounded Fallback", "Manrope", system-ui, sans-serif;
   --max: 1200px;
   --ease: cubic-bezier(.2,.7,.2,1);
 }

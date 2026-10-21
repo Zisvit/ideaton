@@ -17,19 +17,43 @@ export default function Document() {
     <Html lang="ru" data-theme="light">
       <Head>
         <meta name="theme-color" content="#F2EFE8" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* v28: шрифты свои (public/fonts) — внешних preconnect не нужно:
+            CDN Google в РФ часто недоступен, и пользователь молча получал
+            system-ui вместо фирменных шрифтов. */}
         {/* v12: до первой отрисовки — выбор темы из localStorage (ноль FOUC);
             без JS и без ключа остаётся серверный data-theme="light" */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
-        {/* Manrope — текст и цифры (tabular), Unbounded 500 — только h1/бренд:
-            дисплейный шрифт тяжелее 500 нигде не используется. font-display=swap: офлайн → system-ui. */}
-        {/* v26: Manrope — одна вариативная гарнитура (200–800) вместо пяти
-            статических начертаний: браузер тянет 2 файла вместо 10;
-            Unbounded — два начертания (500/600). */}
+        {/* v28: preload своих шрифтов (Manrope — текст, Unbounded — заголовки).
+            crossOrigin обязателен: иначе preload и CSS-фетч разъедутся и файл
+            скачается дважды. Unbounded в CSS с font-display: optional — без
+            подмены шрифта на первом визите (ноль CLS на h1). */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Unbounded:wght@500;600&display=swap"
-          rel="stylesheet"
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+          href="/fonts/manrope-cyrillic.woff2"
+        />
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+          href="/fonts/manrope-latin.woff2"
+        />
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+          href="/fonts/unbounded-cyrillic.woff2"
+        />
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+          href="/fonts/unbounded-latin.woff2"
         />
       </Head>
       <body>
