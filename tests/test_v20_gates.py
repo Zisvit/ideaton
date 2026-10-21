@@ -43,7 +43,9 @@ def test_fur_is_wired_to_animated_rig() -> None:
     ):
         assert f'id="{base}"' in FOX, f"нет геометрии {base}"
         assert f'href="#{base}"' in FOX, f"нет <use> {base}"
-    assert FOX.count("url(#foxFurBody)") >= 3, "текстура не на корпусе/голове/ушах"
+    # v21: тайл 128u на голове/ушах давал пятно, а не мех; текстура
+    # осталась только на корпусе и хвосте (см. test_v21_gates).
+    assert FOX.count("url(#foxFurBody)") >= 1, "текстура не на корпусе"
     assert "url(#foxFurTail)" in FOX, "текстура не на хвосте"
 
 

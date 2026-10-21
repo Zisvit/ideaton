@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""v20: бесшовный тайл шерсти лиса (fox-fur-128.png).
+"""v21: бесшовный тайл шерсти лиса (fox-fur-128.png).
 
 Растровая текстура для SVG-рига: печём PNG-плитку 128×128, чтобы не
 гонять feTurbulence/фильтры по анимируемым группам (совет v20: фильтры
 на transform-анимации = перерисовка filter-region каждый кадр).
+v21: штрихи идут ВДОЛЬ оси тела (углы около 0°), а не поперёк: старые
+вертикальные штрихи на горизонтальном корпусе читались как вагонка.
 Штрихи двуполярные (тёмные/светлые/подшёрсток), низкий контраст, фон
 прозрачный. Плитка seamless: каждый штрих рисуется с wrap-копиями ±SIZE,
 поэтому на стыках pattern нет швов.
@@ -27,11 +29,18 @@ PALETTE = [
     (255, 217, 160),
     (122, 58, 26),
 ]
-TRNS = [0, 70, 105, 140, 55, 85, 80]
+# v21: альфа ниже — на 300px текстура читается как мех, а не как полосы.
+TRNS = [0, 52, 72, 92, 44, 62, 58]
 
 DARK = (1, 2, 3)
 LIGHT = (4, 5)
 MID = (6,)
+
+# Углы в градусах вокруг оси тела. Держим диапазон узким: 0° = вправо,
+# ±12° даёт лёгкий наклон ворса, но не поперечные полосы.
+DARK_ANGLE = (-12, 12)
+MID_ANGLE = (-16, 16)
+LIGHT_ANGLE = (-10, 10)
 
 
 def png_chunk(tag: bytes, body: bytes) -> bytes:
@@ -111,38 +120,39 @@ def make_fur() -> list:
     rng = random.Random(SEED)
     canvas = [0] * (SIZE * SIZE)
 
-    # подшёрсток — короткие мягкие штрихи
-    for _ in range(220):
+    # подшёрсток — короткие мягкие штрихи вдоль тела
+    for _ in range(100):
         stroke(
             canvas,
             rng.uniform(0, SIZE),
             rng.uniform(0, SIZE),
-            math.radians(rng.uniform(70, 92)),
+            math.radians(rng.uniform(*MID_ANGLE)),
             rng.uniform(3.0, 7.0),
             rng.choice(MID),
             1.2,
         )
-    # остевые волосы — длиннее и темнее
-    for _ in range(520):
+    # остевые волосы — длиннее и темнее; 160 штрихов вместо 520:
+    # плотная сетка давала «шпон», а не мех
+    for _ in range(160):
         stroke(
             canvas,
             rng.uniform(0, SIZE),
             rng.uniform(0, SIZE),
-            math.radians(rng.uniform(65, 100)),
-            rng.uniform(5.0, 11.0),
+            math.radians(rng.uniform(*DARK_ANGLE)),
+            rng.uniform(6.0, 14.0),
             rng.choice(DARK),
-            rng.uniform(1.0, 2.0),
+            rng.uniform(0.9, 1.7),
         )
-    # световые пряди — редкие, тёплые
-    for _ in range(180):
+    # световые пряди — редкие, тёплые; тот же наклон, что у остевых
+    for _ in range(70):
         stroke(
             canvas,
             rng.uniform(0, SIZE),
             rng.uniform(0, SIZE),
-            math.radians(rng.uniform(60, 105)),
-            rng.uniform(4.0, 9.0),
+            math.radians(rng.uniform(*LIGHT_ANGLE)),
+            rng.uniform(5.0, 12.0),
             rng.choice(LIGHT),
-            rng.uniform(0.9, 1.6),
+            rng.uniform(0.8, 1.4),
         )
     return canvas
 
