@@ -26,26 +26,69 @@ CSS = (WEB / "styles/globals.css").read_text(encoding="utf-8")
 INDEX = (WEB / "pages/index.tsx").read_text(encoding="utf-8")
 
 
-def _tokens(dark: bool = False) -> dict[str, str]:
-    """Токены темы: светлой (первый :root) или тёмной (первый dark-блок)."""
-    src = CSS
-    if dark:
-        m = re.search(r'html\[data-theme="dark"\]\s*\{', CSS)
-        assert m, "нет тёмного блока"
-        i = CSS.index("{", m.end() - 1)
-        depth, j = 0, i
-        while j < len(CSS):
-            if CSS[j] == "{":
+def _strip_comments(css: str) -> str:
+    return re.sub(r"/\*[\s\S]*?\*/", "", css)
+
+
+def _strip_media(css: str) -> str:
+    """Убрать все @media-блоки: токены внутри них (печать, prefers-contrast)
+    не действуют в обычном режиме и не должны «побеждать» в каскаде."""
+    out, i = [], 0
+    while True:
+        j = css.find("@media", i)
+        if j < 0:
+            out.append(css[i:])
+            return "".join(out)
+        out.append(css[i:j])
+        k = css.index("{", j)
+        depth, p = 0, k
+        while p < len(css):
+            if css[p] == "{":
                 depth += 1
-            elif CSS[j] == "}":
+            elif css[p] == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            p += 1
+        i = p + 1
+
+
+def _blocks(css: str, selector: str) -> list[str]:
+    """Тела всех top-level блоков с селектором (в т.ч. внутри @media — нет)."""
+    out = []
+    for m in re.finditer(re.escape(selector) + r"\s*\{", css):
+        i = css.index("{", m.end() - 1)
+        depth, j = 0, i
+        while j < len(css):
+            if css[j] == "{":
+                depth += 1
+            elif css[j] == "}":
                 depth -= 1
                 if depth == 0:
                     break
             j += 1
-        src = CSS[i + 1 : j]
+        out.append(css[i + 1 : j])
+    return out
+
+
+def _tokens(dark: bool = False) -> dict[str, str]:
+    """ЭФФЕКТИВНЫЕ токены темы: последнее объявление побеждает в каскаде.
+
+    Раньше гейт брал первое вхождение — и проверял мёртвые значения из
+    первого :root, пока ниже был переопределяющий блок (minimax, раунд 2:
+    «зелёный гейт при фактическом провале 2.54:1»)."""
+    top = _strip_media(_strip_comments(CSS))
+    darks = _blocks(top, 'html[data-theme="dark"]')
+    if dark:
+        assert darks, "нет тёмного блока"
+        src = darks[0]
+    else:
+        src = top
+        for blk in darks:
+            src = src.replace(blk, "")
     out: dict[str, str] = {}
     for name, value in re.findall(r"--([a-z0-9-]+):\s*([^;]+);", src):
-        out.setdefault(name, value.strip())
+        out[name] = value.strip()
     return out
 
 
@@ -77,11 +120,13 @@ def test_key_palette_contrast_is_aa():
         ("ink-2", "bg", 4.5),
         ("muted", "bg", 4.5),
         ("muted-2", "surface", 4.5),
+        ("muted-2", "surface-2", 4.5),
         ("accent-text", "bg", 4.5),
         ("on-match", "match", 4.5),
         ("gap-ink", "gap-soft", 4.5),
         ("match-ink", "surface-2", 4.5),
         ("line-strong", "surface", 3.0),
+        ("accent", "surface-2", 3.0),
     ]
     for fg, bg, need in pairs:
         assert fg in t and bg in t, f"нет токена {fg}/{bg}"
@@ -101,6 +146,7 @@ def test_dark_theme_contrast_is_aa():
         ("match-ink", "surface-2", 4.5),
         ("gap-ink", "gap-soft", 4.5),
         ("line-strong", "surface", 3.0),
+        ("accent", "surface-2", 3.0),
     ]
     for fg, bg, need in pairs:
         assert fg in t and bg in t, f"в тёмной теме нет токена {fg}/{bg}"
@@ -116,11 +162,15 @@ def test_touch_targets_are_44px():
     assert re.search(r"\.btn-ghost \{[^}]*min-height:\s*44px", CSS, re.S), (
         "btn-ghost < 44px"
     )
-    assert re.search(r"\.theme-toggle__btn \{[^}]*min-height:\s*44px", CSS, re.S), (
-        "переключатель темы < 44px"
+    # переключатель темы: визуальная высота 30px + хит-зона 44px через ::after
+    assert re.search(r"\.theme-toggle__btn \{[^}]*min-height:\s*30px", CSS, re.S), (
+        "переключатель темы: нет визуальной высоты"
+    )
+    assert re.search(r"\.theme-toggle__btn::after \{[^}]*inset:\s*-7px", CSS, re.S), (
+        "переключатель темы: нет хит-зоны 44px"
     )
     assert re.search(r"\.check \{[^}]*width:\s*24px", CSS, re.S), "чекбокс < 24px"
-    assert ".check::after" in CSS, "нет хит-зоны 44px у чекбокса"
+    assert ".check::before" in CSS, "нет хит-зоны 44px у чекбокса"
 
 
 def test_mobile_cta_does_not_cover_content():

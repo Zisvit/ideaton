@@ -150,7 +150,7 @@ export default function Home() {
         <div className="step-line" style={{ '--p': '33%' } as React.CSSProperties} />
       </header>
 
-      <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 88 }}>
+      <main id="main" className="container page-index" style={{ paddingTop: 40, paddingBottom: 88 }}>
         {/* v26: герой в две колонки — слева обещание и действия, справа
             «стеклянное» превью выдачи и талисман. Чистый CSS, без blur. */}
         <section className="hero-grid fade-in">

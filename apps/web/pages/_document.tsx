@@ -9,14 +9,14 @@ const THEME_BOOT =
   "if(t!=='dark')t='light';" +
   "document.documentElement.setAttribute('data-theme',t);" +
   "var m=document.querySelectorAll('meta[name=\"theme-color\"]');" +
-  "for(var i=0;i<m.length;i++){m[i].setAttribute('content',t==='dark'?'#121110':'#F6F4EF')}" +
+  "for(var i=0;i<m.length;i++){m[i].setAttribute('content',t==='dark'?'#141210':'#F2EFE8')}" +
   "}catch(e){}})()"
 
 export default function Document() {
   return (
     <Html lang="ru" data-theme="light">
       <Head>
-        <meta name="theme-color" content="#F6F4EF" />
+        <meta name="theme-color" content="#F2EFE8" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {/* v12: до первой отрисовки — выбор темы из localStorage (ноль FOUC);
@@ -24,8 +24,11 @@ export default function Document() {
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
         {/* Manrope — текст и цифры (tabular), Unbounded 500 — только h1/бренд:
             дисплейный шрифт тяжелее 500 нигде не используется. font-display=swap: офлайн → system-ui. */}
+        {/* v26: Manrope — одна вариативная гарнитура (200–800) вместо пяти
+            статических начертаний: браузер тянет 2 файла вместо 10;
+            Unbounded — два начертания (500/600). */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Unbounded:wght@500;600&display=swap"
           rel="stylesheet"
         />
       </Head>
