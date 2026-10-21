@@ -49,18 +49,35 @@ export default function Home() {
     setGuest(isGuestMode())
     // v6: conic-рамка — ЕДИНЫЙ оборот (transition 12s, НЕ keyframe-бесконеч-
     // ность, гейты §8 соблюены), старт после интро (или ≤300ms, если интро
-    // пропущено). is-swept-done снимает слой (teardown, big-pickle).
+    // пропущено). v17c: сцену закрыли раньше — стартуем по событию intro:done,
+    // не ждём страховочный +120. is-swept-done снимает слой (teardown).
     const card = document.querySelector('.fx-conic')
     const delay =
       shouldShowIntro() && !prefersReducedMotion() ? INTRO_MS + 120 : 300
-    const t1 = window.setTimeout(() => card?.classList.add('is-swept'), delay)
-    const t2 = window.setTimeout(
+    let sweepTimer = 0
+    let doneTimer = 0
+    const startConic = () => {
+      window.clearTimeout(sweepTimer)
+      window.clearTimeout(doneTimer)
+      // bfcache: index не перемонтируется, teardown-класс с прошлого показа
+      // остался — снимаем его, иначе conic не сделает новый оборот
+      card?.classList.remove('is-swept-done')
+      card?.classList.add('is-swept')
+      doneTimer = window.setTimeout(
+        () => card?.classList.add('is-swept-done'),
+        12300
+      )
+    }
+    sweepTimer = window.setTimeout(startConic, delay)
+    doneTimer = window.setTimeout(
       () => card?.classList.add('is-swept-done'),
       delay + 12300
     )
+    window.addEventListener('intro:done', startConic)
     return () => {
-      window.clearTimeout(t1)
-      window.clearTimeout(t2)
+      window.clearTimeout(sweepTimer)
+      window.clearTimeout(doneTimer)
+      window.removeEventListener('intro:done', startConic)
     }
   }, [])
 
@@ -136,11 +153,9 @@ export default function Home() {
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 88 }}>
         <section className="band fade-in" style={{ paddingTop: 16, paddingBottom: 8 }}>
           {/* v16: капсовый вордмарк; «переливание» — два градиентных слоя
-              на opacity (fadeIn), без новых keyframes */}
-          <p className="supernova">
-            SUPERNOVA
-            <span className="supernova__alt" aria-hidden="true">SUPERNOVA</span>
-          </p>
+              на opacity (fadeIn), без новых keyframes. v17c: второй слой —
+              ::after, в innerText/копировании одна «SUPERNOVA». */}
+          <p className="supernova">SUPERNOVA</p>
           <h1 style={{ maxWidth: 660 }}>
             Куда тебе <span className="grad">расти?</span>
           </h1>

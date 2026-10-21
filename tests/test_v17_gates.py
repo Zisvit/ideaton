@@ -21,6 +21,7 @@ WEB = ROOT / "apps" / "web"
 APP = (WEB / "pages" / "_app.tsx").read_text(encoding="utf-8")
 INTRO = (WEB / "lib" / "intro.ts").read_text(encoding="utf-8")
 INDEX = (WEB / "pages" / "index.tsx").read_text(encoding="utf-8")
+SCENE = (WEB / "components" / "IntroScene.tsx").read_text(encoding="utf-8")
 CSS = (WEB / "styles" / "globals.css").read_text(encoding="utf-8")
 
 
@@ -65,7 +66,9 @@ def test_intro_blocks_focus_behind_overlay():
     app = _strip_comments(APP)
     # v17b: контент и skip-link inert, пока сцена открыта (WCAG 2.4.11)
     assert app.count("inert={showIntro ? true : undefined}") >= 2
-    # фокус возвращаем после коммита React (снятия inert), не в тот же кадр
+    # фокус возвращаем после коммита React (снятия inert), не в тот же кадр;
+    # v17c: flushSync делает коммит синхронным и для таймера естественного закрытия
+    assert "flushSync" in app
     assert "setTimeout" in app
 
 
@@ -75,6 +78,29 @@ def test_conic_delay_matches_intro_replay():
     assert (
         "shouldShowIntro() && !prefersReducedMotion() ? INTRO_MS + 120 : 300" in index
     )
+    # v17c: ранний скип стартует conic сразу, не ждёт +120
+    assert "window.addEventListener('intro:done', startConic)" in index
+    assert "window.removeEventListener('intro:done', startConic)" in index
+
+
+def test_intro_close_has_no_invisible_tail():
+    """v17c: закрытие ровно на INTRO_MS, а не +120 — иначе оверлей уже
+    невидим, но ещё ловит клики."""
+    scene = _strip_comments(SCENE)
+    assert "window.setTimeout(finish, INTRO_MS)" in scene
+    assert "INTRO_MS + 120" not in scene
+
+
+def test_first_click_reaches_content():
+    """v17c: клик по кнопке/ссылке под сценой не «съедается» — сцена
+    закрывается, элемент активируется; skip-кнопка не проваливается."""
+    scene = _strip_comments(SCENE)
+    assert "elementsFromPoint" in scene
+    assert "interactiveUnder" in scene
+    assert "window.dispatchEvent(new Event('intro:done'))" in scene
+    assert "target.click()" in scene
+    assert "target.focus({ preventScroll: true })" in scene
+    assert "e.stopPropagation()" in scene
 
 
 def test_header_does_not_overflow_at_320():

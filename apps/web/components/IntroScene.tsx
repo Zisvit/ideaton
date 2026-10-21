@@ -281,6 +281,30 @@ export function Fox() {
   )
 }
 
+const INTERACTIVE =
+  'a[href], button, [role="button"], input, textarea, select, label, summary'
+
+// v17c: первый клик по сцене не должен «съедаться». Если под оверлеем
+// интерактивный элемент — закрываем сцену И активируем его. Контент под
+// сценой inert, поэтому на время hit-test снимаем атрибут с обёртки и
+// возвращаем обратно; React снимет его при закрытии сцены.
+function interactiveUnder(x: number, y: number): HTMLElement | null {
+  const wrapper = document.getElementById('main')?.parentElement ?? null
+  const wasInert = wrapper?.hasAttribute('inert') ?? false
+  if (wrapper && wasInert) wrapper.removeAttribute('inert')
+  let found: HTMLElement | null = null
+  for (const node of document.elementsFromPoint(x, y)) {
+    if (!(node instanceof HTMLElement)) continue
+    const el = node.closest(INTERACTIVE) as HTMLElement | null
+    if (!el) continue
+    if (el.closest('.intro-overlay') || el.closest('.skip-link')) continue
+    found = el
+    break
+  }
+  if (wrapper && wasInert) wrapper.setAttribute('inert', '')
+  return found
+}
+
 // Интро-сцена: слой НАД уже отрендеренной «/». Контент под ним inert
 // (см. _app), поэтому фокус/клики не уходят в скрытые контролы; overflow не
 // трогаем — скролл не блокируем. Закрытие только по JS-таймеру или явному
@@ -296,9 +320,33 @@ export default function IntroScene({ onDone }: { onDone: () => void }) {
   const finish = React.useCallback(() => {
     if (!doneRef.current) {
       doneRef.current = true
+      // v17c: conic-рамка на главной стартует по факту закрытия сцены,
+      // а не по страховочному +120 (иначе после раннего скипа она ждёт).
+      window.dispatchEvent(new Event('intro:done'))
       onDone()
     }
   }, [onDone])
+
+  const onOverlayClick = React.useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if ((e.target as HTMLElement).closest('.intro-skip')) return
+      const target = interactiveUnder(e.clientX, e.clientY)
+      finish()
+      // Клик по кнопке/ссылке под сценой: сначала даём React снять inert,
+      // затем активируем элемент. Пустой клик просто закрывает сцену.
+      if (target) {
+        window.setTimeout(() => {
+          target.click()
+          // программный click() не фокусирует поле — первому клику по
+          // textarea/input/select нужен явный focus
+          if (target.matches('input, textarea, select')) {
+            target.focus({ preventScroll: true })
+          }
+        }, 0)
+      }
+    },
+    [finish]
+  )
 
   React.useEffect(() => {
     let cancelled = false
@@ -314,7 +362,8 @@ export default function IntroScene({ onDone }: { onDone: () => void }) {
     ]).then(() => {
       if (cancelled) return
       setRun(true) // единая шкала INTRO_MS=4200 стартует отсюда (CSS var --tl)
-      closeTimer = window.setTimeout(finish, INTRO_MS + 120) // страховка закрытия
+      // ровно конец шкалы: вуаль уже в opacity 0, невидимого хвоста нет
+      closeTimer = window.setTimeout(finish, INTRO_MS)
     })
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') finish()
@@ -355,7 +404,7 @@ export default function IntroScene({ onDone }: { onDone: () => void }) {
       className={`intro-overlay${run ? ' is-run' : ''}`}
       style={{ '--tl': `${INTRO_MS}ms` } as React.CSSProperties}
       role="presentation"
-      onClick={finish}
+      onClick={onOverlayClick}
     >
       <div className="intro-scene" aria-hidden="true">
         <div className="intro-aurora" />
@@ -371,7 +420,15 @@ export default function IntroScene({ onDone }: { onDone: () => void }) {
           <span className="intro-caption__meta">талисман проекта · карьерный трекер СИУЭиП</span>
         </div>
       </div>
-      <button type="button" ref={skipRef} className="intro-skip" onClick={finish}>
+      <button
+        type="button"
+        ref={skipRef}
+        className="intro-skip"
+        onClick={(e) => {
+          e.stopPropagation()
+          finish()
+        }}
+      >
         Пропустить
       </button>
     </div>
