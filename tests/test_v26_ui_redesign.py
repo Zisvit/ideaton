@@ -202,7 +202,7 @@ def test_new_blocks_exist():
     ):
         assert needle in INDEX, f"нет разметки {needle}"
     # футер указывает источник фото (public domain)
-    assert "Red Fox at Puale Bay" in INDEX
+    assert "Red fox (52869982404)" in INDEX
 
 
 def test_depth_without_filters_and_heavy_layers():
