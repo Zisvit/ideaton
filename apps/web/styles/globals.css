@@ -61,58 +61,64 @@
 }
 
 :root {
-  /* v26: новая светлая палитра — тёплая бумага + плоскости с хайрлайном.
-     Контраст текста ≥4.5:1, интерактивных границ ≥3:1 (совет minimax). */
-  --bg: #F2EFE8;
+  /* v33: палитра — по референсу career-tracker.html: фиолетовая (violet
+     #7444f4), лиловая подложка, глубокий сине-фиолетовый текст. Имена токенов
+     те же — поэтому все компоненты перекрасились разом, без правок вёрстки. */
+  --bg: #F8F7FC;
   --surface: #FFFFFF;
-  --surface-2: #ECE8DE;
-  --line: #DFD9CB;
-  --line-strong: #8B8271;   /* границы интерактивных контролов (3.4:1) */
-  --ink: #14161C;
-  --ink-2: #2C3038;
-  --muted: #59636F;
-  --muted-2: #5F6773;   /* 4.7:1 на --surface-2 */
-  --accent: #5B4CFF;
-  --accent-hover: #4A3EE0;
-  --accent-soft: #EDEBFF;
-  --accent-text: #4A3EE0;
-  --match: #12B981;
-  --match-soft: #E4F6EF;
-  --match-ink: #06694A;
-  --on-match: #06301F;       /* галочка на зелёном: 5.7:1 вместо 2.5:1 */
-  --gap: #FF8A3D;
-  --gap-soft: #FFF0E4;
-  --gap-ink: #B04E08;
-  --warn: #F59E0B;
-  --danger: #EF4444;
-  /* громкая палитра интро/фона/конфетти (голубо-сине-фиолет, совет longcat):
-     одна семья, оранжевые маркеры gap в неё не миксуем */
-  --brand-blue: #4E8CFF;
-  /* v17b (совет): голубой стоп вордмарка в светлой теме — 3.7:1 на --bg
-     (AA для крупного текста); #4E8CFF давал 2.9:1. В тёмной — brand-blue. */
-  --supernova-blue: #3B7AE8;
-  --brand-violet: #8B5CF6;
+  --surface-2: #F1EBFF;
+  --line: #EEEAF7;
+  --line-strong: #8F7FC7;   /* границы интерактивных контролов (3.5:1) */
+  --ink: #2B1952;
+  --ink-2: #4B3F63;
+  --muted: #6F6884;      /* 4.9:1 на --bg (AA) */
+  --muted-2: #6A6380;    /* 4.9:1 на --surface-2 (AA) */
+  --accent: #7444F4;
+  --accent-hover: #6333E6;
+  --accent-soft: #F1EBFF;
+  --accent-text: #6333E6;
+  --match: #3A9D67;
+  --match-soft: #E7F9AB;
+  --match-ink: #266E42;
+  --on-match: #06170F;      /* 5.6:1 на --match (AA) */
+  --gap: #F2683C;
+  --gap-soft: #FFEDE4;
+  --gap-ink: #B34A22;
+  --warn: #E8A400;
+  --danger: #E5484D;
+  --brand-blue: #7444F4;
+  --supernova-blue: #6333E6;
+  --brand-violet: #9A6BFF;
   --conf-1: var(--brand-blue);
   --conf-2: var(--brand-violet);
   /* цвет-маркер каждой из 5 ролей (никогда как текст — только рамка/тинт) */
-  --role-web: #5B4CFF;
+  --role-web: #7444F4;
   --role-1c: #E8590C;
   --role-qa: #0EA5E9;
   --role-support: #12B981;
-  --role-startup: #D97706; /* сдвинут от warn #F59E0B — semantic-столкновение устранено */
-  --graph-focus: #F7F3EA;   /* фокусный узел графа (на тёмном холсте) */
+  --role-startup: #D97706;
   --radius-sm: 10px;
-  --radius: 16px;
-  --radius-lg: 22px;
-  /* v26: глубина без blur — плоскость + внутренний хайрлайн + мягкая тень */
-  --hairline: rgba(255,255,255,.9);
-  --shadow-sm: 0 1px 2px rgba(18,20,26,.05);
-  --shadow: 0 1px 2px rgba(18,20,26,.04), 0 12px 30px -16px rgba(18,20,26,.22);
-  --shadow-float: 0 2px 6px rgba(18,20,26,.05), 0 30px 64px -28px rgba(18,20,26,.34);
+  --radius: 15px;
+  --radius-lg: 19px;
+  /* v33: глубина — плоскость + мягкая тень (как в референсе) */
+  --hairline: rgba(255, 255, 255, .9);
+  --shadow-sm: 0 1px 2px rgba(43, 25, 82, .05);
+  --shadow: 0 1px 2px rgba(43, 25, 82, .03), 0 8px 32px rgba(56, 37, 105, .05);
+  --shadow-float: 0 2px 6px rgba(43, 25, 82, .05), 0 24px 60px -24px rgba(43, 25, 82, .22);
   --font-sans: "Manrope", "Manrope Fallback", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: "Unbounded", "Unbounded Fallback", "Manrope", system-ui, sans-serif;
-  --max: 1200px;
-  --ease: cubic-bezier(.2,.7,.2,1);
+  --max: 1600px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --m-fast: 160ms;
+  --m-base: 260ms;
+  --m-slow: 520ms;
+  --m-stagger: 50ms;
+  --m-ease-inout: cubic-bezier(.4, 0, .2, 1);
+  --m-ease-back: cubic-bezier(.34, 1.3, .64, 1);
+  --m-sheen: 400ms;
+  --bg-drift-amp: 2.5%;
+  --bg-drift-period: 36s;
+  --graph-focus: #F7F3EA;
 }
 
 * { box-sizing: border-box; }
@@ -1372,23 +1378,25 @@ main { position: relative; z-index: 1; }
 
 /* ---- v12: токены тем (светлые = прежние литералы, тёмные — в блоке ниже) ---- */
 :root {
-  --accent-text: #4A3EE0;  /* акцент как текст/иконка; в тёмной — светлее */
-  --accent-2: #7C6BFF;     /* 2-й стоп градиента .grad/.intro-mark__glyph */
+  /* v33: значения синхронизированы с новой палитрой (фиолет по референсу) —
+     этот блок ниже :root, поэтому он и побеждает в каскаде. */
+  --accent-text: #6333E6;  /* акцент как текст/иконка; в тёмной — светлее */
+  --accent-2: #A98CFF;     /* 2-й стоп градиента .grad/.intro-mark__glyph */
   --on-ink: #FFFFFF;       /* текст на --ink-подложке (чип.on, skip-link) */
-  --on-match: #06301F;     /* галочка на --match: 5.7:1 (белый давал 2.5) */
-  --track: #D8D2C4;        /* трек .step-line */
-  --veil: rgba(242,239,232,.97);   /* вуаль интро + липкая CTA */
-  --header-bg: rgba(242,239,232,.86);
-  --hero-a: #12141A; --hero-b: #2A2D36;  /* градиент hero-карточки */
+  --on-match: #06170F;     /* галочка на --match: 5.6:1 (белый давал 2.5) */
+  --track: #E4DEF2;        /* трек .step-line */
+  --veil: rgba(248,247,252,.97);   /* вуаль интро + липкая CTA */
+  --header-bg: rgba(248,247,252,.86);
+  --hero-a: #1E1636; --hero-b: #2A1E4A;  /* градиент hero-карточки */
   --ring-mix: #FFFFFF;     /* база color-mix в .score-ring */
-  --bubble-bg: #12141A; --bubble-ink: #FFFFFF;  /* баббл консультанта */
-  --match-ink: #06694A;    /* зелёный текст: tag-match/milestone/badge-live */
-  --gap-ink: #B04E08;      /* оранжевый текст: tag-gap */
+  --bubble-bg: #1C1730; --bubble-ink: #FFFFFF;  /* баббл консультанта */
+  --match-ink: #266E42;    /* зелёный текст: tag-match/milestone/badge-live */
+  --gap-ink: #B34A22;      /* оранжевый текст: tag-gap */
   --warn-ink: #7C3A0A; --warn-line: #FBBF8A;    /* .alert-warn */
-  --dot: rgba(18,20,26,.032);      /* точечная сетка фона (v26: тише) */
+  --dot: rgba(43,25,82,.03);        /* точечная сетка фона (v26: тише) */
   --sheen: rgba(255,255,255,.9);   /* стекло-блик шапки/CTA */
-  --caption-meta: #5B6270;         /* .intro-caption__meta под вуалью */
-  --glow-a: rgba(255,178,110,.30); --glow-b: rgba(255,222,176,.22);  /* за монограммой */
+  --caption-meta: #6A6380;         /* .intro-caption__meta под вуалью */
+  --glow-a: rgba(155,107,255,.30); --glow-b: rgba(199,180,255,.24);  /* за монограммой */
   --skip-bg: rgba(18,20,26,.86); --skip-bg-hover: rgba(18,20,26,.95);
   --skip-ink: #FFFFFF;             /* кнопка скипа интро */
 }
@@ -1398,24 +1406,24 @@ html[data-theme="dark"] {
   color-scheme: dark;
   /* v26: плоскости тёмной темы читаемы (surface/bg ≈ 1.1) + хайрлайн вместо
      свечения; интерактивные границы ≥3:1 (--line-strong). */
-  --bg: #141210;
-  --surface: #1F1B17;
-  --surface-2: #2A251E;
-  --line: #3D362C;
+  --bg: #141020;
+  --surface: #1C1730;
+  --surface-2: #251E3D;
+  --line: #2E2748;
   --line-strong: #7A6F5F;
-  --ink: #F4EFE7;
-  --ink-2: #D8D1C7;
-  --muted: #B3A99C;
+  --ink: #F4F1FF;
+  --ink-2: #D8D2F0;
+  --muted: #A79EC4;
   --muted-2: #9C9285;
-  --accent-soft: #241E44;
+  --accent-soft: #2A2148;
   --match: #34D399; --match-soft: #10281F;
   --gap: #FFA05C; --gap-soft: #2A1A10;
   --warn: #FBBF24; --danger: #F87171;
   --brand-blue: #6CA0FF; --brand-violet: #A78BFA;
   --supernova-blue: var(--brand-blue); /* v17b: 7.3:1 на тёмной --bg */
-  --accent-text: #9A8FFF;  /* текст-акцент: 6.2:1 на --bg (5B4CFF давал 3.5) */
-  --accent-2: #9A8FFF;
-  --accent: #7B6BFF;       /* прогресс-бар на тёмной поверхности: 3.9:1 */
+  --accent-text: #B79BFF;  /* текст-акцент: 6.2:1 на --bg (5B4CFF давал 3.5) */
+  --accent-2: #B79BFF;
+  --accent: #8B5CFF;       /* прогресс-бар на тёмной поверхности: 3.9:1 */
   --on-ink: #141210;
   --on-match: #0B3B2A;
   --track: #3A332A;
@@ -1497,6 +1505,7 @@ html[data-theme="dark"] {
 .topic-map-head h2 { font-size: 18px; margin-bottom: 4px; }
 .topic-map-head p { margin: 0 0 12px; }
 .topic-map-scroll { border-radius: 16px; }
+.topic-map, .topic-map * { -webkit-user-select: none; user-select: none; }
 /* v32: холст графа — 16:9, тёмный холст + сетка точек, как в интерфейсе
    графа Obsidian. Точки сетки лежат под рёбрами и узлами. */
 .topic-map {
@@ -1555,14 +1564,22 @@ html[data-theme="dark"] {
 }
 .topic-node__dot--center { width: 13px; height: 13px; }
 .topic-node__dot--week { width: 9px; height: 9px; }
+/* v32: кружки растут при наведении — и у недели, и у направления */
+.topic-node--center:hover .topic-node__dot,
+.topic-node--week:hover .topic-node__dot { transform: translate(-50%, -50%) scale(1.3); }
 .topic-node--topic {
   display: inline-flex;
   align-items: center;
   padding: 0;
   border: 0;
   background: none;
-  cursor: pointer;
+  /* v32: узел можно перетащить (как точку в графе Obsidian) */
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
 }
+.topic-node--topic.is-dragging { cursor: grabbing; }
+.topic-node--topic.is-dragging .topic-node__dot { transition: none; }
 /* 44px тач-зона без визуального роста узла */
 .topic-node--topic::after {
   content: '';
@@ -1572,6 +1589,8 @@ html[data-theme="dark"] {
 }
 .topic-node--topic:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 4px; border-radius: 8px; }
 .topic-node--topic:hover .topic-node__dot { transform: scale(1.25); }
+/* v32: соседи подсвеченной окрестности тоже чуть крупнее */
+.topic-node--topic.is-lit .topic-node__dot { transform: scale(1.15); }
 .topic-node--topic.is-selected .topic-node__dot {
   transform: scale(1.3);
   box-shadow: 0 0 0 3px rgba(255, 255, 255, .22), 0 0 20px rgba(255, 255, 255, .5);

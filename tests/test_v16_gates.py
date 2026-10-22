@@ -139,10 +139,11 @@ def test_gradient_text_print_and_forced_colors_fallback():
 
 
 def test_wordmark_blue_stop_meets_large_text_contrast():
-    """v17b (совет): #4E8CFF на светлой --bg давал ~2.9:1. Локальный токен
-    #3B7AE8 — 3.7:1 (AA для крупного текста); в тёмной теме — brand-blue."""
+    """v17b (совет): стоп вордмарка должен быть ≥3:1 (AA для крупного текста).
+    v33: палитра фиолетовая — #6333E6 даёт ~7:1 на --bg; в тёмной теме —
+    brand-blue."""
     css = _strip_comments(CSS)
-    assert "--supernova-blue: #3B7AE8;" in css
+    assert "--supernova-blue: #6333E6;" in css
     assert "--supernova-blue: var(--brand-blue);" in css
     assert "var(--supernova-blue)" in css
     assert "var(--brand-blue) 28%" not in css  # старый стоп не вернулся

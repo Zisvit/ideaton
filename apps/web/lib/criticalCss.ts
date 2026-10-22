@@ -12,14 +12,14 @@
  * Значения совпадают с токенами в styles/globals.css (гейт v30 сверяет).
  */
 export const CRITICAL_CSS = `
-:root{--bg:#F2EFE8;--surface:#FFFFFF;--surface-2:#ECE8DE;--line:#DFD9CB;
---ink:#14161C;--ink-2:#2C3038;--muted:#59636F;--accent:#5B4CFF;--accent-text:#4A3EE0;
---accent-soft:#EDEBFF;--hairline:rgba(255,255,255,.9);
---shadow:0 1px 2px rgba(18,20,26,.04),0 12px 30px -16px rgba(18,20,26,.22);
+:root{--bg:#F8F7FC;--surface:#FFFFFF;--surface-2:#F1EBFF;--line:#EEEAF7;
+--ink:#2B1952;--ink-2:#4B3F63;--muted:#6F6884;--accent:#7444F4;--accent-text:#6333E6;
+--accent-soft:#F1EBFF;--hairline:rgba(255,255,255,.9);
+--shadow:0 1px 2px rgba(43,25,82,.03),0 8px 32px rgba(56,37,105,.05);
 --skip-bg:rgba(18,20,26,.86);--skip-ink:#FFFFFF;
---radius-sm:10px;--radius:16px;--radius-lg:22px;--max:1200px;--ease:cubic-bezier(.2,.7,.2,1)}
-html[data-theme="dark"]{--bg:#141210;--surface:#1F1B17;--surface-2:#2A251E;--line:#3D362C;
---ink:#F4EFE7;--ink-2:#D8D1C7;--muted:#B3A99C;--accent-text:#9A8FFF;--accent-soft:#241E44;
+--radius-sm:10px;--radius:15px;--radius-lg:19px;--max:1600px;--ease:cubic-bezier(.2,.7,.2,1)}
+html[data-theme="dark"]{--bg:#141020;--surface:#1C1730;--surface-2:#251E3D;--line:#2E2748;
+--ink:#F4F1FF;--ink-2:#D8D2F0;--muted:#A79EC4;--accent-text:#B79BFF;--accent-soft:#2A2148;
 --hairline:rgba(255,255,255,.06);
 --shadow:0 1px 2px rgba(0,0,0,.40),0 14px 34px -18px rgba(0,0,0,.70);
 --skip-bg:rgba(240,236,230,.9);--skip-ink:#141210}
