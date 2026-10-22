@@ -1,9 +1,12 @@
 /**
- * v7 + v13 (совет 7/9): «Карта тем» — мини-граф в стиле Obsidian: тёмный
- * холст, точки (размер — число связей), кривые рёбра, подсветка соседей при
- * наведении/выборе, подписи — на hover/selected. Узлы-темы — настоящие кнопки
- * (фокус с клавиатуры, 44px-зона), центр и недели — статичные подписи.
- * Никаких библиотек, keyframes и Math.random.
+ * v7 + v13 + v32: «Карта тем» — граф в интерфейсе Obsidian.
+ *
+ * v32: холст-граф 1:1 с обсидиановским — сетка точек на тёмном фоне, узлы-
+ * кружки (размер = число связей), цвет недели, тонкие кривые связи, при
+ * наведении подсвечивается «окрестность» (как локальный граф Obsidian), а
+ * подписи соседей появляются вместе с подсветкой.
+ * Узлы-темы — настоящие кнопки (фокус с клавиатуры, 44px-зона), центр и
+ * недели — статичные подписи. Никаких библиотек, keyframes и Math.random.
  * На узких экранах карта не сжимается до нечитаемого: обёртка даёт
  * горизонтальный скролл (карта фиксированной ширины), см. globals.css.
  */
@@ -16,6 +19,14 @@ type TopicMapProps = {
   selected: string | null
   onSelect: (key: string) => void
 }
+
+/** v32: цвет недели — палитра бренда (синий → фиолетовый → светлый → тёплый). */
+const WEEK_COLOR = [
+  'var(--brand-blue)',
+  'var(--brand-violet)',
+  'var(--accent-2)',
+  'var(--gap)',
+]
 
 /** v13: квадратичная кривая ребра — лёгкая «дуга», детерминированная по индексу. */
 function edgePath(edge: GraphEdge, i: number): string {
@@ -88,12 +99,18 @@ export default function TopicMap({ graph, selected, onSelect }: TopicMapProps) {
         </svg>
 
         {graph.nodes.map((node) => {
+          const color =
+            node.kind === 'center'
+              ? 'var(--graph-focus)'
+              : WEEK_COLOR[(node.week ?? 1) - 1] ?? 'var(--brand-blue)'
           const style = {
             left: `${node.x}%`,
             top: `${node.y}%`,
+            '--node-color': color,
           } as React.CSSProperties
 
           if (node.kind === 'center') {
+            // v32: узел-«якорь» — кружок, подпись рядом (как в обсидиане)
             return (
               <div
                 key={node.key}
@@ -101,7 +118,10 @@ export default function TopicMap({ graph, selected, onSelect }: TopicMapProps) {
                 style={style}
                 title={node.label}
               >
-                {node.label}
+                <span className="topic-node__dot topic-node__dot--center" aria-hidden="true" />
+                <span className="topic-node__text topic-node__text--center">
+                  {node.label}
+                </span>
               </div>
             )
           }
@@ -112,19 +132,25 @@ export default function TopicMap({ graph, selected, onSelect }: TopicMapProps) {
                 className={`topic-node topic-node--week${nodeState(node.key)}`}
                 style={style}
               >
-                {node.label}
+                <span className="topic-node__dot topic-node__dot--week" aria-hidden="true" />
+                <span className="topic-node__text topic-node__text--week">
+                  {node.label}
+                </span>
               </div>
             )
           }
-          // v13: размер точки — по числу связей (degree), как в графе Obsidian.
-          const dot = 9 + Math.round(3.2 * Math.sqrt(node.degree || 1))
+          // v32: размер точки — по числу связей (degree), как в графе Obsidian.
+          const dot = 7 + Math.round(3.4 * Math.sqrt(node.degree || 1))
+          const isLit = !!lit && lit.has(node.key)
           return (
             <button
               key={node.key}
               type="button"
               className={`topic-node topic-node--topic${
                 node.testable ? ' is-testable' : ''
-              }${selected === node.key ? ' is-selected' : ''}${nodeState(node.key)}`}
+              }${selected === node.key ? ' is-selected' : ''}${nodeState(node.key)}${
+                isLit ? ' is-lit' : ''
+              }`}
               style={style}
               onClick={() => onSelect(node.key)}
               onMouseEnter={() => setHover(node.key)}
@@ -149,7 +175,10 @@ export default function TopicMap({ graph, selected, onSelect }: TopicMapProps) {
 
         <div className="topic-map__legend" aria-hidden="true">
           <span className="topic-map__legend-item">
-            <i className="topic-map__legend-dot" /> точка — тема: клик — проверка
+            <i className="topic-map__legend-dot" /> тема — клик открывает проверку
+          </span>
+          <span className="topic-map__legend-item">
+            <i className="topic-map__legend-line" /> неделя
           </span>
           <span className="topic-map__legend-item">
             <i className="topic-map__legend-line topic-map__legend-line--skill" />{' '}

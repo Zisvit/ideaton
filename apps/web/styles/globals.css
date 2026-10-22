@@ -100,6 +100,7 @@
   --role-qa: #0EA5E9;
   --role-support: #12B981;
   --role-startup: #D97706; /* сдвинут от warn #F59E0B — semantic-столкновение устранено */
+  --graph-focus: #F7F3EA;   /* фокусный узел графа (на тёмном холсте) */
   --radius-sm: 10px;
   --radius: 16px;
   --radius-lg: 22px;
@@ -1496,23 +1497,30 @@ html[data-theme="dark"] {
 .topic-map-head h2 { font-size: 18px; margin-bottom: 4px; }
 .topic-map-head p { margin: 0 0 12px; }
 .topic-map-scroll { border-radius: 16px; }
+/* v32: холст графа — 16:9, тёмный холст + сетка точек, как в интерфейсе
+   графа Obsidian. Точки сетки лежат под рёбрами и узлами. */
 .topic-map {
   position: relative;
   width: 100%;
-  aspect-ratio: 2.3 / 1;
-  min-height: 320px;
-  max-height: 520px;
+  aspect-ratio: 16 / 9;
+  min-height: 340px;
+  max-height: 560px;
   border: 1px solid var(--line);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, .07) 0%, transparent 58%),
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, .055) 0%, transparent 62%),
     linear-gradient(135deg, var(--hero-a) 0%, var(--hero-b) 100%);
   overflow: hidden;
+}
+.topic-map::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(240, 236, 230, .13) 1px, transparent 1.3px);
+  background-size: 26px 26px;
 }
 .topic-map__edges { position: absolute; inset: 0; width: 100%; height: 100%; }
 .topic-map__edge {
   fill: none;
-  stroke: rgba(240, 236, 230, .20);
+  stroke: rgba(240, 236, 230, .22);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
   transition: opacity .18s var(--ease);
@@ -1520,32 +1528,33 @@ html[data-theme="dark"] {
 .topic-map__edge--skill {
   stroke: var(--accent-2);
   stroke-dasharray: 3 4;
-  opacity: .5;
+  opacity: .45;
 }
-.topic-map__edge.is-hot { stroke: #F5F1E8; opacity: .85; }
-.topic-map__edge.is-dim { opacity: .10; }
+.topic-map__edge.is-hot { stroke: #F5F1E8; opacity: .8; }
+.topic-map__edge.is-dim { opacity: .08; }
+
+/* v32: узел-«якорь» — точка ровно в точке графа, подписи рядом. */
 .topic-node { position: absolute; transform: translate(-50%, -50%); transition: opacity .18s var(--ease); }
-.topic-node.is-dim { opacity: .22; }
-.topic-node--center {
-  max-width: 34%;
-  padding: 9px 13px;
-  border-radius: 14px;
-  border: 1px solid rgba(240, 236, 230, .28);
-  background: rgba(255, 255, 255, .09);
-  color: #F4F1EA;
-  font-weight: 700;
-  font-size: 13px;
-  line-height: 1.3;
-  text-align: center;
-  box-shadow: 0 0 28px rgba(143, 132, 255, .22);
+.topic-node.is-dim { opacity: .16; }
+.topic-node--center, .topic-node--week {
+  width: 0; height: 0; display: block;
 }
-.topic-node--week {
-  font-size: 10px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: rgba(240, 236, 230, .55);
-  padding: 0;
+.topic-node--center .topic-node__dot,
+.topic-node--week .topic-node__dot {
+  position: absolute; left: 0; top: 0; transform: translate(-50%, -50%);
 }
+.topic-node__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--node-color, rgba(238, 233, 225, .78));
+  flex: none;
+  /* тонкое тёмное кольцо + мягкий ореол цвета — как точки графа Obsidian */
+  box-shadow: 0 0 0 1.5px rgba(10, 10, 12, .55), 0 0 12px -3px var(--node-color, rgba(238, 233, 225, .5));
+  transition: transform .16s var(--ease), background-color .16s var(--ease), box-shadow .16s var(--ease);
+}
+.topic-node__dot--center { width: 13px; height: 13px; }
+.topic-node__dot--week { width: 9px; height: 9px; }
 .topic-node--topic {
   display: inline-flex;
   align-items: center;
@@ -1562,20 +1571,10 @@ html[data-theme="dark"] {
   border-radius: 999px;
 }
 .topic-node--topic:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 4px; border-radius: 8px; }
-.topic-node__dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(238, 233, 225, .78);
-  flex: none;
-  box-shadow: 0 0 10px rgba(238, 233, 225, .25);
-  transition: transform .16s var(--ease), background-color .16s var(--ease), box-shadow .16s var(--ease);
-}
-.topic-node--topic.is-testable .topic-node__dot { background: var(--accent-2); }
 .topic-node--topic:hover .topic-node__dot { transform: scale(1.25); }
 .topic-node--topic.is-selected .topic-node__dot {
-  background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, .18), 0 0 18px rgba(255, 255, 255, .55);
+  transform: scale(1.3);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .22), 0 0 20px rgba(255, 255, 255, .5);
 }
 .topic-node__text {
   position: absolute;
@@ -1588,7 +1587,7 @@ html[data-theme="dark"] {
   white-space: nowrap;
   padding: 3px 8px;
   border-radius: 7px;
-  background: rgba(18, 20, 26, .85);
+  background: rgba(18, 20, 26, .88);
   color: #F4F1EA;
   font-size: 11px;
   line-height: 1.2;
@@ -1597,32 +1596,66 @@ html[data-theme="dark"] {
   transition: opacity .15s var(--ease);
 }
 .topic-node__text.is-flip { left: auto; right: calc(100% + 7px); }
+/* подпись недели — под точкой, всегда видна */
+.topic-node__text--week {
+  position: absolute; left: 0; top: 0;
+  transform: translate(-50%, 11px);
+  opacity: 1; /* базовое правило .topic-node__text гасит подписи — здесь видно всегда */
+  font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+  color: rgba(240, 236, 230, .62);
+  white-space: nowrap;
+  padding: 2px 6px; border-radius: 6px;
+  background: rgba(16, 16, 20, .5);
+}
+/* подпись направления — под точкой, всегда видна */
+.topic-node__text--center {
+  position: absolute; left: 0; top: 0;
+  transform: translate(-50%, 12px);
+  opacity: 1;
+  max-width: 220px;
+  padding: 3px 9px; border-radius: 8px;
+  background: rgba(16, 16, 20, .68);
+  border: 1px solid rgba(240, 236, 230, .14);
+  color: #F7F3EA;
+  font-size: 12px; font-weight: 600; line-height: 1.25;
+  text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* v32: подпись появляется у самого узла и у его соседей — «локальный граф» */
 .topic-node--topic:hover .topic-node__text,
 .topic-node--topic:focus-visible .topic-node__text,
-.topic-node--topic.is-selected .topic-node__text { opacity: 1; }
+.topic-node--topic.is-selected .topic-node__text,
+.topic-node--topic.is-lit .topic-node__text { opacity: 1; }
 .topic-map__legend {
   position: absolute;
   left: 12px;
-  bottom: 8px;
+  bottom: 12px;
   display: flex;
-  gap: 14px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(14, 14, 18, .62);
+  border: 1px solid rgba(240, 236, 230, .10);
   font-size: 10px;
-  color: rgba(240, 236, 230, .55);
+  color: rgba(240, 236, 230, .62);
 }
-.topic-map__legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.topic-map__legend-item { display: inline-flex; align-items: center; gap: 6px; }
 .topic-map__legend-dot {
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--accent-2);
+  box-shadow: 0 0 0 1.5px rgba(10, 10, 12, .55);
 }
 .topic-map__legend-line {
   display: inline-block;
   width: 16px;
-  border-top: 1px solid rgba(240, 236, 230, .35);
+  border-top: 1px solid rgba(240, 236, 230, .45);
 }
-.topic-map__legend-line--skill { border-top: 1px dashed rgba(240, 236, 230, .35); }
+.topic-map__legend-line--skill { border-top: 1px dashed rgba(240, 236, 230, .45); }
 .topic-panel {
   margin-top: 14px;
   border: 1px solid var(--line);
@@ -1652,7 +1685,7 @@ html[data-theme="dark"] {
     border-radius: 0;
   }
   .topic-node__text { font-size: 10px; max-width: 150px; }
-  .topic-node--center { font-size: 11px; padding: 8px 10px; max-width: 28%; }
+  .topic-node__text--center { font-size: 11px; max-width: 180px; }
   .topic-map__legend { display: none; }
   .topic-map-hint { display: block; }
 }
