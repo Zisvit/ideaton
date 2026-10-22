@@ -23,44 +23,26 @@ type ChatItem =
   | { role: 'user'; text: string }
   | (ScriptMessage & { role: 'bot' })
 
-// ---- Лис-мини: талисман ПРОЕКТА (не бренд вуза). 44×36, отдельный SVG
-// вне intro-сцены (fill-box). 3 idle-реюза: breath (корневая группа),
-// foxMiniBlink (глаз — единственный НОВЫЙ keyframe v6: 29→30/30, договорный
-// свободный слот бюджета), tailIdle (хвост, --tw inline). Декор-акцент,
-// статуса не несёт (§9-регламент). ----
-function FoxMini() {
+// ---- Аватар помощника: монограмма проекта «СИ» в тёплом круге.
+// v31: вместо прежнего персонажа — знак проекта (тот же, что в интро-сцене).
+// Декор-акцент, статуса не несёт; живой остаётся только медленное
+// «дыхание» (реюз breath, без новых @keyframes). ----
+function BotAvatar() {
   return (
-    <svg
-      className="foxMini"
-      viewBox="200 30 108 88"
+    <span
+      className="bot-avatar"
       role="img"
-      aria-label="Лис Идея — талисман проекта"
+      aria-label="Помощник карьерного трекера"
     >
-      <g className="foxMini__body">
-        {/* голова (кроп силуэта v5), стрелки ушей, глаз, нос */}
-        <path
-          fill="var(--fox-deep, #C25A1B)"
-          d="M212 62 L232 44 L246 60 L262 60 L276 44 L296 62 C304 76 296 96 254 96 C212 96 204 76 212 62 Z"
-        />
-        <path
-          fill="var(--fox-dark, #8A3D10)"
-          d="M228 50 L236 44 L242 54 L232 58 Z M278 50 L270 44 L264 54 L274 58 Z"
-        />
-        <path fill="var(--fox-eye, #1C232B)" className="foxMini__eye" d="M238 70 L252 72 L240 80 Z" />
-        <path fill="var(--fox-nose, #3A2A22)" d="M288 70 L298 66 L294 78 Z" />
-      </g>
-      {/* хвост — отдельная группа (tailIdle реюз, --tw inline, §9-регламент) */}
-      <g className="foxMini__tail">
-        <path fill="var(--fox-deep, #C25A1B)" d="M282 88 L306 82 L298 100 Z" />
-      </g>
-    </svg>
+      СИ
+    </span>
   )
 }
 
 function BotHead() {
   return (
     <div className="chatBot__head">
-      <FoxMini />
+      <BotAvatar />
       <div className="chatBot__head-text">
         <span className="badge badge-demo badge--script">Скриптовый режим</span>
         <span className="chatBot__hint">ответы заготовлены заранее · текст не уходит в сеть</span>

@@ -9,10 +9,11 @@
    чекбокс — 24px + хит-зона;
 3) мобильная липкая CTA не перекрывает контент (fixed + safe-area + отступ);
 4) новые блоки интерфейса на месте: герой в две колонки, превью подбора,
-   сгруппированный пикер, футер с атрибуцией фото;
+   сгруппированный пикер, карточка маршрута, футер с обещанием приватности;
 5) глубина строится плоскостями и хайрлайнами: filter/backdrop-filter/
    mix-blend-mode в стилях нет, conic-слой не раздут до 220%;
-6) талисман отдаётся в WebP (LCP), PNG остаётся запасным вариантом.
+6) v31: в герое больше нет тяжёлого растра — карточка маршрута собрана
+   на CSS (контракт персонажа снят, см. test_v31_no_mascot.py).
 """
 
 from __future__ import annotations
@@ -189,7 +190,8 @@ def test_new_blocks_exist():
         ".preview-card",
         ".preview-row",
         ".picker-group",
-        ".mascot-card",
+        ".route-card",
+        ".route__step",
         ".site-footer",
     ):
         assert cls in CSS, f"нет блока {cls}"
@@ -198,11 +200,11 @@ def test_new_blocks_exist():
         'className="preview-card"',
         'className="picker-group"',
         'className="site-footer"',
-        'className="mascot-card"',
+        'className="route-card"',
     ):
         assert needle in INDEX, f"нет разметки {needle}"
-    # футер указывает источник фото (public domain)
-    assert "Red fox (52869982404)" in INDEX
+    # футер обещает приватность и офлайн-режим
+    assert "Работает офлайн" in INDEX
 
 
 def test_depth_without_filters_and_heavy_layers():
@@ -216,13 +218,13 @@ def test_depth_without_filters_and_heavy_layers():
     assert "inset: 0" in conic
 
 
-def test_mascot_ships_webp_and_png():
-    webp = WEB / "public/fox-cutout.webp"
-    png = WEB / "public/fox-cutout.png"
-    assert webp.exists() and png.exists()
-    assert webp.stat().st_size < png.stat().st_size / 4, "WebP не дал экономии"
-    assert "/fox-cutout.webp" in INDEX
-    assert 'src="/fox-cutout.png"' in INDEX
+def test_hero_side_has_no_heavy_raster():
+    """v31: в герое только текст и CSS-графики — растровых картинок нет."""
+    for asset in ("fox-cutout.png", "fox-cutout.webp", "fox-fur-128.png"):
+        assert not (WEB / "public" / asset).exists(), f"остался ассет {asset}"
+    hero = INDEX[INDEX.index('className="hero-side"') : INDEX.index("</aside>")]
+    assert "<img" not in hero, "в правой колонке героя не должно быть растровых картинок"
+    assert "route-card" in hero
 
 
 def test_reduced_motion_keeps_done_state_readable():

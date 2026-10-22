@@ -73,15 +73,16 @@ def test_noise_asset_baked_and_wired():
     assert "background-attachment: fixed" not in CSS
 
 
-def test_foxmini_blade_single_new_keyframe():
-    # единственный новый кейфрейм: короткое окно моргания (93–97%)
-    assert "@keyframes foxMiniBlink" in CSS
-    assert "95%, 97%" in CSS
-    # лис-мини в консультанте, 44×36, реюз breath/tailIdle
-    assert 'className="foxMini"' in CONSULTANT
-    assert ".foxMini__eye" in CSS and ".foxMini__body" in CSS
+def test_bot_avatar_reuses_breath():
+    """v31: аватар помощника — монограмма, новых keyframes не заводим.
+
+    Геометрия статична, живой остаётся только медленное «дыхание» — реюз
+    ключа breath (бюджет 30 не тратится)."""
+    assert "@keyframes foxMiniBlink" not in CSS
+    assert 'className="bot-avatar"' in CONSULTANT
+    assert ".bot-avatar {" in CSS
     assert "animation: breath" in CSS
-    assert "tailIdle" in CSS
+    assert "@keyframes breath" in CSS
 
 
 def test_v6_print_and_rm():
