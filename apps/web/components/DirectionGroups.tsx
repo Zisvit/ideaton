@@ -23,8 +23,13 @@ export default function DirectionGroups({ specs, variant = 'showcase' }: Props) 
   const groups = Array.from(buckets.values()).sort(
     (a, b) => a[0].group_order - b[0].group_order
   )
+  // v31: источник данных один на каталог (у всех направлений он одинаковый)
+  const source = specs[0]?.source
   return (
     <>
+      {source && (
+        <p className="spec-source">Источник данных: {source}</p>
+      )}
       {groups.map((items) => (
         <section key={items[0].group_id} className="spec-group">
           <h2 className="spec-group__title">

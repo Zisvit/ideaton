@@ -183,3 +183,32 @@ def test_intro_is_short_and_rail_is_inside_composition():
     scene = SCENE[SCENE.index('className="intro-scene"') :]
     scene = scene[: scene.index('className="intro-skip"')]
     assert "intro-rail" in scene
+
+
+def test_catalog_source_is_not_repeated_in_every_card():
+    """Источник данных — одна строка на каталог, а не в каждой из 21 карточки."""
+    groups = (WEB / "components/DirectionGroups.tsx").read_text(encoding="utf-8")
+    card = (WEB / "components/DirectionCard.tsx").read_text(encoding="utf-8")
+    work = (WEB / "components/CollegeWork.tsx").read_text(encoding="utf-8")
+    assert 'className="spec-source"' in groups
+    assert "showSource={false}" in card
+    assert "showSource = true" in work, "по умолчанию источник показывается"
+    assert ".spec-source {" in CSS
+
+
+def test_skills_are_tags_and_workplaces_stay_neutral():
+    """Иерархия внутри карточки: навыки — теги, места работы — нейтраль."""
+    skill = CSS[CSS.index(".spec-skill {") :]
+    skill = skill[: skill.index("}")]
+    assert "var(--accent-soft)" in skill
+    assert "var(--accent-text)" in skill
+    work = CSS[CSS.index(".spec-work__list li {") :]
+    work = work[: work.index("}")]
+    assert "var(--surface-2)" in work, "места работы остаются нейтральными"
+
+
+def test_catalog_cards_have_no_middle_void():
+    """Навыки идут за описанием, а не прижаты к низу (пустота в середине)."""
+    skills = CSS[CSS.index(".spec-item__skills {") :]
+    skills = skills[: skills.index("}")]
+    assert "margin-top: auto" not in skills
