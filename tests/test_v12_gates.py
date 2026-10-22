@@ -16,6 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
+SHELL = (WEB / "components/Shell.tsx").read_text(encoding="utf-8")
 CSS = (WEB / "styles" / "globals.css").read_text(encoding="utf-8")
 DOC = (WEB / "pages" / "_document.tsx").read_text(encoding="utf-8")
 APP = (WEB / "pages" / "_app.tsx").read_text(encoding="utf-8")
@@ -116,8 +117,9 @@ def test_toggle_wired_on_all_pages():
     # v14: /employer — пятая страница со своим заголовком и переключателем темы
     for name in ("index", "result", "plan", "consultant", "employer"):
         src = (WEB / "pages" / f"{name}.tsx").read_text(encoding="utf-8")
-        assert "ThemeToggle" in src, f"{name}.tsx без ThemeToggle"
-        assert "site-header__side" in src, f"{name}.tsx без обёртки шапки"
+        # v34: переключатель темы и шапка уехали в оболочку (components/Shell.tsx) —
+        # страницы больше не дублируют шапку.
+        assert "ThemeToggle" in SHELL, "в оболочке нет переключателя темы"
 
 
 def test_toggle_component_contract():

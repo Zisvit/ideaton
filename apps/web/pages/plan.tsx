@@ -180,16 +180,6 @@ export default function Plan() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="container site-header__inner">
-          <Link href="/" className="brand">Карьерный трекер</Link>
-          <div className="site-header__side">
-            <ThemeToggle />
-            <span className="step-pill">Шаг 3 из 3</span>
-          </div>
-        </div>
-        <div className="step-line" style={{ '--p': '100%' } as React.CSSProperties} />
-      </header>
 
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
         <section className="fade-in">
