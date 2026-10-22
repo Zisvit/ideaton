@@ -131,24 +131,6 @@ export default function Home() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="container site-header__inner">
-          <span className="brand">Карьерный трекер</span>
-          <div className="site-header__side">
-            <ThemeToggle />
-            {/* v14: кросс-ссылка на интерфейс работодателя — маршрут, без JS */}
-            <Link
-              href="/employer"
-              className="btn btn-ghost header-employer-link"
-              style={{ padding: '6px 12px', fontSize: 13 }}
-            >
-              Я работодатель
-            </Link>
-            <span className="step-pill">Шаг 1 из 3</span>
-          </div>
-        </div>
-        <div className="step-line" style={{ '--p': '33%' } as React.CSSProperties} />
-      </header>
 
       <main id="main" className="container page-index" style={{ paddingTop: 40, paddingBottom: 88 }}>
         {/* v31: герой в две колонки — слева обещание и действия, справа

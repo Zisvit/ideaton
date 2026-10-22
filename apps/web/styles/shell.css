@@ -14,6 +14,7 @@
  * карточки-статистика, чипы, нижняя навигация).
  */
 
+@media screen {
 :root {
   --side-w: 232px;
   --side-w-md: 200px;
@@ -508,4 +509,179 @@ body {
 
 @media (min-width: 721px) {
   .mobile-brand { display: none; }
+}
+
+/* =========================================================================
+   6. ЕДИНЫЙ СТИЛЬ (v34): все внутренние блоки — по макету референса.
+   После переноса оболочки остались элементы старой системы: плотные
+   «пилюли» вместо плоских строк, дисплейный шрифт в заголовках, старые
+   радиусы и тона. Здесь они приводятся к общему языку: плоскость + волосяная
+   линия + фиолетовый акцент, тот же радиус и та же типографика.
+   ========================================================================= */
+
+/* ---- заголовки: гарнитура макета (без засечек), плотный трекинг ---- */
+h1, h2, h3 {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  letter-spacing: -0.5px;
+}
+h1 { font-size: 30px; font-weight: 800; line-height: 1.16; letter-spacing: -0.8px; }
+h2 { font-size: 18px; font-weight: 750; line-height: 1.25; }
+h3 { font-size: 15px; font-weight: 700; line-height: 1.3; }
+.hero-title { font-size: clamp(26px, 2.6vw, 34px); font-weight: 800; letter-spacing: -0.9px; }
+.grad { background-image: linear-gradient(92deg, #6333E6 0%, #A98CFF 100%); }
+.num { font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ---- строки списков: плоско + волосяная линия (как .list-row в макете) ---- */
+.week li,
+.checklist li {
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  padding: 13px 0;
+  min-height: 46px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.week li:first-child,
+.checklist li:first-child { border-top: 0; }
+.week li:hover { border-color: var(--line-strong); background: none; }
+.checklist { padding: 20px 23px; border-radius: 19px; }
+.checklist ul { gap: 0; }
+
+/* мини-проверка: плоская строка, без лиловой «плашки» */
+.mini-row {
+  padding: 0;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+}
+.week li .mini-row { border-top: 0; }
+.mini__head { padding: 10px 0; min-height: 44px; }
+.mini__mark { background: var(--accent-soft); color: var(--accent-text); }
+.mini__task { font-size: 13.5px; font-weight: 650; }
+.mini__opts { margin-top: 4px; }
+.opt {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  padding: 9px 12px;
+}
+.opt:hover { border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
+
+/* недели и карточки плана — карточки макета */
+.week { padding: 20px 23px; border-radius: 19px; }
+.week__title { font-size: 16px; font-weight: 750; letter-spacing: -0.2px; }
+.week__num {
+  width: 28px; height: 28px; font-size: 12.5px;
+  background: var(--accent-soft); color: var(--accent-text);
+  border: 1px solid transparent;
+}
+.week ul { gap: 0; }
+
+/* ---- прогресс: тонкая фиолетовая полоса ---- */
+.progress { height: 6px; background: var(--surface-2); border-radius: 999px; }
+.progress > span { background: linear-gradient(90deg, var(--accent), var(--brand-violet)); }
+
+/* ---- блоки-предупреждения и сноски ---- */
+.disclaimer {
+  font-size: 12.5px;
+  color: var(--muted);
+  background: var(--accent-soft);
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 15px;
+}
+.offline-note,
+.alert {
+  background: var(--accent-soft);
+  border: 0;
+  border-radius: 12px;
+  color: var(--ink-2);
+  font-size: 13px;
+  padding: 11px 14px;
+}
+.alert-warn { background: var(--gap-soft); color: var(--gap-ink); }
+.empty { padding: 52px 20px; color: var(--muted); font-size: 13.5px; }
+.empty h3 { font-size: 15px; color: var(--ink); margin-bottom: 6px; }
+
+/* ---- результат: карточки ролей и теги ---- */
+.role-card { padding: 22px; border-radius: 19px; }
+.role-card__title { font-size: 17px; font-weight: 750; letter-spacing: -0.3px; }
+.role-card__why { font-size: 13.5px; color: var(--muted); }
+.role-card__gaps { gap: 6px; }
+.role-card__foot { margin-top: 14px; }
+.tag {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.tag-match { background: var(--match-soft); color: var(--match-ink); }
+.tag-gap { background: var(--gap-soft); color: var(--gap-ink); }
+.tag-neutral { background: var(--surface-2); color: var(--ink-2); }
+.score-ring {
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  border: 1px solid transparent;
+}
+/* карточка топ-1 — фиолетовая плоскость, как hero макета */
+.hero-card {
+  border-radius: 19px;
+  padding: 26px;
+  background:
+    radial-gradient(760px 260px at 12% -20%, rgba(155, 107, 255, .30), transparent 62%),
+    linear-gradient(135deg, #2A1E4A 0%, #1E1636 100%);
+  color: #F4F1FF;
+}
+
+/* ---- консультант: чат в стиле макета ---- */
+.chatBot { gap: 14px; }
+.chatBot__log {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+}
+.chatLine__bubble { border-radius: 16px; padding: 12px 15px; font-size: 13.5px; }
+.chatLine__bubble--bot { background: var(--surface); color: var(--ink); }
+.chatLine__title { font-size: 10.5px; letter-spacing: .06em; color: var(--muted); }
+.chatLine__meta { font-size: 11.5px; color: var(--muted); }
+.badge { border-radius: 999px; font-size: 10.5px; padding: 4px 10px; letter-spacing: .04em; }
+.badge--script { background: var(--accent-soft); color: var(--accent-text); }
+.suggest { gap: 7px; margin-top: 12px; }
+.suggest button {
+  font-size: 12.5px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+}
+.suggest button:hover { border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
+.bot-avatar { background: var(--accent-soft); color: var(--accent-text); box-shadow: inset 0 1px 0 rgba(255,255,255,.7); }
+
+/* ---- рабочая область: отступы макета ---- */
+main.page-index,
+main.page-result,
+main.page-plan,
+main.page-employer,
+main.page-consultant { padding-top: 0; padding-bottom: 70px; }
+
+/* ---- интро: палитра та же, что и у макета ---- */
+.intro-badge::before {
+  background:
+    radial-gradient(circle at 36% 32%, rgba(155, 107, 255, .30), transparent 58%),
+    radial-gradient(circle at 68% 72%, rgba(116, 68, 244, .22), transparent 56%);
+}
+.intro-mark__glyph { color: #6333E6; }
+.intro-rail__fill { background: linear-gradient(90deg, var(--accent), var(--brand-violet)); }
+.intro-wordmark { color: #6333E6; }
 }

@@ -102,16 +102,6 @@ export default function Consultant() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="container site-header__inner">
-          <Link href="/" className="brand">Карьерный трекер</Link>
-          <div className="site-header__side">
-            <ThemeToggle />
-            <span className="step-pill">Консультант</span>
-          </div>
-        </div>
-        <div className="step-line" style={{ '--p': '100%' } as React.CSSProperties} />
-      </header>
 
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
         {/* v29: герой в две колонки — как на главной */}

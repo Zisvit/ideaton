@@ -285,9 +285,13 @@ def test_college_work_rules_and_employer_variant():
 
 
 def test_cross_links_are_route_based():
-    assert 'href="/employer"' in INDEX and "Я работодатель" in INDEX
-    assert 'href="/"' in EMPLOYER and "Я студент" in EMPLOYER
+    # v34: пункт «Работодателю» живёт в навигации оболочки (components/Shell.tsx)
+    shell = (WEB / "components/Shell.tsx").read_text(encoding="utf-8")
+    assert "'/employer'" in shell and "Работодателю" in shell
+    assert "'/'" in shell and "Сегодня" in shell
+    # переходы между разделами — только по маршрутам (никаких location.*)
     assert "useRouter" not in INDEX and "useRouter" not in EMPLOYER
+    assert "location.href" not in INDEX and "location.href" not in EMPLOYER
 
 
 def test_result_specialty_work_block():

@@ -139,16 +139,6 @@ export default function Result() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="container site-header__inner">
-          <Link href="/" className="brand">Карьерный трекер</Link>
-          <div className="site-header__side">
-            <ThemeToggle />
-            <span className="step-pill">Шаг 2 из 3</span>
-          </div>
-        </div>
-        <div className="step-line" style={{ '--p': '66%' } as React.CSSProperties} />
-      </header>
 
       <main
         id="main"

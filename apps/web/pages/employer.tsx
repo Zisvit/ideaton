@@ -1,5 +1,4 @@
 import React from 'react'
-import Link from 'next/link'
 import ThemeToggle from '../components/ThemeToggle'
 import DirectionGroups from '../components/DirectionGroups'
 import { SpecialtyCardData } from '../components/DirectionCard'
@@ -75,22 +74,6 @@ export default function Employer() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="container site-header__inner">
-          <Link href="/" className="brand">Карьерный трекер</Link>
-          <div className="site-header__side">
-            <ThemeToggle />
-            {/* кросс-ссылка на студенческий интерфейс — маршрут, без JS */}
-            <Link
-              href="/"
-              className="btn btn-ghost"
-              style={{ padding: '6px 12px', fontSize: 13 }}
-            >
-              Я студент
-            </Link>
-          </div>
-        </div>
-      </header>
 
       <main id="main" className="container" style={{ paddingTop: 40, paddingBottom: 88 }}>
         {/* v29: герой в две колонки — как на главной */}

@@ -590,6 +590,10 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   .site-header, .cta-bar, .cta-sticky, .confetti, .skeleton, .alert,
   .skip-link, .badge, .progress, .check, .milestone, .plan-print-hide,
   .intro-overlay, .btn { display: none !important; }
+  /* v34: оболочка (сайдбар/топбар/нижняя навигация) — только на экране:
+     её слой в shell.css завёрнут в media=screen, поэтому на бумаге эти
+     элементы прячем здесь (новых блоков для печати не добавляем — бюджет 3). */
+  .side, .topbar, .bottom-nav { display: none !important; }
   body { background: #fff; color: #000; font-family: var(--font-sans); }
   /* v17-риск: градиентный вордмарк на бумаге без фоновой графики исчезает —
      печатаем сплошным чёрным; декоративный второй слой не печатаем. */
