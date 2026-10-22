@@ -63,13 +63,14 @@ def test_critical_css_matches_tokens():
     body = _css_body().replace(" ", "")
     css = CSS.replace(" ", "")
     for pair in (
-        "--bg:#F2EFE8;",
+        # v33: палитра синхронизирована с globals.css (фиолет по референсу)
+        "--bg:#F8F7FC;",
         "--surface:#FFFFFF;",
-        "--ink:#14161C;",
-        "--accent:#5B4CFF;",
+        "--ink:#2B1952;",
+        "--accent:#7444F4;",
         # v31: маршрут и интро-сцена в аварийном CSS ссылаются на эти токены —
         # без них значения невалидны и карточка остаётся без тени/заливки
-        "--accent-soft:#EDEBFF;",
+        "--accent-soft:#F1EBFF;",
         "--hairline:rgba(255,255,255,.9);",
         "--skip-bg:rgba(18,20,26,.86);",
         "--skip-ink:#FFFFFF;",

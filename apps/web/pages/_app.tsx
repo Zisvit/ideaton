@@ -4,8 +4,11 @@ import React from 'react'
 import { flushSync } from 'react-dom'
 import FixLayer from '../components/FixLayer'
 import IntroScene from '../components/IntroScene'
+import Shell from '../components/Shell'
 import { shouldShowIntro } from '../lib/intro'
 import '../styles/globals.css'
+// v33: слой оболочки и компонентов — поверх дизайн-системы
+import '../styles/shell.css'
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
@@ -81,7 +84,10 @@ export default function App({ Component, pageProps }: AppProps) {
       {/* v17b: под сценой нет фокуса/кликов в скрытые контролы (WCAG 2.4.11);
           inert снимается в момент закрытия. */}
       <div inert={showIntro ? true : undefined}>
-        <Component {...pageProps} />
+        {/* v33: оболочка (сайдбар + топбар) — по референсу career-tracker.html */}
+        <Shell>
+          <Component {...pageProps} />
+        </Shell>
       </div>
     </>
   )

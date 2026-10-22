@@ -80,18 +80,20 @@ def test_light_palette_byte_stable():
     # v26: палитра обновлена осознанно (редизайн) — пин пересчитан, чтобы
     # новые значения снова не «утекли» молча. Тёмная тема — в v26-гейте.
     for pair in (
-        "--bg: #F2EFE8;",
+        # v33: палитра перенесена по референсу career-tracker.html (фиолет) —
+        # пин пересчитан, чтобы новые значения снова не «утекли» молча.
+        "--bg: #F8F7FC;",
         "--surface: #FFFFFF;",
-        "--surface-2: #ECE8DE;",
-        "--line: #DFD9CB;",
-        "--ink: #14161C;",
-        "--accent: #5B4CFF;",
-        "--match: #12B981;",
-        "--gap: #FF8A3D;",
-        "--accent-text: #4A3EE0;",
-        "--veil: rgba(242,239,232,.97);",
-        "--header-bg: rgba(242,239,232,.86);",
-        "--track: #D8D2C4;",
+        "--surface-2: #F1EBFF;",
+        "--line: #EEEAF7;",
+        "--ink: #2B1952;",
+        "--accent: #7444F4;",
+        "--match: #3A9D67;",
+        "--gap: #F2683C;",
+        "--accent-text: #6333E6;",
+        "--veil: rgba(248,247,252,.97);",
+        "--header-bg: rgba(248,247,252,.86);",
+        "--track: #E4DEF2;",
     ):
         assert pair in CSS, f"светлая палитра изменилась: {pair}"
 

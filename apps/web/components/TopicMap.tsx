@@ -28,20 +28,45 @@ const WEEK_COLOR = [
   'var(--gap)',
 ]
 
-/** v13: квадратичная кривая ребра — лёгкая «дуга», детерминированная по индексу. */
-function edgePath(edge: GraphEdge, i: number): string {
-  const dx = edge.to.x - edge.from.x
-  const dy = edge.to.y - edge.from.y
+/** v13: квадратичная кривая ребра — лёгкая «дуга», детерминированная по индексу.
+ *  v32: концы ребра берём из актуальных координат — перетащенный узел тянет
+ *  за собой свои связи (как в графе Obsidian). */
+function edgePath(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  i: number
+): string {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
   const bend = (((i * 7919) % 13) - 6) / 45
-  const cx = (edge.from.x + edge.to.x) / 2 - dy * bend
-  const cy = (edge.from.y + edge.to.y) / 2 + dx * bend
-  return `M ${edge.from.x} ${edge.from.y} Q ${cx} ${cy} ${edge.to.x} ${edge.to.y}`
+  const cx = (from.x + to.x) / 2 - dy * bend
+  const cy = (from.y + to.y) / 2 + dx * bend
+  return `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`
 }
 
 export default function TopicMap({ graph, selected, onSelect }: TopicMapProps) {
   const scrollRef = React.useRef<HTMLDivElement | null>(null)
+  const mapRef = React.useRef<HTMLDivElement | null>(null)
   // v13: наведённый узел — как в Obsidian: соседи подсвечены, остальное гаснет.
   const [hover, setHover] = React.useState<string | null>(null)
+  // v32: перетаскивание узлов (в графе Obsidian точки можно таскать мышью).
+  // Позиции перетащенных узлов живут в состоянии — до перезагрузки страницы.
+  const [moved, setMoved] = React.useState<Record<string, { x: number; y: number }>>({})
+  const dragRef = React.useRef<{
+    key: string
+    pointerId: number
+    dx: number
+    dy: number
+    startX: number
+    startY: number
+    moved: boolean
+  } | null>(null)
+  const suppressClick = React.useRef(false)
+  // v32: какой узел сейчас тянут (для курсора и отключения перехода)
+  const [dragging, setDragging] = React.useState<string | null>(null)
+
+  /** Актуальная точка узла: перетащенная — из состояния, иначе из графа. */
+  const pointOf = (key: string, x: number, y: number) => moved[key] ?? { x, y }
 
   // На узком экране карта шире вьюпорта: стартуем с центра, чтобы
   // направление и лучи были видны без «слепого» свайпа. На десктопе
@@ -52,6 +77,70 @@ export default function TopicMap({ graph, selected, onSelect }: TopicMapProps) {
     const centered = (el.scrollWidth - el.clientWidth) / 2
     if (centered > 0) el.scrollLeft = centered
   }, [graph])
+
+  // v32: указатель в процентах холста — по нему двигаем узел
+  const pointFromEvent = (e: React.PointerEvent) => {
+    const map = mapRef.current
+    if (!map) return null
+    const rect = map.getBoundingClientRect()
+    if (!rect.width || !rect.height) return null
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * 100,
+      y: ((e.clientY - rect.top) / rect.height) * 100,
+    }
+  }
+
+  const onPointerDown = (e: React.PointerEvent<HTMLButtonElement>, key: string) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    const p = pointFromEvent(e)
+    if (!p) return
+    const node = graph.nodes.find((n) => n.key === key)
+    if (!node) return
+    const at = pointOf(key, node.x, node.y)
+    dragRef.current = {
+      key,
+      pointerId: e.pointerId,
+      dx: p.x - at.x,
+      dy: p.y - at.y,
+      startX: e.clientX,
+      startY: e.clientY,
+      moved: false,
+    }
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      /* захват указателя не обязателен */
+    }
+  }
+
+  const onPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = dragRef.current
+    if (!d || d.pointerId !== e.pointerId) return
+    // порог 4px: короткое смещение — это клик, а не перетаскивание
+    if (!d.moved) {
+      if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) < 4) return
+      d.moved = true
+      suppressClick.current = true
+      setDragging(d.key)
+    }
+    const p = pointFromEvent(e)
+    if (!p) return
+    const x = Math.min(98, Math.max(2, p.x - d.dx))
+    const y = Math.min(98, Math.max(2, p.y - d.dy))
+    setMoved((cur) => ({ ...cur, [d.key]: { x, y } }))
+  }
+
+  const endDrag = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = dragRef.current
+    if (!d || d.pointerId !== e.pointerId) return
+    dragRef.current = null
+    setDragging(null)
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    } catch {
+      /* указатель мог быть уже отпущен */
+    }
+  }
 
   // Соседи по рёбрам (v13: у рёбер есть fromKey/toKey): фокус + соседи = «горячие».
   const neighbors = new Map<string, Set<string>>()
@@ -76,6 +165,7 @@ export default function TopicMap({ graph, selected, onSelect }: TopicMapProps) {
     <div className="topic-map-scroll" ref={scrollRef}>
       <div
         className="topic-map"
+        ref={mapRef}
         role="group"
         aria-label="Карта тем тестирований"
         onMouseLeave={() => setHover(null)}
@@ -87,25 +177,30 @@ export default function TopicMap({ graph, selected, onSelect }: TopicMapProps) {
           aria-hidden="true"
           focusable="false"
         >
-          {graph.edges.map((edge, i) => (
+          {graph.edges.map((edge, i) => {
+            const from = pointOf(edge.fromKey, edge.from.x, edge.from.y)
+            const to = pointOf(edge.toKey, edge.to.x, edge.to.y)
+            return (
             <path
               key={i}
-              d={edgePath(edge, i)}
+              d={edgePath(from, to, i)}
               className={`topic-map__edge${
                 edge.kind === 'topic' ? ' topic-map__edge--skill' : ''
               }${edgeState(edge)}`}
             />
-          ))}
+            )
+          })}
         </svg>
 
         {graph.nodes.map((node) => {
+          const at = pointOf(node.key, node.x, node.y)
           const color =
             node.kind === 'center'
               ? 'var(--graph-focus)'
               : WEEK_COLOR[(node.week ?? 1) - 1] ?? 'var(--brand-blue)'
           const style = {
-            left: `${node.x}%`,
-            top: `${node.y}%`,
+            left: `${at.x}%`,
+            top: `${at.y}%`,
             '--node-color': color,
           } as React.CSSProperties
 
@@ -150,9 +245,20 @@ export default function TopicMap({ graph, selected, onSelect }: TopicMapProps) {
                 node.testable ? ' is-testable' : ''
               }${selected === node.key ? ' is-selected' : ''}${nodeState(node.key)}${
                 isLit ? ' is-lit' : ''
-              }`}
+              }${dragging === node.key ? ' is-dragging' : ''}`}
               style={style}
-              onClick={() => onSelect(node.key)}
+              onClick={() => {
+                // после перетаскивания клик не должен открывать проверку
+                if (suppressClick.current) {
+                  suppressClick.current = false
+                  return
+                }
+                onSelect(node.key)
+              }}
+              onPointerDown={(e) => onPointerDown(e, node.key)}
+              onPointerMove={onPointerMove}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
               onMouseEnter={() => setHover(node.key)}
               onMouseLeave={() => setHover(null)}
               onFocus={() => setHover(node.key)}
