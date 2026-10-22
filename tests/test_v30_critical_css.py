@@ -49,7 +49,8 @@ def test_critical_css_covers_base():
         ".btn{",
         ".hero-grid{",
         ".preview-card{",
-        ".mascot-card{",
+        ".route-card{",
+        ".route__num{",
     ):
         assert token in body, f"в аварийном CSS нет {token}"
 

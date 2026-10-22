@@ -94,9 +94,6 @@
   --brand-violet: #8B5CF6;
   --conf-1: var(--brand-blue);
   --conf-2: var(--brand-violet);
-  /* талисман «Лис Идея» (проектный, не бренд вуза) */
-  --fox: #E8722C;
-  --fox-soft: #FFE3CE;
   /* цвет-маркер каждой из 5 ролей (никогда как текст — только рамка/тинт) */
   --role-web: #5B4CFF;
   --role-1c: #E8590C;
@@ -111,10 +108,6 @@
   --shadow-sm: 0 1px 2px rgba(18,20,26,.05);
   --shadow: 0 1px 2px rgba(18,20,26,.04), 0 12px 30px -16px rgba(18,20,26,.22);
   --shadow-float: 0 2px 6px rgba(18,20,26,.05), 0 30px 64px -28px rgba(18,20,26,.34);
-  /* v24: фото-карточка лиса — своя тень и скрим (в тёмной теме переопределяются) */
-  --photo-shadow: 0 8px 24px rgba(18,20,26,.08);
-  /* v25: фон карточки под вырезкой лиса (PNG с альфой) — тёплый градиент */
-  --photo-bg: radial-gradient(120% 110% at 32% 22%, #FFF7EA 0%, #F3E6D2 55%, #E7D6BB 100%);
   --font-sans: "Manrope", "Manrope Fallback", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: "Unbounded", "Unbounded Fallback", "Manrope", system-ui, sans-serif;
   --max: 1200px;
@@ -626,12 +619,12 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   .preview-card__eyebrow, .preview-card__sub, .preview-row__meta, .preview-foot { color: #333 !important; }
   .preview-row { background: none; border-color: #999; }
   .preview-row__score { background: none; color: #000; border: 1px solid #999; }
-  .mascot-card { display: none; }
+  .route-card { display: none; }
 }
 
 /* =========================================================================
    СЦЕНЫ v5 + микро-слой: «живая база — шедевр в сценах» (манифест v5).
-   Секции: 1) TOKENS · 2) ФОН · 3) ИНТРО+ЛИСА · 4) МИКРО · 5) MUTE.
+   Секции: 1) TOKENS · 2) ФОН · 3) ИНТРО · 4) МИКРО · 5) MUTE.
    Контракты (совет, раунд 2): только transform/opacity в @keyframes
    (гейт: tests/test_motion_css.py ловит paint/layout-свойства); @keyframes
    ≤ 30 имён; stagger 50 ms × cap 8; sheen 400 ms; интро 4200 ms.
@@ -651,15 +644,6 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   /* фон: медленный, но заметный дрейф (≈2.7 px/s на 1440) */
   --bg-drift-amp: 2.5%;
   --bg-drift-period: 36s;
-  /* лиса v8: детали геометрии (талисман проекта, не бренд вуза) */
-  --fox-deep: #A8460F;  /* носки/глубина leg-ов, пыль */
-  --fox-dark: #7A3208;  /* штрихи меха */
-  --fox-nose: #2C1C15;
-  --fox-eye: #C97A1E;
-  --fox-ink: #241811;   /* чёрные чулки/лапы/зрачок; в тёмной — приподнят */
-  --fox-ao: #7A3208;    /* мягкая тень меха */
-  --fox-rim: #FFD8A6;   /* тёплый свет по верхней кромке */
-  --fox-contact: rgba(18,20,26,.30);
 }
 
 /* ---- 2. ФОН: aurora 4 блоба без blur + dot-grid + 3 микро-фигуры ----
@@ -725,15 +709,20 @@ main { position: relative; z-index: 1; }
   to   { transform: translate3d(var(--sx), var(--sy), 0) rotate(calc(var(--sr) + var(--sw, 5deg))) scale(1.02); }
 }
 
-/* ---- 3. ИНТРО-сцена: лис Идея → знак «СИ» → переливание → панельки ----
-   Единая шкала --tl (INTRO_MS = 4200, lib/intro.ts). Таймер бега: 0–1720 мс,
-   посадка 1560–1860, пыль, реакция знака, блик 2160–3060, idle-дыхание до 4200.
+/* ---- 3. ИНТРО-сцена: гем «СИ» → блик → вордмарк → шкала сцены -------
+   Единая шкала --tl (INTRO_MS = 4200, lib/intro.ts). v31: гем появляется на
+   240 мс, вордмарк на 700, подпись на 900, блик по монограмме 1100–2000,
+   мягкий импульс на 1000–2200, шкала заполняется всю сцену, вуаль гаснет
+   на 89–100%. Аура медленно дышит (auroraDrift, 22 с).
    Закрытие ТОЛЬКО JS-таймер/клик/Esc/колесо/тач (animationend под
    reduced-motion мёртв — потому не используется вовсе). Скролл не блокируем. */
+/* v31: сцена — самостоятельный экран: плотный фон палитры (а не вуаль
+   поверх страницы — композиция должна читаться, а не спорить с контентом).
+   На светле это тёплая бумага, на тёмной — почти чёрный. */
 .intro-overlay {
   position: fixed; inset: 0; z-index: 200;
   display: grid; place-items: center;
-  background: var(--veil);
+  background: var(--bg);
   cursor: pointer;
 }
 /* v17b (совет): вуаль стартует вместе с прогоном (.is-run), а не с монта.
@@ -745,31 +734,81 @@ main { position: relative; z-index: 1; }
   100%    { opacity: 0; }
 }
 .intro-scene {
-  position: relative; display: grid; place-items: center; row-gap: 4px;
-  width: min(620px, 92vw); aspect-ratio: 4 / 3; /* 4/3: стек mark+fox влезает на мобиле */
+  position: relative; z-index: 1;
+  display: grid; place-items: center; justify-items: center;
+  row-gap: 10px; width: min(560px, 92vw); padding: 6px 0 2px;
   animation: introIn .4s var(--ease) both;
+}
+/* v31: ореол вокруг гема. Статичный conic (оборотов не делаем — гейт v6
+   разрешает conic только transition'ом, а не keyframe) + тонкое кольцо. */
+.intro-badge {
+  position: relative; display: grid; place-items: center;
+  width: clamp(158px, 32vw, 208px); aspect-ratio: 1;
+}
+.intro-badge::before {
+  content: ''; position: absolute; inset: -30%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 36% 32%, rgba(78,140,255,.28), transparent 58%),
+    radial-gradient(circle at 68% 72%, rgba(232,114,44,.22), transparent 56%);
+}
+.intro-badge::after {
+  content: ''; position: absolute; inset: 6%;
+  border-radius: 50%; border: 1px solid var(--line);
+}
+/* вордмарк сцены: мелкая разрядка, градиентный набор — как в шапке */
+.intro-wordmark {
+  margin: 2px 0 0; font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(14px, 3.4vw, 19px); line-height: 1.2;
+  letter-spacing: .42em; text-indent: .42em; text-transform: uppercase;
+  color: var(--accent-text);
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .intro-wordmark {
+    background-image: linear-gradient(96deg, var(--accent-text) 0%, var(--supernova-blue) 34%, var(--brand-violet) 72%, var(--accent-text) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+}
+/* шкала сцены: заполняется всю длительность (4.2 с) — только transform */
+.intro-rail {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1;
+  height: 2px; background: var(--line);
+}
+.intro-rail__fill {
+  display: block; width: 100%; height: 100%;
+  transform-origin: left center; transform: scaleX(1);
+  background: linear-gradient(90deg, var(--brand-blue), var(--accent-text) 55%, var(--accent-2));
+}
+.is-run .intro-rail__fill { animation: introRail var(--tl) linear both; }
+@keyframes introRail { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* фон сцены еле заметно дышит — только transform, без paint-ловушек */
+.is-run .intro-aurora { animation: auroraDrift 22s ease-in-out infinite alternate; }
+@keyframes auroraDrift {
+  from { transform: translate3d(-1.4%, -1%, 0) scale(1.04); }
+  to   { transform: translate3d(1.4%, 1.2%, 0) scale(1.08); }
 }
 @keyframes introIn { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
 .intro-aurora {
-  position: absolute; inset: -12%;
+  position: absolute; inset: 0; z-index: 0;
   background:
     radial-gradient(38vmax 38vmax at 24% 20%, rgba(78,140,255,.16), transparent 60%),
     radial-gradient(34vmax 34vmax at 72% 30%, rgba(91,76,255,.14), transparent 62%),
     radial-gradient(36vmax 36vmax at 50% 86%, rgba(139,92,246,.12), transparent 64%);
 }
-/* тёплый «золотой час» за лисой: статуарный градиент, без анимации (paint один
-   раз) — отделяет рыжий мех от холодной авроры и даёт глубину сцене */
+/* тёплый «золотой час» за монограммой: статуарный градиент, без анимации
+   (paint один раз) — отделяет тёплый акцент от холодной авроры */
 .intro-glow {
-  position: absolute; inset: 2% 4% 0%;
+  position: absolute; inset: 0; z-index: 0;
   background:
-    radial-gradient(40% 30% at 52% 64%, var(--glow-a), transparent 72%),
-    radial-gradient(24% 17% at 58% 60%, var(--glow-b), transparent 70%);
+    radial-gradient(46% 34% at 50% 44%, var(--glow-a), transparent 72%),
+    radial-gradient(26% 19% at 56% 40%, var(--glow-b), transparent 70%);
 }
 /* знак проекта: монограмма «СИ» (НЕ официальный логотип вуза). Статичный
    градиент (paint один раз) + блик-слой-layer с translateX, только transform */
 .intro-mark {
   position: relative; overflow: hidden;
-  width: clamp(88px, 18vw, 112px); aspect-ratio: 1;
+  width: clamp(104px, 21vw, 136px); aspect-ratio: 1;
   border-radius: 28px; background: var(--surface);
   border: 1px solid var(--line); box-shadow: var(--shadow);
   display: grid; place-items: center;
@@ -795,206 +834,30 @@ main { position: relative; z-index: 1; }
   background: linear-gradient(115deg, transparent 26%, rgba(78,140,255,.36) 42%, rgba(255,255,255,.7) 50%, transparent 64%);
   transform: translateX(-130%); pointer-events: none;
 }
-.is-run .intro-mark::after { animation: markSweep 900ms var(--ease) 2160ms 1 both; }
+.is-run .intro-mark::after { animation: markSweep 900ms var(--ease) 1100ms 1 both; }
 @keyframes markSweep {
   from { transform: translateX(-130%); }
   to   { transform: translateX(130%); }
 }
 /* знак отвечает импульсом на приземление (привязан к шкале сцены) */
-.is-run .intro-mark { animation: markReact var(--tl) linear 1 both; }
+/* v31: гем приходит (markIn), затем один мягкий импульс (markReact) —
+   fill none у второго, иначе его 0%-кадр перебил бы появление. */
+.is-run .intro-mark {
+  animation: markIn 700ms var(--ease) 240ms both,
+             markReact 1200ms var(--ease) 1000ms 1 none;
+}
+@keyframes markIn {
+  from { opacity: 0; transform: scale(.86) translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
 @keyframes markReact {
   0%, 39%     { transform: scale(1); }
   41.4%       { transform: scale(1.07); }
   43.5%       { transform: scale(1.012); }
   45.7%, 100% { transform: scale(1); }
 }
-/* лиса v8: крупнее и «кинематографичнее» (300 / 220 на ≤720px), viewBox
-   36:26; ступени ширины дискретны — амплитуды в user units считаются от width */
-.intro-fox-wrap {
-  width: 300px; aspect-ratio: 36 / 26;
-  position: relative; margin-top: -18%; /* в прыжке лис касается низа знака */
-  transform: translate3d(-58vw, 0, 0); opacity: 0; /* статичная поза до .is-run */
-}
-@media (max-width: 720px) {
-  .intro-fox-wrap { width: 220px; margin-top: -12%; }
-}
-.intro-fox { width: 100%; height: 100%; overflow: visible; }
-/* суставы: transform-box: view-box (дефолт SVG) + origin из inline --ox/--oy */
-.intro-fox, .intro-fox * {
-  transform-box: view-box;
-  transform-origin: var(--ox, 50%) var(--oy, 50%);
-}
-/* пыль — единственная группа без шарнирного --ox/--oy: origin должен быть
-   центр самого круга, иначе scale(.4→1.8) растёт из центра viewBox (180,130)
-   и пыль «прорастает» из брюха и тонет ниже земли. Специфичность (0,2,0)
-   выше (0,1,0) у .intro-fox *, порядок объявления не важен. */
-.intro-fox .fx-dust { transform-box: fill-box; transform-origin: 50% 50%; }
-/* v22: фото-карточка лиса вместо SVG. Растр запечён (public domain),
-   без фильтров/blend; зум и посадка — transition, не @keyframes.
-   v25: в карточке теперь вырезка лиса без фона (PNG с альфой), поэтому
-   фон карточки — токенный градиент, а картинку нельзя кропить (contain). */
-.intro-photo {
-  position: absolute; inset: 0;
-  border-radius: var(--radius-lg); overflow: hidden;
-  background: var(--photo-bg);
-  border: 1px solid var(--line);
-  box-shadow: var(--photo-shadow);
-  transform: translateY(-6px);
-  transition: transform 360ms var(--ease) 1560ms;
-}
-.is-run .intro-photo { transform: translateY(0); }
-/* v24: фото не загрузилось — нейтральная карточка вместо битой картинки */
-.intro-photo--fallback {
-  background: var(--surface-2);
-}
-.intro-photo__img {
-  display: block; width: 100%; height: 100%;
-  object-fit: contain; object-position: center;
-  transform: scale(1.03);
-  transition: transform var(--tl, 4200ms) linear;
-}
-.is-run .intro-photo__img { transform: scale(1); }
-/* ==== хореография (бег 0–1720, посадка 1560–1860, idle до 4200) ==== */
-.is-run .intro-fox-wrap { animation: foxRun 1720ms cubic-bezier(.3, 0, .38, 1) both; }
-/* v10: 90.7%→96% — к старту прыжка остаётся ~6px хода (замер @1280): лис
-   доезжает в первые ~90мс полёта, а не замирает заранее; 42/68% подстроены
-   под новый финал, чтобы темп бега по фазам не просел */
-@keyframes foxRun {
-  0%    { opacity: 0; transform: translate3d(-58vw, 0, 0); }
-  5.8%  { opacity: 1; }
-  42%   { transform: translate3d(-30vw, 0, 0); }
-  68%   { transform: translate3d(-13vw, 0, 0); }
-  96%   { transform: translate3d(0, 0, 0); }
-  100%  { opacity: 1; transform: translate3d(0, 0, 0); }
-}
-/* тело: боб в беге + прыжок-дуга со squash-посадкой (второй в списке
-   animation-name перекрывает transform с 1560 мс — поздний прав).
-   v10: последний — forwards, не both: backwards-fill держал 0%-кадр весь
-   бег (замер: computed transform застывал на 1.06) и глушил foxBob; 0%
-   foxLand — поза боба на стыке 1560 (4-й цикл, 51.2%: -5px / -.7deg). */
-.is-run .fox-bob {
-  animation:
-    foxBob 430ms ease-in-out 50ms 4 both,
-    foxLand 300ms ease-in-out 1560ms 1 forwards;
-}
-@keyframes foxBob {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-5px) rotate(-.7deg); }
-}
-@keyframes foxLand {
-  0%   { transform: translateY(-5px) rotate(-.7deg) scale(1, 1); }
-  43%  { transform: translateY(-52px) scale(1.06, 1); }
-  60%  { transform: translateY(0) scale(1.16, .84); }
-  80%  { transform: translateY(4px) scale(.98, 1.03); }
-  100% { transform: translateY(0) scale(1, 1); }
-}
-/* голова: противофаза бобу (знак минус в keyframe) + «осмотрелся» */
-.is-run .fx-head {
-  animation:
-    headBob 430ms ease-in-out 90ms 4 both,
-    headScan 240ms ease-in-out 1880ms 1 both;
-}
-@keyframes headBob {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(2.2px) rotate(-1.4deg); }
-}
-@keyframes headScan {
-  0%   { transform: rotate(0); }
-  30%  { transform: rotate(-9deg); }
-  60%  { transform: rotate(8deg); }
-  84%  { transform: rotate(-3deg); }
-  100% { transform: rotate(0); }
-}
-/* ноги: 4 отдельных хода (диагональный галоп), у голени/носка свои суставы;
-   215 ms × 8 = ровно окно бега 1720 ms. v10: 62%-кадр больше не «складывает»
-   ногу (.78→.88), 46% чуть вытянут (1.08→1.10) — галоп читается по фазам */
-.is-run .fx-leg-fh   { animation: legStride 215ms ease-in-out 0ms   8 both; }
-.is-run .fx-leg-ff   { animation: legStride 215ms ease-in-out 161ms 8 both; }
-.is-run .fx-thigh-nh { animation: legStride 215ms ease-in-out 54ms 8 both; }
-.is-run .fx-thigh-nf { animation: legStride 215ms ease-in-out 0ms   8 both; }
-.is-run .fx-shin-nh  { animation: shinBend 215ms ease-in-out 80ms 8 both; }
-.is-run .fx-shin-nf  { animation: shinBend 215ms ease-in-out 26ms 8 both; }
-.is-run .fx-paw-nh   { animation: toeLift  215ms ease-in-out 64ms 8 both; }
-.is-run .fx-paw-nf   { animation: toeLift  215ms ease-in-out 10ms 8 both; }
-@keyframes legStride {
-  0%   { transform: scaleY(1)   rotate(-13deg); }
-  22%  { transform: scaleY(.86) rotate(-4deg); }
-  46%  { transform: scaleY(1.10) rotate(7deg); }
-  62%  { transform: scaleY(.88) rotate(11deg); }
-  84%  { transform: scaleY(.6)  rotate(3deg); }
-  100% { transform: scaleY(1)   rotate(-13deg); }
-}
-@keyframes shinBend {
-  0%, 20% { transform: scaleY(1); }
-  45%     { transform: scaleY(.82) rotate(-14deg); }
-  70%     { transform: scaleY(1.08) rotate(8deg); }
-  100%    { transform: scaleY(1); }
-}
-@keyframes toeLift {
-  0%, 18% { transform: rotate(0); }
-  46%     { transform: rotate(-30deg); }
-  100%    { transform: rotate(0); }
-}
-/* хвост: run-волна двух суставов (--tw inline: 6deg / 9deg) + idle после бег */
-.is-run .fox-tail-a  { animation: tailWave 215ms ease-in-out 0ms  8 both; }
-.is-run .fox-tail-b  { animation: tailWave 215ms ease-in-out 70ms 8 both; }
-@keyframes tailWave {
-  0%, 100% { transform: rotate(calc(var(--tw) * -1)); }
-  50%      { transform: rotate(var(--tw)); }
-}
-.is-run .fx-tail-idle-a { animation: tailIdle 1900ms ease-in-out 2120ms infinite alternate; }
-.is-run .fx-tail-idle-b { animation: tailIdle 1900ms ease-in-out 2270ms infinite alternate; }
-@keyframes tailIdle {
-  0%, 100% { transform: rotate(0); }
-  50%      { transform: rotate(var(--tw, 5deg)); }
-}
-/* уши: два тика, дальнее позже; амплитуды inline --ea/--eb на внешней группе */
-.is-run .fx-ear { animation: earFlick 300ms linear 1740ms 1 both; }
-.is-run .fx-ear-far { animation: earFlick 300ms linear 1790ms 1 both; }
-@keyframes earFlick {
-  0%, 100% { transform: rotate(0); }
-  22%      { transform: rotate(var(--ea, -16deg)); }
-  38%      { transform: rotate(calc(var(--eb, -8deg) * -.5)); }
-  52%      { transform: rotate(var(--eb, -8deg)); }
-  70%      { transform: rotate(calc(var(--eb, -8deg) / 3)); }
-}
-/* дыхание грудки — единственный бесконечный цикл в лисе, живёт до вуали */
-.is-run .fox-chest { animation: breath 2400ms ease-in-out 1740ms infinite; }
-@keyframes breath {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.012); }
-}
-/* глаза: три моргания (0.71/с, площадь меньше 0.1% — WCAG 2.3.1 PASS) */
-.is-run .fx-eye {
-  animation:
-    blink 120ms linear 1900ms 1 both,
-    blink 120ms linear 2200ms 1 both,
-    blink 120ms linear 2900ms 1 both;
-}
-@keyframes blink {
-  0%, 44%, 100% { transform: scaleY(1); }
-  50%, 72%      { transform: scaleY(.06); }
-}
-/* пыль под лапами при приземлении (расширяется и гаснет).
-   fill-mode forwards, НЕ both: с both backwards-fill держит 0%-кадр
-   (opacity .45, scale .4) все 1740мс бега — бледная точка висит под лисом.
-   До задержки действует natural opacity="0". Delays d2/d3 — только здесь:
-   inline animationDelay в JSX перебивал бы шорткатный delay 1740ms. */
-.is-run .fx-dust { animation: dust 320ms ease-out 1740ms 1 forwards; }
-.is-run .fx-dust.d2 { animation-delay: 1780ms; }
-.is-run .fx-dust.d3 { animation-delay: 1810ms; }
-@keyframes dust {
-  0%   { transform: scale(.4); opacity: .45; }
-  100% { transform: scale(1.8); opacity: 0; }
-}
-/* усы: один прогон микродрожи, не цикл */
-.is-run .fx-whiskers { animation: whiskTw 240ms ease-in-out 1900ms 1 both; }
-@keyframes whiskTw {
-  0%, 100% { transform: rotate(0); }
-  30%      { transform: rotate(1.4deg); }
-  70%      { transform: rotate(-1.4deg); }
-}
-.is-run .intro-caption { animation: introIn .4s var(--ease) 2.12s backwards; }
+.is-run .intro-caption { animation: fadeIn .5s var(--ease) .9s both; }
+.is-run .intro-wordmark { animation: fadeIn .6s var(--ease) .7s both; }
 .intro-caption {
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   font-size: 12px; color: var(--muted-2); letter-spacing: .01em; text-align: center;
@@ -1105,10 +968,9 @@ main { position: relative; z-index: 1; }
 /* =========================================================================
    СЦЕНЫ v6: мини-проверки + скриптовый консультант + fx-декор (append).
    Секции: 1) TOKENS · 2) ДЕКОР (шум/conic/glass) · 3) МИНИ-ПРОВЕРКИ ·
-   4) СКРИПТ-ЧАТ · 5) ЛИС-МИНИ · 6) MUTE v6.
-   Контракты (совет v6, раунд 2, 9/9): НОВЫЙ keyframe ровно один —
-   foxMiniBlink (29→30/30: свободный слот гейта, решён советом); всё
-   остальное — реюз fadeIn/mPop/bounce/breath/tailIdle и transitions.
+   4) СКРИПТ-ЧАТ · 5) АВАТАР ПОМОЩНИКА · 6) MUTE v6.
+   Контракты (совет v6, раунд 2, 9/9): аватар — монограмма проекта,
+   всё остальное — реюз fadeIn/mPop/bounce/breath и transitions.
    Conic = РОВНО ОДИН оборот (transition 12s, класс .is-swept) только на
    index-карте навыков; result/plan — статика. Шум = запечённый PNG
    (alpha в пикселях), БЕЗ mix-blend-mode и БЕЗ backdrop-filter (гейт
@@ -1244,15 +1106,35 @@ main { position: relative; z-index: 1; }
 .preview-row__score--mid { background: rgba(255,164,84,.18); color: #FFC08F; }
 .preview-foot { margin-top: 14px; font-size: 11.5px; color: rgba(255,255,255,.48); }
 
-/* маскот в герое: карточка-лис на тёплом градиенте */
-.mascot-card {
-  position: relative; border-radius: var(--radius-lg); overflow: hidden;
-  padding: 14px 16px 10px; max-width: 330px; justify-self: end;
-  background: var(--photo-bg);
+/* v31: карточка «маршрут» в герое — три шага с вертикальной линией.
+   Плоскость + внутренний хайрлайн, без blur (гейт v6: без filter/blend). */
+.route-card {
+  position: relative; border-radius: var(--radius-lg);
+  padding: 18px 20px 16px;
+  background: var(--surface);
   border: 1px solid var(--line);
   box-shadow: var(--shadow), inset 0 1px 0 var(--hairline);
 }
-.mascot-card__img { display: block; width: 100%; height: auto; max-height: 220px; object-fit: contain; object-position: bottom; }
+.route-card__eyebrow {
+  display: block; margin-bottom: 12px;
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted-2);
+}
+.route { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.route__step { position: relative; display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: start; }
+/* соединительная линия между шагами */
+.route__step:not(:last-child)::before {
+  content: ''; position: absolute; left: 12.5px; top: 30px; bottom: -12px;
+  width: 1px; background: var(--line);
+}
+.route__num {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  color: var(--accent-text); background: var(--accent-soft);
+  border: 1px solid var(--line);
+}
+.route__text { font-size: 14px; line-height: 1.45; color: var(--ink-2); }
 
 /* пикер навыков: группы вместо стены чипов */
 .picker { scroll-margin-top: 92px; }
@@ -1284,7 +1166,9 @@ main { position: relative; z-index: 1; }
   /* v26: на телефоне сначала обещание (заголовок и действия), потом превью */
   .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 26px; padding-top: 12px; }
   .hero-side { order: 0; }
-  .mascot-card { display: none; }
+  /* на телефоне герой держит обещание → действия → факты → превью:
+     маршрут уступает месту, он вторичен */
+  .route-card { display: none; }
 }
 
 /* старые браузеры без conic: дефолтная рамка .card остаётся — no-signal */
@@ -1425,31 +1309,22 @@ main { position: relative; z-index: 1; }
 .chatBot__form { display: grid; }
 .chatBot .suggest button { animation: fadeIn var(--m-base) var(--ease) both; }
 
-/* ---- 5. ЛИС-МИНИ (44×36): талисман проекта, декор-акцент ----
-   Реюз idles v5 + ЕДИНСТВЕННЫЙ новый keyframe (слот 30/30): */
-/* v29: лис-мини в аватаре-круге (был «блоб» рядом с бейджем) */
-.foxMini {
-  width: 46px; height: 46px; flex: none; display: block; padding: 5px;
+/* ---- 5. АВАТАР ПОМОЩНИКА (46×46): монограмма проекта, декор-акцент ----
+   v31: монограмма «СИ» в тёплом круге. Статична по геометрии, живой
+   остаётся только медленное «дыхание» (реюз breath). */
+.bot-avatar {
+  width: 46px; height: 46px; flex: none; display: grid; place-items: center;
   border-radius: 50%;
+  font-family: var(--font-display); font-weight: 600; font-size: 15px;
+  letter-spacing: .02em; color: #7A3208;
   background: radial-gradient(circle at 32% 26%, #FFF3E4 0%, #FFD9B8 46%, #F0A46A 100%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 6px 14px -8px rgba(232,114,44,.75);
-}
-.foxMini__body {
-  transform-box: fill-box; transform-origin: 50% 100%;
   animation: breath 3.4s ease-in-out infinite;
 }
-.foxMini__eye {
-  transform-box: fill-box; transform-origin: 60% 70%;
-  animation: foxMiniBlink 4.8s linear 1.2s infinite;
-}
-@keyframes foxMiniBlink {
-  0%, 93%, 100% { transform: scaleY(1); }
-  95%, 97%      { transform: scaleY(.08); }
-}
-.foxMini__tail {
-  transform-box: fill-box; transform-origin: 12% 60%;
-  animation: tailIdle 2.8s ease-in-out infinite alternate;
-  --tw: -7deg;
+/* v31: «дыхание» аватара (реюз ключа): только transform */
+@keyframes breath {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.035); }
 }
 
 /* =========================================================================
@@ -1479,7 +1354,7 @@ main { position: relative; z-index: 1; }
   --dot: rgba(18,20,26,.032);      /* точечная сетка фона (v26: тише) */
   --sheen: rgba(255,255,255,.9);   /* стекло-блик шапки/CTA */
   --caption-meta: #5B6270;         /* .intro-caption__meta под вуалью */
-  --glow-a: rgba(255,178,110,.30); --glow-b: rgba(255,222,176,.22);  /* за лисой */
+  --glow-a: rgba(255,178,110,.30); --glow-b: rgba(255,222,176,.22);  /* за монограммой */
   --skip-bg: rgba(18,20,26,.86); --skip-bg-hover: rgba(18,20,26,.95);
   --skip-ink: #FFFFFF;             /* кнопка скипа интро */
 }
@@ -1504,14 +1379,6 @@ html[data-theme="dark"] {
   --warn: #FBBF24; --danger: #F87171;
   --brand-blue: #6CA0FF; --brand-violet: #A78BFA;
   --supernova-blue: var(--brand-blue); /* v17b: 7.3:1 на тёмной --bg */
-  --fox-deep: #D2691E;  /* пыль+мех-мини читаются на тёмной вуали */
-  --fox-dark: #B85C1A;
-  --fox-ink: #3A2A20;
-  --fox-ao: #C25716;
-  --fox-rim: #FFE2BC;
-  --fox-contact: rgba(255,255,255,.16);
-  --fox-nose: #4A3026;
-  --fox-eye: #E8A63D;
   --accent-text: #9A8FFF;  /* текст-акцент: 6.2:1 на --bg (5B4CFF давал 3.5) */
   --accent-2: #9A8FFF;
   --accent: #7B6BFF;       /* прогресс-бар на тёмной поверхности: 3.9:1 */
@@ -1520,9 +1387,6 @@ html[data-theme="dark"] {
   --track: #3A332A;
   --veil: rgba(20,18,16,.97);
   --header-bg: rgba(20,18,16,.86);
-  /* v24: на тёмной вуали фото-карточка не должна читаться «наклейкой» */
-  --photo-shadow: 0 18px 44px rgba(0,0,0,.55), 0 0 0 1px rgba(255,214,170,.10);
-  --photo-bg: radial-gradient(120% 110% at 32% 22%, #4A3A29 0%, #2A211A 55%, #181310 100%);
   --hero-a: #1E1A16; --hero-b: #2B2620;
   --ring-mix: #1F1B17;
   --bubble-bg: #262119; --bubble-ink: #F0ECE6;

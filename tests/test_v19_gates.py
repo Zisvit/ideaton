@@ -1,5 +1,7 @@
-"""Гейты волны v19: шапка над контентом (z-index/opaque/bevel) и токены
-лиса для тёмной темы. Без новых @keyframes и без правок светлой палитры.
+"""Гейты волны v19: шапка над контентом (z-index/opaque/bevel).
+
+v31: контракт токенов персонажа снят — персонаж убран из продукта целиком
+(см. tests/test_v31_no_mascot.py).
 """
 
 from __future__ import annotations
@@ -9,7 +11,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CSS = (ROOT / "apps/web/styles/globals.css").read_text()
-FOX = (ROOT / "apps/web/components/IntroScene.tsx").read_text()
 
 
 def _block(selector: str) -> str:
@@ -37,20 +38,3 @@ def test_header_top_edge_is_bevel() -> None:
     assert ".site-header::after { display: none; }" in CSS
 
 
-def test_fox_theme_tokens() -> None:
-    # Светлые значения
-    for token in ("--fox-ink:", "--fox-ao:", "--fox-rim:", "--fox-contact:"):
-        assert token in CSS, f"нет {token}"
-    # Тёмная тема: чулки/лапы не растворяются, нос/глаз не чёрные на чёрном
-    assert "--fox-ink: #3A2A20;" in CSS
-    assert "--fox-nose: #4A3026;" in CSS
-    assert "--fox-eye: #E8A63D;" in CSS
-
-
-def test_fox_new_anatomy_marks() -> None:
-    # Крупные тональные массы вместо микро-штрихов + чёрные чулки.
-    assert FOX.count("var(--fox-rim)") >= 3
-    assert "M120 213 C118 219 116 225 113 229" in FOX  # чулок от скакательного
-    assert "M255 207 C254 213 253 218 252 222" in FOX  # передний чулок
-    # Никаких новых keyframes/анимаций в SVG
-    assert "@keyframes" not in FOX

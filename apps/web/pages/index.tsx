@@ -151,8 +151,8 @@ export default function Home() {
       </header>
 
       <main id="main" className="container page-index" style={{ paddingTop: 40, paddingBottom: 88 }}>
-        {/* v26: герой в две колонки — слева обещание и действия, справа
-            «стеклянное» превью выдачи и талисман. Чистый CSS, без blur. */}
+        {/* v31: герой в две колонки — слева обещание и действия, справа
+            «стеклянное» превью выдачи и карточка «маршрут». Чистый CSS, без blur. */}
         <section className="hero-grid fade-in">
           <div className="hero-main">
             {/* v16: капсовый вордмарк; «переливание» — два градиентных слоя
@@ -223,19 +223,28 @@ export default function Home() {
                 навыков и объясняет, чего не хватает.
               </p>
             </div>
-            <div className="mascot-card">
-              <picture>
-                <source srcSet="/fox-cutout.webp" type="image/webp" />
-                <img
-                  className="mascot-card__img"
-                  src="/fox-cutout.png"
-                  alt=""
-                  width={900}
-                  height={650}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </picture>
+            {/* v31: маршрут из трёх шагов. Карточка объясняет путь
+                пользователя и держит правую колонку героя. */}
+            <div className="route-card">
+              <span className="route-card__eyebrow">Как это работает</span>
+              <ol className="route">
+                <li className="route__step">
+                  <span className="route__num">1</span>
+                  <span className="route__text">
+                    Отметь навыки, которые уже есть
+                  </span>
+                </li>
+                <li className="route__step">
+                  <span className="route__num">2</span>
+                  <span className="route__text">
+                    Получи до 12 подходящих направлений
+                  </span>
+                </li>
+                <li className="route__step">
+                  <span className="route__num">3</span>
+                  <span className="route__text">Иди по плану на 30 дней</span>
+                </li>
+              </ol>
             </div>
           </aside>
         </section>
@@ -402,15 +411,15 @@ export default function Home() {
           </Link>
         </section>
 
-        {/* v26: футер + атрибуция фото талисмана (public domain) */}
+        {/* v31: футер — бренд, разделы и обещание приватности */}
         <footer className="site-footer">
-          <span>Карьерный трекер СИУЭиП</span>
-          <span>
+          <span className="site-footer__brand">Карьерный трекер СИУЭиП</span>
+          <span className="site-footer__links">
             <Link href="/employer">Версия для работодателя</Link>
+            <Link href="/consultant">Помощник</Link>
           </span>
-          <span className="site-footer__credit">
-            Фото лиса: «Red fox (52869982404)», USFWS Midwest Region, public
-            domain (Wikimedia Commons)
+          <span className="site-footer__note">
+            Работает офлайн · без регистрации · данные не уходят в сеть
           </span>
         </footer>
       </main>

@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CSS = (ROOT / "apps/web/styles/globals.css").read_text(encoding="utf-8")
 INTRO = (ROOT / "apps/web/lib/intro.ts").read_text(encoding="utf-8")
-FOX = (ROOT / "apps/web/components/IntroScene.tsx").read_text(encoding="utf-8")
+SCENE = (ROOT / "apps/web/components/IntroScene.tsx").read_text(encoding="utf-8")
 
 
 def keyframe_bodies():
@@ -42,25 +42,14 @@ def test_required_and_legacy_keyframes():
         "fixDrift5",
         "dotDrift",
         "bgShape",
-        "foxRun",
-        "foxBob",
-        "foxLand",
-        "headBob",
-        "headScan",
-        "legStride",
-        "shinBend",
-        "toeLift",
-        "tailWave",
-        "tailIdle",
-        "earFlick",
         "breath",
-        "blink",
-        "dust",
-        "whiskTw",
         "markReact",
         "markSweep",
+        "markIn",
         "introVeil",
         "introIn",
+        "introRail",
+        "auroraDrift",
         "mPop",
         "mSweep",
         "mGrowX",
@@ -72,8 +61,29 @@ def test_required_and_legacy_keyframes():
     names = {n for n, _ in keyframe_bodies()}
     missing = required - names
     assert not missing, f"нет обязательных keyframes: {missing}"
-    # легаси v4-лисицы удалены полностью (совет: без хвостов, super-vl)
-    dead = ("legPhaseA", "legPhaseB", "shapeA", "shapeB", "shapeC")
+    # легаси v4-лисицы и персонажа v31 удалены полностью
+    dead = (
+        "legPhaseA",
+        "legPhaseB",
+        "shapeA",
+        "shapeB",
+        "shapeC",
+        "foxRun",
+        "foxBob",
+        "foxLand",
+        "headBob",
+        "headScan",
+        "legStride",
+        "shinBend",
+        "toeLift",
+        "tailWave",
+        "tailIdle",
+        "earFlick",
+        "blink",
+        "dust",
+        "whiskTw",
+        "foxMiniBlink",
+    )
     leftover = [n for n in names if n in dead or re.fullmatch(r"fixDrift", n)]
     assert not leftover, f"легаси-ключи остались: {leftover}"
 
@@ -99,34 +109,28 @@ def test_intro_scale_is_4200():
     assert "sessionStorage" not in INTRO
     # единая шкала: сцена и знак живут от --tl
     assert "animation: introVeil var(--tl) linear 1 both" in CSS
-    assert "animation: markReact var(--tl) linear 1 both" in CSS
+    # v31: импульс монограммы — короткий, с fill none (иначе его 0%-кадр
+    # перебил бы появление markIn)
+    assert "markReact 1200ms var(--ease) 1000ms 1 none" in CSS
 
 
-def test_fox_classes_are_wired_between_tsx_and_css():
+def test_intro_scene_classes_are_wired_between_tsx_and_css():
+    """v31: классы новой композиции интро существуют и в разметке, и в стилях."""
     for cls in (
-        "fox-bob",
-        "fox-tail-a",
-        "fox-tail-b",
-        "fx-tail-idle-a",
-        "fx-tail-idle-b",
-        "fx-leg-fh",
-        "fx-leg-ff",
-        "fx-thigh-nh",
-        "fx-thigh-nf",
-        "fx-shin-nh",
-        "fx-shin-nf",
-        "fx-paw-nh",
-        "fx-paw-nf",
-        "fx-head",
-        "fx-eye",
-        "fx-whiskers",
-        "fx-ear",
-        "fx-ear-far",
-        "fox-chest",
-        "fx-dust",
+        "intro-scene",
+        "intro-aurora",
+        "intro-glow",
+        "intro-badge",
+        "intro-mark",
+        "intro-wordmark",
+        "intro-caption",
+        "intro-rail",
     ):
-        assert cls in FOX, f"класс {cls} отсутствует в Fox SVG"
+        assert cls in SCENE, f"класс {cls} отсутствует в сцене"
         assert cls in CSS, f"класс {cls} отсутствует в стилях сцены"
+    # сцена не тащит ни растров, ни инлайновых задержек анимации
+    assert "<img" not in SCENE
+    assert "style={{ animationDelay" not in SCENE
 
 
 def test_print_is_static():
@@ -142,27 +146,3 @@ def test_print_is_static():
     )
 
 
-def test_dust_stagger_is_css_side_and_origin_is_fill_box():
-    """Пыль приземления: стаггер d2/d3 живёт в CSS, не в inline-style (space-bunny).
-
-    Механика бага: inline `animationDelay` в JSX перебивает только longhand
-    delay шортката `animation: ... 1740ms 1 ...` — кружки срабатывают на
-    40/70мс вместо 1740+40/1810. Правильная схема: классы .d2/.d3 в CSS с
-    абсолютными delay 1780/1810мс; fill-mode forwards (не both: backwards-fill
-    виден в 1740мс бега); transform-box fill-box (иначе origin = центр
-    viewBox и пыль растёт из брюха, ниже земли).
-    """
-    assert ".is-run .fx-dust.d2" in CSS and ".is-run .fx-dust.d3" in CSS
-    assert "1780ms" in CSS and "1810ms" in CSS
-    # inline-диспетчеризация в TSX не вернулась (слово в комментарии ок)
-    assert "style={{ animationDelay" not in FOX, (
-        "inline animationDelay перебивает delay 1740ms из CSS-шортката"
-    )
-    # forwards, не both: backwards-fill держит 0%-кадр (opacity .45) в беге
-    assert re.search(r"\.is-run \.fx-dust \{[^}]*forwards", CSS), (
-        "анимация dust должна быть forwards (both показывает 0%-кадр до задержки)"
-    )
-    # fill-box у пыли: origin круга, не центр viewBox
-    assert re.search(r"\.intro-fox \.fx-dust \{[^}]*transform-box:\s*fill-box", CSS), (
-        "у .fx-dust обязан быть transform-box: fill-box (origin = центр круга)"
-    )

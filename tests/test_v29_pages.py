@@ -5,7 +5,7 @@
    (67 чипов одним списком не прочитать) и счётчик в шапке блока фильтров;
 2) /consultant: герой в две колонки с карточкой «три шага», разговор — «колодец»
    внутри карточки, реплика консультанта — светлая плоскость (чёрный блок в
-   светлой карточке выглядел чужеродно), лис-мини в аватаре-круге;
+        светлой карточке выглядел чужеродно), аватар-монограмма в круге;
 3) реплика пользователя и бота различаются по тону, оба — с хайрлайном.
 """
 
@@ -37,7 +37,7 @@ def test_consultant_hero_and_chat():
     assert 'className="preview-card"' in CONSULTANT
     assert "Три шага до плана" in CONSULTANT
     # контракт v6: лис-мини и бейдж скриптового режима на месте
-    assert 'className="foxMini"' in CONSULTANT
+    assert 'className="bot-avatar"' in CONSULTANT
     assert "badge--script" in CONSULTANT
 
 
@@ -51,10 +51,10 @@ def test_chat_is_plane_not_black_block():
     log = CSS[CSS.index(".chatBot__log {") :]
     log = log[: log.index("}")]
     assert "var(--surface-2)" in log and "border:" in log
-    # лис-мини — круглый аватар
-    fox = CSS[CSS.index(".foxMini {") :]
-    fox = fox[: fox.index("}")]
-    assert "border-radius: 50%" in fox
+    # аватар — круглый
+    av = CSS[CSS.index(".bot-avatar {") :]
+    av = av[: av.index("}")]
+    assert "border-radius: 50%" in av
 
 
 def test_hero_blocks_shared_across_pages():

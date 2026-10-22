@@ -26,7 +26,7 @@ COPY --from=build /app/next.config.js ./next.config.js
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/.next ./.next
-# public/ (фото лиса, текстуры) нужен в рантайме: без него /fox-photo.jpg → 404
+# public/ (шрифты, шум-тайл) нужен в рантайме: без него /fonts/* → 404
 COPY --from=build /app/public ./public
 
 EXPOSE 3000

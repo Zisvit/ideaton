@@ -120,5 +120,5 @@ def test_badge_and_honesty_subscript():
     assert "badge--script" in PAGE
     assert "Скриптовый режим" in PAGE
     assert "текст не уходит в сеть" in PAGE
-    # лис — талисман ПРОЕКТА (не вуза), от первого лица проекта
-    assert "талисман проекта" in PAGE
+    # помощник — проводник по памяткам, от первого лица проекта
+    assert "Помощник" in PAGE
