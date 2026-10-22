@@ -12,6 +12,9 @@ type Props = {
   positions: string[]
   source: string
   full?: boolean
+  /** v31: в каталоге источник показывается один раз на раздел, а не в каждой
+      из 21 карточки (одна и та же строка 21 раз — шум). */
+  showSource?: boolean
 }
 
 export default function CollegeWork({
@@ -19,6 +22,7 @@ export default function CollegeWork({
   positions,
   source,
   full = false,
+  showSource = true,
 }: Props) {
   const hasEmployers = employers.length > 0
   const hasPositions = positions.length > 0
@@ -52,7 +56,7 @@ export default function CollegeWork({
           )}
         </>
       )}
-      <span className="spec-work__source">Источник: {source}</span>
+      {showSource && <span className="spec-work__source">Источник: {source}</span>}
     </div>
   )
 }

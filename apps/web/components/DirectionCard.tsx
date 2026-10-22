@@ -43,6 +43,7 @@ export default function DirectionCard({ spec, variant = 'showcase' }: Props) {
         positions={spec.positions}
         source={spec.source}
         full={variant === 'employer'}
+        showSource={false}
       />
     </article>
   )

@@ -1690,14 +1690,25 @@ html[data-theme="dark"] {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.spec-item__skills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+/* v31: навыки идут сразу за описанием. Раньше margin-top:auto прижимал их к
+   низу карточки, и в карточках с коротким текстом посреди карточки зияла
+   пустота (контент вверху, теги внизу). Теперь пустота, если есть, внизу. */
+.spec-item__skills { display: flex; flex-wrap: wrap; gap: 6px; }
+/* v31: навыки — теги (акцентная подложка), «где работать» — нейтральные
+   пилюли. Раньше это были два одинаковых ряда пилюль, и карточка читалась
+   как один сплошной список без иерархии. */
 .spec-skill {
   font-size: 12.5px;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-  color: var(--muted);
+  border: 1px solid transparent;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+/* строка источника — одна на каталог, а не в каждой карточке */
+.spec-source {
+  margin: 10px 0 0;
+  font-size: 12px; color: var(--muted);
 }
 /* галочка «изучено» заблокирована до пройденной проверки (v13) */
 .check.is-locked { opacity: .45; cursor: help; }
