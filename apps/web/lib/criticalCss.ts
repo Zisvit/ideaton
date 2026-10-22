@@ -14,9 +14,15 @@
 export const CRITICAL_CSS = `
 :root{--bg:#F2EFE8;--surface:#FFFFFF;--surface-2:#ECE8DE;--line:#DFD9CB;
 --ink:#14161C;--ink-2:#2C3038;--muted:#59636F;--accent:#5B4CFF;--accent-text:#4A3EE0;
+--accent-soft:#EDEBFF;--hairline:rgba(255,255,255,.9);
+--shadow:0 1px 2px rgba(18,20,26,.04),0 12px 30px -16px rgba(18,20,26,.22);
+--skip-bg:rgba(18,20,26,.86);--skip-ink:#FFFFFF;
 --radius-sm:10px;--radius:16px;--radius-lg:22px;--max:1200px;--ease:cubic-bezier(.2,.7,.2,1)}
 html[data-theme="dark"]{--bg:#141210;--surface:#1F1B17;--surface-2:#2A251E;--line:#3D362C;
---ink:#F4EFE7;--ink-2:#D8D1C7;--muted:#B3A99C;--accent-text:#9A8FFF}
+--ink:#F4EFE7;--ink-2:#D8D1C7;--muted:#B3A99C;--accent-text:#9A8FFF;--accent-soft:#241E44;
+--hairline:rgba(255,255,255,.06);
+--shadow:0 1px 2px rgba(0,0,0,.40),0 14px 34px -18px rgba(0,0,0,.70);
+--skip-bg:rgba(240,236,230,.9);--skip-ink:#141210}
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{background:var(--bg);color:var(--ink);
@@ -48,4 +54,18 @@ background:radial-gradient(120% 120% at 12% -10%,rgba(91,76,255,.55),transparent
 radial-gradient(100% 100% at 96% 108%,rgba(232,114,44,.34),transparent 62%),
 linear-gradient(160deg,#191A2A 0%,#14131E 58%,#1A1520 100%)}
 @media (max-width:900px){.hero-grid{grid-template-columns:minmax(0,1fr);gap:26px}}
+.intro-overlay{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+background:var(--bg);text-align:center}
+.intro-scene{display:grid;place-items:center;justify-items:center;row-gap:10px;
+width:min(560px,92vw)}
+.intro-mark{width:104px;height:104px;border-radius:28px;background:var(--surface);
+border:1px solid var(--line);display:grid;place-items:center;
+font-family:"Unbounded","Unbounded Fallback",system-ui,sans-serif;font-size:30px;
+font-weight:600;color:var(--accent-text)}
+.intro-wordmark{font-family:"Unbounded","Unbounded Fallback",system-ui,sans-serif;
+font-size:17px;font-weight:600;letter-spacing:.42em;text-indent:.42em;
+text-transform:uppercase;color:var(--accent-text)}
+.intro-caption{font-size:12px;color:var(--muted)}
+.intro-skip{position:fixed;top:14px;right:14px;z-index:201;min-height:44px;padding:10px 16px;
+border-radius:999px;border:0;background:var(--skip-bg);color:var(--skip-ink);cursor:pointer}
 `.trim()
