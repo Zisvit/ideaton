@@ -102,8 +102,11 @@ def test_no_paint_or_layout_properties_in_keyframes():
     assert not hits, f"paint/layout в @keyframes (v5-контракт): {hits}"
 
 
-def test_intro_scale_is_4200():
-    assert "INTRO_MS = 4200" in INTRO
+def test_intro_scale_is_2400():
+    """v31: сцена сокращена 4200 → 2400 мс (совет: 4.2 с фальшивого прогресса
+    читаются как дешёвый лоадер). Требование v17 — сцена на каждом открытии
+    главной — сохранено (гейт v17 проверяет повтор)."""
+    assert "INTRO_MS = 2400" in INTRO
     # v17/v17b: сессионный ключ удалён — гейт только по URL
     assert "career-tracker-intro:v2" not in INTRO
     assert "sessionStorage" not in INTRO
@@ -111,7 +114,7 @@ def test_intro_scale_is_4200():
     assert "animation: introVeil var(--tl) linear 1 both" in CSS
     # v31: импульс монограммы — короткий, с fill none (иначе его 0%-кадр
     # перебил бы появление markIn)
-    assert "markReact 1200ms var(--ease) 1000ms 1 none" in CSS
+    assert "markReact 900ms var(--ease) 900ms 1 none" in CSS
 
 
 def test_intro_scene_classes_are_wired_between_tsx_and_css():

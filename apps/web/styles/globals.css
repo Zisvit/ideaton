@@ -634,7 +634,7 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
    Секции: 1) TOKENS · 2) ФОН · 3) ИНТРО · 4) МИКРО · 5) MUTE.
    Контракты (совет, раунд 2): только transform/opacity в @keyframes
    (гейт: tests/test_motion_css.py ловит paint/layout-свойства); @keyframes
-   ≤ 30 имён; stagger 50 ms × cap 8; sheen 400 ms; интро 4200 ms.
+   ≤ 30 имён; stagger 50 ms × cap 8; sheen 400 ms; интро 2400 ms (v31).
    Append-only для базы v1–v3 (правок середины нет, кроме снятия .band::before);
    сцены правятся хирургически внутри этого хвоста.
    ========================================================================= */
@@ -717,9 +717,10 @@ main { position: relative; z-index: 1; }
 }
 
 /* ---- 3. ИНТРО-сцена: гем «СИ» → блик → вордмарк → шкала сцены -------
-   Единая шкала --tl (INTRO_MS = 4200, lib/intro.ts). v31: гем появляется на
-   240 мс, вордмарк на 700, подпись на 900, блик по монограмме 1100–2000,
-   мягкий импульс на 1000–2200, шкала заполняется всю сцену, вуаль гаснет
+   Единая шкала --tl (INTRO_MS = 2400, lib/intro.ts; v31 сократил 4200 →
+   2400 — долгое ожидание читалось как «дешёвый лоадер»). Гем появляется на
+   200 мс, вордмарк на 480, подпись на 620, блик по монограмме 780–1580,
+   мягкий импульс 900–1800, шкала заполняется всю сцену, вуаль гаснет
    на 89–100%. Аура медленно дышит (auroraDrift, 22 с).
    Закрытие ТОЛЬКО JS-таймер/клик/Esc/колесо/тач (animationend под
    reduced-motion мёртв — потому не используется вовсе). Скролл не блокируем. */
@@ -785,8 +786,8 @@ main { position: relative; z-index: 1; }
 }
 /* шкала сцены: заполняется всю длительность (4.2 с) — только transform */
 .intro-rail {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1;
-  height: 2px; background: var(--line);
+  width: 172px; height: 2px; margin-top: 18px;
+  border-radius: 2px; background: var(--line); overflow: hidden;
 }
 .intro-rail__fill {
   display: block; width: 100%; height: 100%;
@@ -849,7 +850,7 @@ main { position: relative; z-index: 1; }
   background: linear-gradient(115deg, transparent 26%, rgba(78,140,255,.36) 42%, rgba(255,255,255,.7) 50%, transparent 64%);
   transform: translateX(-130%); pointer-events: none;
 }
-.is-run .intro-mark::after { animation: markSweep 900ms var(--ease) 1100ms 1 both; }
+.is-run .intro-mark::after { animation: markSweep 800ms var(--ease) 780ms 1 both; }
 @keyframes markSweep {
   from { transform: translateX(-130%); }
   to   { transform: translateX(130%); }
@@ -858,8 +859,8 @@ main { position: relative; z-index: 1; }
 /* v31: гем приходит (markIn), затем один мягкий импульс (markReact) —
    fill none у второго, иначе его 0%-кадр перебил бы появление. */
 .is-run .intro-mark {
-  animation: markIn 700ms var(--ease) 240ms both,
-             markReact 1200ms var(--ease) 1000ms 1 none;
+  animation: markIn 620ms var(--ease) 200ms both,
+             markReact 900ms var(--ease) 900ms 1 none;
 }
 @keyframes markIn {
   from { opacity: 0; transform: scale(.86) translateY(12px); }
@@ -871,8 +872,8 @@ main { position: relative; z-index: 1; }
   43.5%       { transform: scale(1.012); }
   45.7%, 100% { transform: scale(1); }
 }
-.is-run .intro-caption { animation: fadeIn .5s var(--ease) .9s both; }
-.is-run .intro-wordmark { animation: fadeIn .6s var(--ease) .7s both; }
+.is-run .intro-caption { animation: fadeIn .45s var(--ease) .62s both; }
+.is-run .intro-wordmark { animation: fadeIn .55s var(--ease) .48s both; }
 .intro-caption {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   margin-top: 12px; /* воздух между знаком и подписью */
@@ -1131,6 +1132,13 @@ main { position: relative; z-index: 1; }
   border: 1px solid var(--line);
   box-shadow: var(--shadow), inset 0 1px 0 var(--hairline);
 }
+/* v31: волосяная линия бренда по верхней кромке — карточка получает собственный
+   вес в правой колонке и перекликается с превью выше */
+.route-card::before {
+  content: ''; position: absolute; left: 22px; right: 22px; top: -1px; height: 2px;
+  border-radius: 2px; opacity: .5;
+  background: linear-gradient(90deg, var(--brand-blue), var(--accent-text) 52%, var(--brand-violet));
+}
 .route-card__eyebrow {
   display: block; margin-bottom: 12px;
   font-size: 11px; font-weight: 700; letter-spacing: .14em;
@@ -1139,9 +1147,12 @@ main { position: relative; z-index: 1; }
 .route { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .route__step { position: relative; display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: start; }
 /* соединительная линия между шагами */
+/* коннектор: целые пиксели (12px — центр кружка 24px) и затухание вниз,
+   чтобы линия читалась как «продолжение», а не как клеточная сетка */
 .route__step:not(:last-child)::before {
-  content: ''; position: absolute; left: 12.5px; top: 30px; bottom: -12px;
-  width: 1px; background: var(--line);
+  content: ''; position: absolute; left: 12px; top: 32px; bottom: -12px;
+  width: 1px;
+  background: linear-gradient(180deg, var(--line) 0%, var(--line) 45%, transparent 100%);
 }
 .route__num {
   width: 26px; height: 26px; border-radius: 50%;
@@ -1189,7 +1200,7 @@ main { position: relative; z-index: 1; }
   .route { gap: 10px; }
   .route__step { grid-template-columns: 24px 1fr; gap: 10px; }
   .route__num { width: 24px; height: 24px; font-size: 11px; }
-  .route__step:not(:last-child)::before { left: 11.5px; top: 27px; }
+  .route__step:not(:last-child)::before { left: 11px; top: 30px; }
   .route__text { font-size: 13.5px; }
 }
 

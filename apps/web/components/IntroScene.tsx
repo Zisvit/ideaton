@@ -8,7 +8,7 @@ import { INTRO_MS, SWIPE_GRACE_MS } from '../lib/intro'
 // ключи используются.
 // Хореография сцены: разгон 0–240 мс (появление гема), блик по монограмме
 // на 1100 мс, вордмарк и подпись на 700/900 мс, шкала заполняется всю
-// сцену, вуаль гаснет на 89–100% (introVeil, 4200 мс).
+// сцену, вуаль гаснет на 89–100% (introVeil, 2400 мс).
 const INTERACTIVE =
   'a[href], button, [role="button"], input, textarea, select, label, summary'
 
@@ -89,7 +89,7 @@ export default function IntroScene({ onDone }: { onDone: () => void }) {
       new Promise((r) => window.setTimeout(r, 400)),
     ]).then(() => {
       if (cancelled) return
-      setRun(true) // единая шкала INTRO_MS=4200 стартует отсюда (CSS var --tl)
+      setRun(true) // единая шкала INTRO_MS=2400 стартует отсюда (CSS var --tl)
       // ровно конец шкалы: вуаль уже в opacity 0, невидимого хвоста нет
       closeTimer = window.setTimeout(finish, INTRO_MS)
     })
@@ -151,10 +151,12 @@ export default function IntroScene({ onDone }: { onDone: () => void }) {
             маршрут на 30 дней из навыков, которые уже есть
           </span>
         </div>
-      </div>
-      {/* шкала сцены — полосой по низу экрана: кадрирует композицию */}
-      <div className="intro-rail" aria-hidden="true">
-        <i className="intro-rail__fill" />
+        {/* v31: шкала — короткая линия внутри композиции. Полоса во всю
+            ширину экрана читалась как прогресс-бар браузера; здесь это
+            элемент знака, а не служебная полка. */}
+        <div className="intro-rail" aria-hidden="true">
+          <i className="intro-rail__fill" />
+        </div>
       </div>
       <button
         type="button"

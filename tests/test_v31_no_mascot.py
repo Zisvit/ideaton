@@ -169,3 +169,17 @@ def test_print_and_forced_colors_cover_new_blocks():
     print_css = CSS[CSS.index("@media print") :]
     assert ".route-card { background: none !important;" in print_css
     assert ".intro-wordmark" in CSS[CSS.index("@media (forced-colors: active)") :]
+
+
+def test_intro_is_short_and_rail_is_inside_composition():
+    """v31: сцена 2400 мс, шкала — элемент композиции, а не полоса браузера."""
+    assert "INTRO_MS = 2400" in (WEB / "lib/intro.ts").read_text(encoding="utf-8")
+    # шкала внутри сцены: не position:fixed, а элемент композиции
+    rail = CSS[CSS.index(".intro-rail {") :]
+    rail = rail[: rail.index("}")]
+    assert "position: fixed" not in rail, "шкала не должна быть полосой по краю экрана"
+    assert "width:" in rail and "margin-top:" in rail
+    # разметка: шкала внутри .intro-scene (между открытием сцены и кнопкой скипа)
+    scene = SCENE[SCENE.index('className="intro-scene"') :]
+    scene = scene[: scene.index('className="intro-skip"')]
+    assert "intro-rail" in scene
