@@ -119,6 +119,23 @@
   --bg-drift-amp: 2.5%;
   --bg-drift-period: 36s;
   --graph-focus: #F7F3EA;
+  /* v35: панель героя и «оболочечные» тона — токенами, чтобы в тёмной теме
+     панель не оставалась белым пятном (было: жёсткие светлые литералы). */
+  --hero-panel-a: #EDE4FF;
+  --hero-panel-b: #F2EAFF;
+  --hero-panel-ink: #2B1952;
+  --hero-panel-ink-2: #6B5F80;
+  --hero-panel-accent: #6333E6;
+  --shell-track: #EEEAF5;
+  --shell-nav-idle: #9386A8;
+  --shell-ctx: #9A8BA8;
+  --shell-tab-idle: #8B7E9A;
+  --shell-bottom-bg: #FFFEFD;
+  --shell-bottom-idle: #B0A3BD;
+  --shell-foot: #B5A9C0;
+  --hero-card-a: #2A1E4A;
+  --hero-card-b: #1E1636;
+  --hero-card-ink: #F4F1FF;
 }
 
 * { box-sizing: border-box; }
@@ -1400,7 +1417,7 @@ main { position: relative; z-index: 1; }
   --dot: rgba(43,25,82,.03);        /* точечная сетка фона (v26: тише) */
   --sheen: rgba(255,255,255,.9);   /* стекло-блик шапки/CTA */
   --caption-meta: #6A6380;         /* .intro-caption__meta под вуалью */
-  --glow-a: rgba(155,107,255,.30); --glow-b: rgba(199,180,255,.24);  /* за монограммой */
+  --glow-a: rgba(155,107,255,.26); --glow-b: rgba(199,180,255,.20);  /* за монограммой */
   --skip-bg: rgba(18,20,26,.86); --skip-bg-hover: rgba(18,20,26,.95);
   --skip-ink: #FFFFFF;             /* кнопка скипа интро */
 }
@@ -1426,11 +1443,27 @@ html[data-theme="dark"] {
   --brand-blue: #6CA0FF; --brand-violet: #A78BFA;
   --supernova-blue: var(--brand-blue); /* v17b: 7.3:1 на тёмной --bg */
   --accent-text: #B79BFF;  /* текст-акцент: 6.2:1 на --bg (5B4CFF давал 3.5) */
-  --accent-2: #B79BFF;
+  --accent-2: #CBB4FF;
   --accent: #8B5CFF;       /* прогресс-бар на тёмной поверхности: 3.9:1 */
   --on-ink: #141210;
   --on-match: #0B3B2A;
   --track: #3A332A;
+  /* v35: тёмная панель героя и тона оболочки */
+  --hero-panel-a: #2A1E4A;
+  --hero-panel-b: #1A1332;
+  --hero-panel-ink: #F4F1FF;
+  --hero-panel-ink-2: #B9AFD6;
+  --hero-panel-accent: #B79BFF;
+  --shell-track: #251E3D;
+  --shell-nav-idle: #A79EC4;
+  --shell-ctx: #948AB4;
+  --shell-tab-idle: #A79EC4;
+  --shell-bottom-bg: #1C1730;
+  --shell-bottom-idle: #8A80A8;
+  --shell-foot: #7E74A0;
+  --hero-card-a: #2A1E4A;
+  --hero-card-b: #16102A;
+  --hero-card-ink: #F4F1FF;
   --veil: rgba(20,18,16,.97);
   --header-bg: rgba(20,18,16,.86);
   --hero-a: #1E1A16; --hero-b: #2B2620;

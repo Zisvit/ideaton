@@ -84,7 +84,7 @@ body {
   border-radius: 12px;
   padding: 12px 15px;
   text-align: left;
-  color: #9386a8;
+  color: var(--shell-nav-idle);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -107,7 +107,7 @@ body {
 .side-foot {
   margin: 16px 0 0;
   font-size: 10px;
-  color: #b5a9c0;
+  color: var(--shell-foot);
 }
 .main {
   min-width: 0;
@@ -123,18 +123,18 @@ body {
   gap: 16px;
   margin-bottom: 33px;
 }
-.context { color: #9a8ba8; font-size: 12px; }
+.context { color: var(--shell-ctx); font-size: 12px; }
 .role-tabs {
   display: flex;
   padding: 4px;
-  background: #eeeaf5;
+  background: var(--shell-track);
   border-radius: 13px;
   gap: 3px;
 }
 .role-tabs a {
   padding: 8px 14px;
   font-weight: 600;
-  color: #8b7e9a;
+  color: var(--shell-tab-idle);
   font-size: 12px;
   border-radius: 10px;
   text-decoration: none;
@@ -210,7 +210,7 @@ body {
   font-weight: 750;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #9c7ac9;
+  color: var(--accent-text);
 }
 .section-label {
   margin: 3px 0 14px;
@@ -236,7 +236,7 @@ body {
   align-items: start;
 }
 .hero-main {
-  background: linear-gradient(120deg, #ede4ff, #f2eaff);
+  background: linear-gradient(120deg, var(--hero-panel-a), var(--hero-panel-b));
   border-radius: 23px;
   padding: 26px;
   min-height: 240px;
@@ -251,7 +251,7 @@ body {
   font-weight: 500;
   font-size: clamp(20px, 2.2vw, 30px);
   letter-spacing: .18em;
-  color: #6333E6;
+  color: var(--hero-panel-accent);
   margin: 0 0 8px;
 }
 .hero-main .hero-title {
@@ -260,9 +260,8 @@ body {
   font-size: clamp(26px, 2.6vw, 34px);
   line-height: 1.14;
   letter-spacing: -0.9px;
-  /* панель лиловая в обеих темах (как в референсе) — значит, текст внутри
-     всегда тёмный, иначе в тёмной теме белый на лиловом нечитаем */
-  color: #2B1952;
+  /* v35: панель идёт по теме — в тёмной она фиолетовая, а не белая */
+  color: var(--hero-panel-ink);
   margin: 0 0 12px;
   max-width: 15ch;
 }
@@ -272,7 +271,7 @@ body {
 .hero-main .hero__sub {
   font-size: 13.5px;
   line-height: 1.55;
-  color: #6B5F80;
+  color: var(--hero-panel-ink-2);
   margin: 0;
   max-width: 46ch;
 }
@@ -285,12 +284,12 @@ body {
   flex-wrap: wrap;
   gap: 10px 22px;
 }
-.hero__facts li { display: flex; align-items: baseline; gap: 7px; font-size: 12.5px; color: #6B5F80; }
+.hero__facts li { display: flex; align-items: baseline; gap: 7px; font-size: 12.5px; color: var(--hero-panel-ink-2); }
 .hero__facts b {
   font-family: var(--font-sans);
   font-size: 19px;
   font-weight: 800;
-  color: #2B1952;
+  color: var(--hero-panel-ink);
   letter-spacing: -0.02em;
 }
 
@@ -334,7 +333,7 @@ body {
   border-radius: 30px;
   padding: 5px 9px;
   background: var(--accent-soft);
-  color: #9575ba;
+  color: var(--accent-text);
   font-weight: 550;
 }
 .filter-chip,
@@ -367,7 +366,7 @@ body {
 .small { font-size: 12px; color: var(--muted); }
 .tiny { font-size: 10px; color: var(--muted); }
 .muted { color: var(--muted); }
-.footnote { font-size: 10px; color: #b5a9c0; margin-top: 20px; }
+.footnote { font-size: 10px; color: var(--shell-foot); margin-top: 20px; }
 
 /* статистика-ряд (референс): четыре плитки в ряд */
 .stats {
@@ -460,7 +459,7 @@ body {
 }
 
 @media (max-width: 720px) {
-  body { background: #faf8fe; }
+  body { background: var(--bg); }
   .shell { display: block; }
   .side { display: none; }
   .main { padding: 20px 17px 110px; }
@@ -490,7 +489,7 @@ body {
     left: 0;
     right: 0;
     z-index: 30;
-    background: #fffefd;
+    background: var(--shell-bottom-bg);
     border-top: 1px solid var(--line);
     padding: 10px 7px max(10px, env(safe-area-inset-bottom));
   }
@@ -501,7 +500,7 @@ body {
     gap: 5px;
     padding: 4px 0;
     font-size: 9px;
-    color: #b0a3bd;
+    color: var(--shell-bottom-idle);
     text-decoration: none;
   }
   .bottom-nav a.is-active { color: var(--accent-text); }
@@ -529,7 +528,7 @@ h1 { font-size: 30px; font-weight: 800; line-height: 1.16; letter-spacing: -0.8p
 h2 { font-size: 18px; font-weight: 750; line-height: 1.25; }
 h3 { font-size: 15px; font-weight: 700; line-height: 1.3; }
 .hero-title { font-size: clamp(26px, 2.6vw, 34px); font-weight: 800; letter-spacing: -0.9px; }
-.grad { background-image: linear-gradient(92deg, #6333E6 0%, #A98CFF 100%); }
+.grad { background-image: linear-gradient(92deg, var(--accent-text) 0%, var(--accent-2) 100%); }
 .num { font-weight: 800; font-variant-numeric: tabular-nums; }
 
 /* ---- строки списков: плоско + волосяная линия (как .list-row в макете) ---- */
@@ -638,8 +637,8 @@ h3 { font-size: 15px; font-weight: 700; line-height: 1.3; }
   padding: 26px;
   background:
     radial-gradient(760px 260px at 12% -20%, rgba(155, 107, 255, .30), transparent 62%),
-    linear-gradient(135deg, #2A1E4A 0%, #1E1636 100%);
-  color: #F4F1FF;
+    linear-gradient(135deg, var(--hero-card-a) 0%, var(--hero-card-b) 100%);
+  color: var(--hero-card-ink);
 }
 
 /* ---- консультант: чат в стиле макета ---- */
@@ -681,7 +680,7 @@ main.page-consultant { padding-top: 0; padding-bottom: 70px; }
     radial-gradient(circle at 36% 32%, rgba(155, 107, 255, .30), transparent 58%),
     radial-gradient(circle at 68% 72%, rgba(116, 68, 244, .22), transparent 56%);
 }
-.intro-mark__glyph { color: #6333E6; }
+.intro-mark__glyph { color: var(--accent-text); }
 .intro-rail__fill { background: linear-gradient(90deg, var(--accent), var(--brand-violet)); }
-.intro-wordmark { color: #6333E6; }
+.intro-wordmark { color: var(--accent-text); }
 }
