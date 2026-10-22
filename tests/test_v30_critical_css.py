@@ -37,6 +37,9 @@ def test_critical_css_embedded():
 def test_critical_css_covers_base():
     body = _css_body()
     for token in (
+        ".intro-overlay{",
+        ".intro-mark{",
+        ".intro-skip{",
         "--bg",
         "--surface",
         "--ink",
@@ -64,6 +67,12 @@ def test_critical_css_matches_tokens():
         "--surface:#FFFFFF;",
         "--ink:#14161C;",
         "--accent:#5B4CFF;",
+        # v31: маршрут и интро-сцена в аварийном CSS ссылаются на эти токены —
+        # без них значения невалидны и карточка остаётся без тени/заливки
+        "--accent-soft:#EDEBFF;",
+        "--hairline:rgba(255,255,255,.9);",
+        "--skip-bg:rgba(18,20,26,.86);",
+        "--skip-ink:#FFFFFF;",
     ):
         assert pair in body, f"в аварийном CSS нет {pair}"
         assert pair in css, f"в globals.css нет {pair}"

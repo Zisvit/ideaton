@@ -130,3 +130,42 @@ def test_no_raster_in_intro_or_hero():
     assert not (PUBLIC / "fox-fur-128.png").exists()
     # герой и интро — только текст и CSS
     assert "<picture" not in INDEX[: INDEX.index("</aside>")]
+
+
+def test_intro_does_not_flash_before_run():
+    """Совет совета: до .is-run сцена не показывается.
+
+    Иначе контент виден на монте (анимации появления ждут .is-run), потом
+    уходит на 0%-кадр markIn/fadeIn и проявляется заново — «дёрнулось»
+    вместо «проявилось»."""
+    scene = CSS[CSS.index(".intro-scene {") :]
+    scene = scene[: scene.index("}")]
+    assert "opacity: 0" in scene, "до .is-run сцена должна быть скрыта"
+    assert ".is-run .intro-scene { opacity: 1;" in CSS
+
+
+def test_monogram_contrast_in_light_theme():
+    """Первый стоп градиента монограммы был #D9E7FF (1.15:1 на белой плитке)."""
+    css = re.sub(r"/\*[\s\S]*?\*/", "", CSS)  # комментарии не считаем
+    assert "#D9E7FF" not in css, "в градиенте монограммы остался нечитаемый стоп"
+    # вордмарк героя: самый светлый стоп ≥3:1 на бумаге
+    assert "--accent-2) 52%" not in css, "в вордмарке остался слишком светлый стоп"
+    # градиент монограммы живёт в @supports (background-clip) — ищем сам градиент
+    assert (
+        "linear-gradient(94deg, var(--brand-blue) 0%, var(--accent-text) 52%, "
+        "var(--brand-violet) 100%)" in css
+    ), "в градиенте монограммы нет контрастных стопов"
+
+
+def test_route_card_is_not_hidden_on_mobile():
+    """Совет совета: карточка маршрута не должна исчезать на телефоне —
+    мобильный герой терял объяснение продукта."""
+    assert ".route-card { display: none; }" not in CSS
+    mobile = CSS[CSS.index("@media (max-width: 900px)") :]
+    assert ".route-card {" in mobile
+
+
+def test_print_and_forced_colors_cover_new_blocks():
+    print_css = CSS[CSS.index("@media print") :]
+    assert ".route-card { background: none !important;" in print_css
+    assert ".intro-wordmark" in CSS[CSS.index("@media (forced-colors: active)") :]

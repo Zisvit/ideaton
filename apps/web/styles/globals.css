@@ -328,7 +328,9 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
    остаётся, дубля для скринридера не появляется. */
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .supernova {
-    background-image: linear-gradient(96deg, var(--accent-text) 0%, var(--supernova-blue) 28%, var(--accent-2) 52%, var(--brand-violet) 76%, var(--accent-text) 100%);
+    /* v31: стоп --accent-2 давал 2.1:1 на бумаге — для крупного текста
+       нужен ≥3:1. Остались три тона, все с запасом по контрасту. */
+    background-image: linear-gradient(96deg, var(--accent-text) 0%, var(--supernova-blue) 26%, var(--brand-violet) 58%, var(--accent-text) 100%);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
   }
@@ -372,7 +374,7 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   .supernova { background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
   .supernova::after { display: none; }
   /* v17b (совет): тот же приём у остального градиентного текста. */
-  .grad, .intro-mark__glyph {
+  .grad, .intro-mark__glyph, .intro-wordmark {
     background: none; color: CanvasText; -webkit-text-fill-color: CanvasText;
   }
   /* v19: реальный border переживает HCM, градиентный sheen — нет */
@@ -619,7 +621,12 @@ h3 { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; line-height: 1.
   .preview-card__eyebrow, .preview-card__sub, .preview-row__meta, .preview-foot { color: #333 !important; }
   .preview-row { background: none; border-color: #999; }
   .preview-row__score { background: none; color: #000; border: 1px solid #999; }
-  .route-card { display: none; }
+  /* v31: карточка маршрута — реальное содержание, печатаем её (как превью),
+     а не прячем: на бумаге оставалось только выдуманное «92%». */
+  .route-card { background: none !important; box-shadow: none; border: 1px solid #999; }
+  .route-card__eyebrow { color: #333 !important; }
+  .route__num { background: none; color: #000; border: 1px solid #999; }
+  .route__text { color: #000 !important; }
 }
 
 /* =========================================================================
@@ -737,8 +744,12 @@ main { position: relative; z-index: 1; }
   position: relative; z-index: 1;
   display: grid; place-items: center; justify-items: center;
   row-gap: 10px; width: min(560px, 92vw); padding: 6px 0 2px;
-  animation: introIn .4s var(--ease) both;
+  /* v31: до .is-run сцена скрыта. Иначе контент мигает: на монте он виден
+     (анимации появления ждут .is-run), потом уходит на 0%-кадр markIn/fadeIn
+     и проявляется заново — «дёрнулось» вместо «проявилось». */
+  opacity: 0;
 }
+.is-run .intro-scene { opacity: 1; animation: introIn .4s var(--ease) both; }
 /* v31: ореол вокруг гема. Статичный conic (оборотов не делаем — гейт v6
    разрешает conic только transition'ом, а не keyframe) + тонкое кольцо. */
 .intro-badge {
@@ -759,7 +770,9 @@ main { position: relative; z-index: 1; }
 /* вордмарк сцены: мелкая разрядка, градиентный набор — как в шапке */
 .intro-wordmark {
   margin: 2px 0 0; font-family: var(--font-display); font-weight: 600;
-  font-size: clamp(14px, 3.4vw, 19px); line-height: 1.2;
+  /* v31: совет совета — не хватало среднего уровня иерархии: гем был в 11 раз
+     крупнее вордмарка, и вордмарк читался как сноска. */
+  font-size: clamp(17px, 4.2vw, 25px); line-height: 1.2;
   letter-spacing: .42em; text-indent: .42em; text-transform: uppercase;
   color: var(--accent-text);
 }
@@ -820,7 +833,9 @@ main { position: relative; z-index: 1; }
 }
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .intro-mark__glyph {
-    background-image: linear-gradient(94deg, #D9E7FF 0%, var(--brand-blue) 38%, var(--accent-text) 72%, var(--brand-violet) 100%);
+    /* v31: первый стоп был #D9E7FF — на белой плитке это 1.15:1, монограмма
+       почти не читалась. Теперь все стопы ≥3:1 (крупный текст по AA). */
+    background-image: linear-gradient(94deg, var(--brand-blue) 0%, var(--accent-text) 52%, var(--brand-violet) 100%);
     background-size: 220% 100%; background-repeat: no-repeat;
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
@@ -859,15 +874,16 @@ main { position: relative; z-index: 1; }
 .is-run .intro-caption { animation: fadeIn .5s var(--ease) .9s both; }
 .is-run .intro-wordmark { animation: fadeIn .6s var(--ease) .7s both; }
 .intro-caption {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  font-size: 12px; color: var(--muted-2); letter-spacing: .01em; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  margin-top: 12px; /* воздух между знаком и подписью */
+  font-size: 12.5px; color: var(--muted-2); letter-spacing: .01em; text-align: center;
 }
 .intro-caption__name {
   font-family: var(--font-display); font-size: 15px; font-weight: 600;
   letter-spacing: .03em; color: var(--ink, #12141A); line-height: 1.1;
 }
 .intro-caption__meta {
-  font-size: 10px; text-transform: uppercase; letter-spacing: .15em;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .15em;
   color: var(--caption-meta); /* light: #5B6270 ≈5.6:1 AA; dark: #A8A5A0 */
   line-height: 1.3;
 }
@@ -1166,9 +1182,15 @@ main { position: relative; z-index: 1; }
   /* v26: на телефоне сначала обещание (заголовок и действия), потом превью */
   .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 26px; padding-top: 12px; }
   .hero-side { order: 0; }
-  /* на телефоне герой держит обещание → действия → факты → превью:
-     маршрут уступает месту, он вторичен */
-  .route-card { display: none; }
+  /* v31: на телефоне карточка маршрута не исчезает (совет совета: мобильный
+     герой терял объяснение продукта) — просто компактнее. */
+  .route-card { padding: 14px 16px 12px; }
+  .route-card__eyebrow { margin-bottom: 10px; }
+  .route { gap: 10px; }
+  .route__step { grid-template-columns: 24px 1fr; gap: 10px; }
+  .route__num { width: 24px; height: 24px; font-size: 11px; }
+  .route__step:not(:last-child)::before { left: 11.5px; top: 27px; }
+  .route__text { font-size: 13.5px; }
 }
 
 /* старые браузеры без conic: дефолтная рамка .card остаётся — no-signal */
