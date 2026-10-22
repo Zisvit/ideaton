@@ -1,14 +1,17 @@
 /**
- * v7 + v13 (совет 7/9): «Карта тем» — детерминированный layout без
- * библиотек и без новых keyframes. Вход — пункты плана (те же taskKey, что
- * у чекбоксов), выход — узлы/рёбра для components/TopicMap.tsx.
+ * v7 + v13 + v32: «Карта тем» — детерминированный layout без библиотек и без
+ * новых keyframes. Вход — пункты плана (те же taskKey, что у чекбоксов),
+ * выход — узлы/рёбра для components/TopicMap.tsx.
  *
- * Структура: центр — направление; 4 луча — недели (сверху по часовой);
- * темы — вокруг своего луча с детерминированным джиттером (v13: «облако»,
- * как в графе Obsidian, но без Math.random — SSR-стабильно). Рёбра
- * topic↔topic — общий навык (skill из MiniCheck); у рёбер есть ключи концов
- * (fromKey/toKey), у узлов — degree: размер точки и подсветка соседей.
- * Позиции считаются в процентах (0..100) — компонент раскладывает абсолютно.
+ * v32: раскладка стала силовой — как граф Obsidian: пружины по рёбрам плюс
+ * отталкивание, поэтому узлы лежат свободным созвездием, а не «солнцем» с
+ * лучами. Симуляция детерминированная (Math.random запрещён — SSR-стабильность):
+ * стартовые позиции считаются из джиттера, дальше только арифметика.
+ *
+ * Структура: центр — направление; 4 луча — недели; темы — рядом со своей
+ * неделей. Рёбра topic↔topic — общий навык (skill из MiniCheck); у рёбер
+ * есть ключи концов (fromKey/toKey), у узлов — degree: размер точки и
+ * подсветка соседей. Позиции — в процентах (0..100) по осям.
  */
 
 import type { MiniCheck } from './planChecks'
@@ -49,6 +52,17 @@ const WEEK_R = 25
 const TOPIC_R = 45
 const RAD = Math.PI / 180
 
+/** v32: холст графа 16:9 — x считаем в «визуальных» единицах (домножаем на
+ *  аспект), иначе пружины смещают узлы вбок и облако вытягивается. */
+const ASPECT = 16 / 9
+/** Параметры силовой раскладки (подобраны на глаз по рендеру). */
+const RELAX_ITER = 220
+const REPULSE = 215
+const SPRING = 0.05
+const REST = 14
+const GRAVITY = 0.008
+const DAMP = 0.32
+
 /** v13: детерминированный хэш (без Math.random — SSR-стабильность). */
 function hashInt(s: string): number {
   let h = 0
@@ -77,6 +91,83 @@ export function shortLabel(text: string, max = 24): string {
 /** Угол луча недели: неделя 1 — сверху, дальше по часовой стрелке. */
 function weekAngle(week: number): number {
   return (-90 + (week - 1) * 90) * RAD
+}
+
+/**
+ * v32: детерминированная силовая раскладка (граф Obsidian).
+ *
+ * Пружины по рёбрам (у каждой — своя длина покоя) + попарное отталкивание +
+ * слабая гравитация к центру. Никаких библиотек и Math.random: результат
+ * одинаков на сервере и клиенте (SSR-стабильность — гейт v13).
+ */
+function relax(nodes: GraphNode[], edges: GraphEdge[]): void {
+  const index = new Map(nodes.map((n, i) => [n.key, i]))
+  const pos = nodes.map((n) => ({ x: n.x, y: n.y }))
+  const disp = nodes.map(() => ({ x: 0, y: 0 }))
+
+  for (let step = 0; step < RELAX_ITER; step++) {
+    for (const d of disp) {
+      d.x = 0
+      d.y = 0
+    }
+    // отталкивание всех пар
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = (pos[j].x - pos[i].x) * ASPECT
+        const dy = pos[j].y - pos[i].y
+        const d2 = Math.max(dx * dx + dy * dy, 0.05)
+        const d = Math.sqrt(d2)
+        const f = REPULSE / d2
+        // силы считаем в визуальных единицах, а позиции — в процентах:
+        // x делим на аспект, иначе горизонтальная часть силы в 1.78 раза
+        // сильнее нужной и граф схлопывается по горизонтали
+        disp[i].x -= ((dx / d) * f) / ASPECT
+        disp[i].y -= (dy / d) * f
+        disp[j].x += ((dx / d) * f) / ASPECT
+        disp[j].y += (dy / d) * f
+      }
+    }
+    // пружины по рёбрам
+    for (const edge of edges) {
+      const a = index.get(edge.fromKey)
+      const b = index.get(edge.toKey)
+      if (a === undefined || b === undefined) continue
+      const dx = (pos[b].x - pos[a].x) * ASPECT
+      const dy = pos[b].y - pos[a].y
+      const d = Math.max(Math.hypot(dx, dy), 0.01)
+      // неделя держит темы короче, чем тема — соседа по навыку
+      const rest = edge.kind === 'week' ? REST : REST * 1.35
+      const f = (d - rest) * SPRING
+      disp[a].x += ((dx / d) * f) / ASPECT
+      disp[a].y += (dy / d) * f
+      disp[b].x -= ((dx / d) * f) / ASPECT
+      disp[b].y -= (dy / d) * f
+    }
+    // гравитация: направление — в центр, недели — крепче, темы — слабее
+    for (let i = 0; i < nodes.length; i++) {
+      const kind = nodes[i].kind
+      const g = kind === 'center' ? 0.004 : GRAVITY * (kind === 'week' ? 1.8 : 0.85)
+      disp[i].x -= (pos[i].x - 50) * g
+      disp[i].y -= (pos[i].y - 50) * g
+    }
+    // интеграция с затуханием + рамка поля
+    for (let i = 0; i < nodes.length; i++) {
+      pos[i].x = clampPct(pos[i].x + disp[i].x * DAMP, 8, 92)
+      pos[i].y = clampPct(pos[i].y + disp[i].y * DAMP, 11, 89)
+    }
+  }
+
+  for (let i = 0; i < nodes.length; i++) {
+    nodes[i].x = Math.round(pos[i].x * 10) / 10
+    nodes[i].y = Math.round(pos[i].y * 10) / 10
+  }
+  // рёбра переезжают вместе с узлами
+  for (const edge of edges) {
+    const a = nodes[index.get(edge.fromKey)!]
+    const b = nodes[index.get(edge.toKey)!]
+    edge.from = { x: a.x, y: a.y }
+    edge.to = { x: b.x, y: b.y }
+  }
 }
 
 export function buildTopicGraph(title: string, items: TopicInput[]): TopicGraph {
@@ -183,6 +274,9 @@ export function buildTopicGraph(title: string, items: TopicInput[]): TopicGraph 
     degree.set(edge.toKey, (degree.get(edge.toKey) || 0) + 1)
   }
   for (const node of nodes) node.degree = degree.get(node.key) || 0
+
+  // v32: свободная силовая раскладка вместо «солнца с лучами» — граф Obsidian
+  relax(nodes, edges)
 
   return { nodes, edges }
 }
