@@ -3,62 +3,71 @@
 Веб-сервис: студент → топ-5 карьерных траекторий → план 30 дней → чат-консультант.
 
 ## Стек
-- **Frontend:** React 18 + TypeScript + Vite (`apps/web`)
-- **Backend:** Fastify + TypeScript (`services/api`)
-- **Контракты:** OpenAPI 3.1 + генерируемые TS типы (`packages/contracts`)
-- **Данные:** JSON-роли в `data/roles` (50+ ролей, веса, 30-дневные планы)
-- **Инфра:** Docker Compose, nginx reverse proxy (`infra`)
-- **Монорепо:** Turborepo + pnpm workspaces
+- **Frontend:** Next.js 16 (pages router) + React 19 + TypeScript (`apps/web`)
+- **Backend:** Python 3.12 + FastAPI + uvicorn (`services/api`)
+- **Контракты:** OpenAPI 3.1 и JSON-схема роли (`packages/contracts`)
+- **Данные:** YAML-роли в `data/roles` (26 направлений, веса и 30-дневные планы)
+- **Инфра:** Docker Compose (`infra/docker-compose.yml`)
+- **Тесты:** pytest — юнит, HTTP-контракт и UI-гейты (`tests/`)
 
 ## Структура
 ```
 ideaton/
 ├── apps/
-│   ├── web/          # React SPA (zisvit)
-│   └── api/          # Fastify API (phpAtom1c)
+│   └── web/          # Next.js (zisvit)
+├── services/
+│   └── api/          # FastAPI: scoring, plan, chat (phpAtom1c)
 ├── packages/
-│   └── contracts/    # OpenAPI + TS типы (Soda)
+│   └── contracts/    # openapi.yaml + roles.schema.json (Soda)
 ├── data/
-│   └── roles/        # JSON-схемы ролей (Soda)
+│   └── roles/        # YAML-роли (Soda)
 ├── infra/
-│   ├── docker-compose.yml
-│   └── nginx.conf
+│   └── docker-compose.yml
+├── tests/            # pytest: API, контракты, UI-гейты
 └── docs/
     ├── PRD.md
-    └── SPRINTS.md
+    ├── SPRINTS.md
+    ├── UX.md
+    └── DEMO.md
 ```
 
 ## Запуск
 ```bash
 # Требуется: Docker 24+, Docker Compose v2
-docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.yml up --build
 
-# Web:  http://localhost:3000
-# API:  http://localhost:3001/api/v1
-# Health: http://localhost:3001/health
+# Web:    http://localhost:3000
+# API:    http://localhost:8000
+# Health: http://localhost:8000/health
+```
+
+## Разработка без Docker
+```bash
+# API (из services/api — импорты llm/scoring/schemas локальные)
+cd services/api
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+
+# Web (из apps/web)
+cd apps/web
+npm ci
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 npm run dev
+
+# Тесты (из корня; нужны fastapi, httpx, pytest, pydantic, pyyaml)
+python -m pytest tests/ -q
 ```
 
 ## Контракты
-- Исходник: `packages/contracts/openapi.yaml`
-- Генерируемые типы: `packages/contracts/src/` (публикуются как `@tracker/contracts`)
-- Использование в web/api: `import { Profile, ScoreResponse } from '@tracker/contracts'`
-- Регенерация: `pnpm --filter @tracker/contracts generate`
-
-## Разработка
-```bash
-# Установка
-pnpm install
-
-# Локально (без Docker)
-pnpm dev          # web + api параллельно
-pnpm build        # все пакеты
-pnpm check        # lint + typecheck + tests
-```
+- `packages/contracts/openapi.yaml` — контракт API (источник истины).
+- `packages/contracts/roles.schema.json` — схема роли в `data/roles`.
+- `tests/test_contract_live.py` сверяет `app.openapi()` с `openapi.yaml`.
 
 ## Ветки и CI
 - `main` — защищена, PR required, 1 approve.
 - Фичи: `feat/<short-name>` от `main`.
-- CI: линт, типы, тесты, валидация контрактов, сборка Docker-образов.
+- CI: compileall, валидация YAML-ролей, проверка секретов, сборка фронта,
+  pytest и API-smoke (`tests/smoke.sh`); автомерж — через `automerge-*.yml`.
 
 ## Команда
 | Роль | Ответственность | Контакт |

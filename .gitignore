@@ -30,6 +30,10 @@ Thumbs.db
 /mine/
 /friend/
 /merge/
+/wt-*/
+# --- локальные артефакты браузера и референс-макет ---
+/.playwright-mcp/
+/career-tracker.html
 
 # TS incremental build artifact
 *.tsbuildinfo
