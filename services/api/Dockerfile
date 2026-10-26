@@ -8,7 +8,7 @@ WORKDIR /app
 COPY services/api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY services/api/*.py .
+COPY services/api/*.py ./
 
 # v7: закрытая база 26 направлений едет в образ; ROLES_DIR указывает на неё,
 # иначе main.py берёт встроенный дефолт (5 ролей) и стенд теряет специальности.
